@@ -37,9 +37,7 @@ const CATEGORIES = [
 
 const PAGE_SIZE = 24;
 
-export default function CatalogExplorer({
-  initialProducts,
-}: CatalogExplorerProps) {
+export default function CatalogExplorer({ initialProducts }: CatalogExplorerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -124,7 +122,7 @@ export default function CatalogExplorer({
       (entries) => {
         if (entries[0].isIntersecting) loadMore();
       },
-      { rootMargin: "200px" }
+      { rootMargin: "300px" }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -141,63 +139,59 @@ export default function CatalogExplorer({
     } else {
       params.set("category", cat);
     }
-    router.push(`/?${params.toString()}#catalog-section`);
+    router.push(`/?${params.toString()}`);
   };
 
   const clearAllFilters = () => {
     setSelectedPriceRange(0);
     setSortBy("featured");
-    router.push("/#catalog-section");
+    router.push("/");
   };
 
+  const hasActiveFilters =
+    activeCategory !== "All Products" || activeSearch || selectedPriceRange !== 0 || sortBy !== "featured";
+
   return (
-    <div id="catalog-section" className="space-y-6">
-      {/* Catalog Control Bar */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Results Count */}
-        <div className="flex items-center gap-2 min-w-0">
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">
-            {activeSearch ? `"${activeSearch}"` : activeCategory}
-          </h2>
-          <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full flex-shrink-0">
-            {totalItems}
-          </span>
+    <div id="catalog-section" className="space-y-4 sm:space-y-6">
+      {/* ── Single-Row Compact Control Bar (Replaces bulky "All Products" card) ── */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-2.5 sm:p-4 shadow-sm flex items-center justify-between gap-2 sm:gap-4">
+        {/* Left: Category Dropdown */}
+        <div className="relative flex-1 sm:flex-initial sm:min-w-[200px]">
+          <select
+            value={activeCategory}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+            className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 text-xs sm:text-sm font-bold rounded-xl pl-3 pr-8 py-2 sm:py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer appearance-none truncate"
+            aria-label="Filter by category"
+          >
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
-        {/* Filter Controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Category dropdown (visible on all screen sizes) */}
-          <div className="relative flex items-center">
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" />
-            <select
-              value={activeCategory}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-              className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer appearance-none"
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Mobile Filter Sheet Button */}
+        {/* Right (Mobile): Dedicated "Filter & Sort" Button */}
+        <div className="flex md:hidden items-center">
           <button
-            onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-            className="md:hidden flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition"
+            type="button"
+            onClick={() => setIsMobileFilterOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95 whitespace-nowrap"
+            aria-label="Open Filter and Sort options"
           >
-            <Filter className="w-3.5 h-3.5" />
+            <Filter className="w-3.5 h-3.5 text-emerald-400" />
             <span>Filter & Sort</span>
             {(selectedPriceRange !== 0 || sortBy !== "featured") && (
-              <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[9px] font-black flex items-center justify-center">
-                !
-              </span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
             )}
           </button>
+        </div>
 
+        {/* Right (Desktop): Price Ranges & Sort */}
+        <div className="hidden md:flex items-center gap-3">
           {/* Desktop Price Range Selector */}
-          <div className="hidden md:flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
             {PRICE_RANGES.map((r, idx) => (
               <button
                 key={idx}
@@ -213,7 +207,7 @@ export default function CatalogExplorer({
             ))}
           </div>
 
-          {/* Sort Dropdown */}
+          {/* Desktop Sort Dropdown */}
           <div className="relative flex items-center">
             <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
             <select
@@ -228,53 +222,59 @@ export default function CatalogExplorer({
               ))}
             </select>
           </div>
+
+          {/* Item count badge on desktop */}
+          <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-100">
+            {totalItems} items
+          </span>
         </div>
       </div>
 
-      {/* Active Filter Chips Bar */}
-      {(activeCategory !== "All Products" || activeSearch || selectedPriceRange !== 0) && (
-        <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-          <span className="text-slate-500 font-semibold">Active filters:</span>
+      {/* Active Filter Chips Bar (Shown only when filters are active) */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs">
+          <span className="text-slate-400 font-semibold text-[11px]">Active:</span>
           {activeCategory !== "All Products" && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold text-[11px]">
               {activeCategory}
-              <button onClick={() => handleCategoryChange("All Products")}>
+              <button onClick={() => handleCategoryChange("All Products")} aria-label="Clear category">
                 <X className="w-3 h-3 hover:text-red-600" />
               </button>
             </span>
           )}
           {activeSearch && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold">
-              Search: &ldquo;{activeSearch}&rdquo;
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold text-[11px]">
+              &ldquo;{activeSearch}&rdquo;
               <button
                 onClick={() => {
                   const params = new URLSearchParams(searchParams.toString());
                   params.delete("search");
                   router.push(`/?${params.toString()}`);
                 }}
+                aria-label="Clear search"
               >
                 <X className="w-3 h-3 hover:text-red-600" />
               </button>
             </span>
           )}
           {selectedPriceRange !== 0 && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold text-[11px]">
               {PRICE_RANGES[selectedPriceRange].label}
-              <button onClick={() => setSelectedPriceRange(0)}>
+              <button onClick={() => setSelectedPriceRange(0)} aria-label="Clear price filter">
                 <X className="w-3 h-3 hover:text-red-600" />
               </button>
             </span>
           )}
           <button
             onClick={clearAllFilters}
-            className="text-slate-500 hover:text-red-600 underline font-semibold ml-2"
+            className="text-slate-500 hover:text-rose-600 underline font-semibold text-[11px] ml-1"
           >
-            Clear all
+            Reset
           </button>
         </div>
       )}
 
-      {/* Mobile Filter Sheet — z-[60] ensures it renders ABOVE bottom nav (z-50) */}
+      {/* Mobile Slide-Over Filter & Sort Drawer (z-[60] renders safely above bottom nav z-50) */}
       {isMobileFilterOpen && (
         <div className="md:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex justify-end">
           <div className="w-full max-w-xs bg-white h-full p-6 space-y-6 shadow-2xl flex flex-col justify-between overflow-y-auto pb-[env(safe-area-inset-bottom)]">
@@ -284,6 +284,7 @@ export default function CatalogExplorer({
                 <button
                   onClick={() => setIsMobileFilterOpen(false)}
                   className="p-1 rounded-full text-slate-400 hover:text-slate-700"
+                  aria-label="Close filters"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -294,7 +295,7 @@ export default function CatalogExplorer({
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   Category
                 </label>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {CATEGORIES.map((cat) => (
                     <button
                       key={cat}
@@ -342,7 +343,7 @@ export default function CatalogExplorer({
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   Sort By
                 </label>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {SORT_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
@@ -391,7 +392,7 @@ export default function CatalogExplorer({
       )}
 
       {/* Infinite Scroll Sentinel */}
-      <div ref={sentinelRef} className="h-4" />
+      <div ref={sentinelRef} className="h-6" />
 
       {/* Loading indicator */}
       {hasMore && (

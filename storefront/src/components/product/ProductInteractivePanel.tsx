@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BundleTier, Product, Variant } from "../../lib/types";
 import { useCart } from "../../lib/cart";
-import { ShieldCheck, Truck, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import SizeSelector from "./SizeSelector";
+import { showToast } from "../ui/Toast";
 
 interface ProductInteractivePanelProps {
   product: Product;
@@ -17,7 +18,8 @@ export default function ProductInteractivePanel({
 }: ProductInteractivePanelProps) {
   const { addItem } = useCart();
   const [selectedVariant, setSelectedVariant] = useState<Variant>(variant);
-  const [selectedTier, setSelectedTier] = useState<BundleTier>("2x"); // Default to Tier 2 (Most Popular)
+  // Default to 1x Single Unit (per user requirement)
+  const [selectedTier, setSelectedTier] = useState<BundleTier>("1x");
 
   // Determine initial size default
   const titleLower = product.title.toLowerCase();
@@ -48,6 +50,17 @@ export default function ProductInteractivePanel({
 
   const isLowStock = selectedVariant.us_warehouse_stock < 15;
 
+  // Reactively broadcast tier and price updates so the mobile sticky buy bar stays synchronized!
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("product:tier_change", {
+          detail: { tier: selectedTier, price: currentPrice, size: selectedSize },
+        })
+      );
+    }
+  }, [selectedTier, currentPrice, selectedSize]);
+
   const handleSizeChange = (size: string, v: Variant) => {
     setSelectedSize(size);
     setSelectedVariant(v);
@@ -55,11 +68,12 @@ export default function ProductInteractivePanel({
 
   const handleAddToCart = () => {
     addItem(product, selectedVariant, selectedTier, selectedSize);
+    showToast(`Added ${currentUnitCount}x to Cart`, "success");
   };
 
   return (
-    <div className="space-y-6 bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
-      {/* Consumer Inventory Status */}
+    <div className="space-y-6 bg-white border border-slate-200 rounded-3xl p-5 sm:p-7 shadow-sm">
+      {/* Inventory Status Indicator */}
       <div className="flex items-center justify-between text-xs pb-3 border-b border-slate-100">
         <span className="flex items-center gap-2 font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
           <span
@@ -67,9 +81,8 @@ export default function ProductInteractivePanel({
               isLowStock ? "bg-amber-500 animate-pulse" : "bg-emerald-500 animate-pulse-dot"
             }`}
           />
-          {isLowStock ? "High Demand — Limited Clearance Stock" : "In Stock — Ships Today from US"}
+          {isLowStock ? "High Demand — Limited Clearance Stock" : "In Stock — Ready to Ship"}
         </span>
-        <span className="text-slate-400 font-semibold text-[11px]">Free Domestic Express</span>
       </div>
 
       {/* Dynamic Subtotal Banner */}
@@ -89,7 +102,7 @@ export default function ProductInteractivePanel({
         )}
       </div>
 
-      {/* SIZE / OPTION SELECTOR WITH STOCK CLEARANCE */}
+      {/* Size/Option Selector (if multi-variant) */}
       <SizeSelector
         product={product}
         currentVariant={selectedVariant}
@@ -97,13 +110,13 @@ export default function ProductInteractivePanel({
         onSelectSize={handleSizeChange}
       />
 
-      {/* CRO ENGINE: Interactive Tiered Bundle Selector */}
-      <div className="space-y-3 pt-2">
+      {/* Tiered Bundle Selector: 1x Single Unit is default */}
+      <div className="space-y-3 pt-1">
         <label className="block text-xs font-black tracking-wider uppercase text-slate-700">
           Select Quantity & Bundle Savings:
         </label>
 
-        {/* Tier 1: 1x Unit */}
+        {/* Tier 1: 1x Single Unit (Default) */}
         <div
           onClick={() => setSelectedTier("1x")}
           className={`cursor-pointer rounded-2xl p-4 border-2 transition-all relative flex items-center justify-between ${
@@ -121,7 +134,7 @@ export default function ProductInteractivePanel({
             />
             <div>
               <p className="text-sm font-bold text-slate-900">1x Single Unit</p>
-              <p className="text-xs text-slate-500">Standard domestic order</p>
+              <p className="text-xs text-slate-500">Standard single order</p>
             </div>
           </div>
           <div className="text-right">
@@ -130,17 +143,17 @@ export default function ProductInteractivePanel({
           </div>
         </div>
 
-        {/* Tier 2: 2x Units (Most Popular) */}
+        {/* Tier 2: 2x Units (Double Pack) */}
         <div
           onClick={() => setSelectedTier("2x")}
           className={`cursor-pointer rounded-2xl p-4 border-2 transition-all relative flex items-center justify-between ${
             selectedTier === "2x"
-              ? "border-emerald-600 bg-emerald-50/40 shadow-md ring-1 ring-emerald-600"
+              ? "border-emerald-600 bg-emerald-50/40 shadow-sm ring-1 ring-emerald-600"
               : "border-slate-200 hover:border-slate-300 bg-white"
           }`}
         >
           <div className="absolute -top-3 right-4 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-sm">
-            Most Popular • Save 12%
+            Save 12%
           </div>
           <div className="flex items-center gap-3">
             <input
@@ -164,7 +177,7 @@ export default function ProductInteractivePanel({
           </div>
         </div>
 
-        {/* Tier 3: 3x Units (Best Value) */}
+        {/* Tier 3: 3x Units (Family Bundle) */}
         <div
           onClick={() => setSelectedTier("3x")}
           className={`cursor-pointer rounded-2xl p-4 border-2 transition-all relative flex items-center justify-between ${
@@ -174,7 +187,7 @@ export default function ProductInteractivePanel({
           }`}
         >
           <div className="absolute -top-3 right-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-sm">
-            Best Value • Save 18%
+            Save 18%
           </div>
           <div className="flex items-center gap-3">
             <input
@@ -199,7 +212,7 @@ export default function ProductInteractivePanel({
         </div>
       </div>
 
-      {/* Main High-Conversion Call To Action */}
+      {/* Main Call To Action */}
       <button
         onClick={handleAddToCart}
         className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-base rounded-2xl shadow-xl shadow-emerald-600/25 transition active:scale-[0.98] flex items-center justify-center gap-3"
@@ -209,18 +222,6 @@ export default function ProductInteractivePanel({
           Add {currentUnitCount}x {selectedSize} to Cart — ${currentPrice.toFixed(2)}
         </span>
       </button>
-
-      {/* Real-World Consumer Signals */}
-      <div className="pt-2 grid grid-cols-2 gap-3 text-xs text-slate-600">
-        <div className="flex items-center gap-2">
-          <Truck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-          <span>Free Tracked Delivery (3–5 Days)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-          <span>Free Replacement on Damage</span>
-        </div>
-      </div>
     </div>
   );
 }

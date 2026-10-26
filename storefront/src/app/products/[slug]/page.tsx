@@ -1,6 +1,5 @@
 import React from "react";
-import Link from "next/link";
-import { getCatalog, getProductBySlug } from "../../../lib/api";
+import { getProductBySlug } from "../../../lib/api";
 import {
   ProductGallery,
   ProductInteractivePanel,
@@ -8,7 +7,7 @@ import {
   MobileStickyBuyBar,
   ProductBackButton,
 } from "../../../components/product";
-import { Star, Truck, ArrowLeft } from "lucide-react";
+import { Star, Truck } from "lucide-react";
 import type { Metadata } from "next";
 
 export const dynamicParams = true;
@@ -31,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: product.seo_meta?.meta_title || `${product.title} | Fast US Shipping — Same-Day Dispatch`,
     description:
       product.seo_meta?.meta_description ||
-      "Ships same-day from verified US warehouses via tracked USPS. Arrives in 3–5 business days.",
+      "Free domestic delivery with fast dispatch. Verified quality product.",
   };
 }
 
@@ -41,7 +40,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   if (!product) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center space-y-4">
         <h1 className="text-2xl font-bold text-slate-900">Product Unavailable</h1>
         <p className="text-sm text-slate-500">This item is currently out of stock.</p>
       </div>
@@ -86,59 +85,62 @@ export default async function ProductDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
+    /* pb-36 on mobile ensures full scrolling clearance above the sticky buy bar! */
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-6 pb-36 sm:pb-16 space-y-4 sm:space-y-6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
 
-      {/* Mobile-Only Smart Continue Shopping / Back Button */}
+      {/* Sleek round back button with no excess top space */}
       <ProductBackButton />
 
       {/* Main Product Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-        {/* Left Column: Interactive Visual Showcase (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
-          {/* Breadcrumb & Ratings */}
-          <div className="space-y-2.5">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span className="font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5 text-emerald-600" />
-                Free Tracked Delivery (3–5 Days)
-              </span>
-
-              {/* Clean Rating Without Verified Buyers Text */}
-              <div className="flex items-center gap-1 text-amber-500 font-bold">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                <span className="text-slate-900 ml-0.5">
-                  {rating.toFixed(1)}
-                </span>
-                <span className="text-slate-400 font-normal">
-                  ({reviewCount})
-                </span>
-              </div>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-snug">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
+        {/* Left Column: Visual Showcase (7 cols) */}
+        <div className="lg:col-span-7 space-y-4">
+          {/* Title & In-Stock Status (no unwanted warehouse stock details) */}
+          <div className="space-y-1.5">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-snug">
               {product.title}
             </h1>
-            <p className="text-xs font-semibold text-slate-400">
-              In Stock • US Domestic Warehouse
+            <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-dot" />
+              In Stock
             </p>
           </div>
 
-          {/* Dedicated Interactive Product Gallery */}
+          {/* Interactive Product Gallery */}
           <ProductGallery
-            images={product.images && product.images.length > 0 ? product.images : [product.hero_image_url || "/placeholder.jpg"]}
+            images={
+              product.images && product.images.length > 0
+                ? product.images
+                : [product.hero_image_url || "/placeholder.jpg"]
+            }
             title={product.title}
           />
+
+          {/* Free Delivery & Rating opposite each other below images */}
+          <div className="flex items-center justify-between py-2 px-1 text-xs border-b border-slate-100">
+            <span className="font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 flex items-center gap-1.5">
+              <Truck className="w-3.5 h-3.5 text-emerald-600" />
+              Free Delivery
+            </span>
+
+            {/* Clean Rating */}
+            <div className="flex items-center gap-1 text-amber-500 font-bold">
+              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <span className="text-slate-900 ml-0.5">{rating.toFixed(1)}</span>
+              <span className="text-slate-400 font-normal">({reviewCount})</span>
+            </div>
+          </div>
         </div>
 
-        {/* Right Column: Pricing & Bundle Selector + Accordions Below Pricing (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
+        {/* Right Column: Pricing & Bundle Selector + Accordions (5 cols) */}
+        <div className="lg:col-span-5 space-y-5">
           <ProductInteractivePanel product={product} variant={primaryVariant} />
 
-          {/* Clean Compact Consumer Accordions (Moved Below Pricing) */}
+          {/* Compact Accordions: Details, Damage Replacement & FAQs */}
           <ProductAccordion product={product} variant={primaryVariant} />
         </div>
       </div>
