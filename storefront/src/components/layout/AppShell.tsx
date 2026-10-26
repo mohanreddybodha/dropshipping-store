@@ -75,15 +75,11 @@ export default function AppShell({ children }: AppShellProps) {
         </Suspense>
       )}
 
-      {/* Main Content with bottom padding on mobile when bottom nav is active */}
-      <main className={`flex-1 ${!isProduct ? "pb-16 md:pb-0" : ""}`}>{children}</main>
+      {/* Main Content: Adds bottom padding on mobile non-home screens so bottom nav doesn't overlap */}
+      <main className={`flex-1 ${!isProduct && !isHome ? "pb-20 md:pb-0" : ""}`}>{children}</main>
 
-      {/* Full Retail Footer (desktop view on home) */}
-      {isHome && (
-        <div className="hidden md:block">
-          <Footer />
-        </div>
-      )}
+      {/* Retail Trust Pillars & Footer on Home (Shown on both mobile & desktop with safe clearance above nav) */}
+      {isHome && <Footer />}
 
       {/* Native App-Style Mobile Bottom Navigation Bar: Hidden on product pages and checkout */}
       {!isProduct && <MobileBottomNav />}
