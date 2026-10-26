@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dropship_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///data/ecommerce.db}
+      - CJ_API_KEY=${CJ_API_KEY}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - TARGET_COUNTRY_CODE=${TARGET_COUNTRY_CODE:-US}
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - dropship_network
+
+  storefront:
+    build:
+      context: ./storefront
+      dockerfile: Dockerfile
+    container_name: dropship_storefront
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - dropship_network
+
+networks:
+  dropship_network:
+    driver: bridge

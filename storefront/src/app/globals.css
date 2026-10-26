@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 15, 23, 42;
+  --background-rgb: 248, 250, 252;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  scroll-behavior: smooth;
+}
+
+/* ── Pulsing green dot animation ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.15); }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ── Announcement ticker scroll ── */
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-tape {
+  display: flex;
+  width: max-content;
+  animation: ticker 28s linear infinite;
+}
+.ticker-tape:hover {
+  animation-play-state: paused;
+}
+
+/* ── Fade-up scroll reveal ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.fade-up-delay-1 { animation-delay: 60ms; }
+.fade-up-delay-2 { animation-delay: 120ms; }
+.fade-up-delay-3 { animation-delay: 180ms; }
+.fade-up-delay-4 { animation-delay: 240ms; }
+
+/* ── Category promo card shimmer ── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.card-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  background-size: 400px 100%;
+  animation: shimmer 2.8s infinite;
+}
+
+/* ── Hide scrollbar utility ── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Smooth scale badge ── */
+@keyframes scaleBadge {
+  0%   { transform: scale(0.7); opacity: 0; }
+  80%  { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-scale-badge {
+  animation: scaleBadge 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
