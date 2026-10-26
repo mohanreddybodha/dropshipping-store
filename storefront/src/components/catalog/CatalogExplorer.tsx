@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowUpDown, Filter, X, Check, ChevronDown } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { Product } from "../../lib/types";
 import ProductCard from "./ProductCard";
 
@@ -41,14 +41,31 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // URL State
+  // Active URL State
   const activeCategory = searchParams.get("category") || "All Products";
   const activeSearch = searchParams.get("search") || "";
 
   // Local Filter States
   const [selectedPriceRange, setSelectedPriceRange] = useState<number>(0);
   const [sortBy, setSortBy] = useState<string>("featured");
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState<boolean>(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
+
+  // Pending Modal States (User adjusts these; they ONLY apply when "Apply Filters" is clicked!)
+  const [pendingCategory, setPendingCategory] = useState<string>(activeCategory);
+  const [pendingPriceRange, setPendingPriceRange] = useState<number>(selectedPriceRange);
+  const [pendingSortBy, setPendingSortBy] = useState<string>(sortBy);
+
+  // Listen to open_filter event triggered by the top Navbar icon
+  useEffect(() => {
+    const handleOpen = () => {
+      setPendingCategory(activeCategory);
+      setPendingPriceRange(selectedPriceRange);
+      setPendingSortBy(sortBy);
+      setIsFilterModalOpen(true);
+    };
+    window.addEventListener("app:open_filter", handleOpen);
+    return () => window.removeEventListener("app:open_filter", handleOpen);
+  }, [activeCategory, selectedPriceRange, sortBy]);
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
@@ -99,7 +116,7 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
       if (sortBy === "price_asc") return priceA - priceB;
       if (sortBy === "price_desc") return priceB - priceA;
       if (sortBy === "rating") return ratingB - ratingA;
-      return a.id - b.id; // Featured default
+      return a.id - b.id;
     });
 
     return result;
@@ -132,19 +149,27 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
   const totalItems = filteredProducts.length;
   const hasMore = visibleCount < totalItems;
 
-  const handleCategoryChange = (cat: string) => {
+  // Apply filters ONLY when the user clicks the "Apply Filters" button in the modal!
+  const handleApplyFilters = () => {
+    setSelectedPriceRange(pendingPriceRange);
+    setSortBy(pendingSortBy);
+
     const params = new URLSearchParams(searchParams.toString());
-    if (cat === "All Products") {
+    if (pendingCategory === "All Products") {
       params.delete("category");
     } else {
-      params.set("category", cat);
+      params.set("category", pendingCategory);
     }
     router.push(`/?${params.toString()}`);
+    setIsFilterModalOpen(false);
   };
 
   const clearAllFilters = () => {
     setSelectedPriceRange(0);
     setSortBy("featured");
+    setPendingCategory("All Products");
+    setPendingPriceRange(0);
+    setPendingSortBy("featured");
     router.push("/");
   };
 
@@ -152,92 +177,22 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
     activeCategory !== "All Products" || activeSearch || selectedPriceRange !== 0 || sortBy !== "featured";
 
   return (
-    <div id="catalog-section" className="space-y-4 sm:space-y-6">
-      {/* ── Single-Row Compact Control Bar (Replaces bulky "All Products" card) ── */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-2.5 sm:p-4 shadow-sm flex items-center justify-between gap-2 sm:gap-4">
-        {/* Left: Category Dropdown */}
-        <div className="relative flex-1 sm:flex-initial sm:min-w-[200px]">
-          <select
-            value={activeCategory}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 text-xs sm:text-sm font-bold rounded-xl pl-3 pr-8 py-2 sm:py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer appearance-none truncate"
-            aria-label="Filter by category"
-          >
-            {CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-        </div>
-
-        {/* Right (Mobile): Dedicated "Filter & Sort" Button */}
-        <div className="flex md:hidden items-center">
-          <button
-            type="button"
-            onClick={() => setIsMobileFilterOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-95 whitespace-nowrap"
-            aria-label="Open Filter and Sort options"
-          >
-            <Filter className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Filter & Sort</span>
-            {(selectedPriceRange !== 0 || sortBy !== "featured") && (
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            )}
-          </button>
-        </div>
-
-        {/* Right (Desktop): Price Ranges & Sort */}
-        <div className="hidden md:flex items-center gap-3">
-          {/* Desktop Price Range Selector */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
-            {PRICE_RANGES.map((r, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedPriceRange(idx)}
-                className={`px-3 py-1.5 rounded-lg transition ${
-                  selectedPriceRange === idx
-                    ? "bg-white text-slate-900 shadow-sm font-bold"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Desktop Sort Dropdown */}
-          <div className="relative flex items-center">
-            <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl pl-8 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer appearance-none"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  Sort: {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Item count badge on desktop */}
-          <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-100">
-            {totalItems} items
-          </span>
-        </div>
-      </div>
-
-      {/* Active Filter Chips Bar (Shown only when filters are active) */}
+    <div id="catalog-section" className="space-y-3">
+      {/* Active Filter Chips Bar (Shown cleanly only when filters are active) */}
       {hasActiveFilters && (
-        <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs">
-          <span className="text-slate-400 font-semibold text-[11px]">Active:</span>
+        <div className="flex flex-wrap items-center gap-2 pb-1 text-xs">
+          <span className="text-slate-400 font-semibold text-[11px]">Filters:</span>
           {activeCategory !== "All Products" && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold text-[11px]">
               {activeCategory}
-              <button onClick={() => handleCategoryChange("All Products")} aria-label="Clear category">
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.delete("category");
+                  router.push(`/?${params.toString()}`);
+                }}
+                aria-label="Remove category"
+              >
                 <X className="w-3 h-3 hover:text-red-600" />
               </button>
             </span>
@@ -251,7 +206,7 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
                   params.delete("search");
                   router.push(`/?${params.toString()}`);
                 }}
-                aria-label="Clear search"
+                aria-label="Remove search"
               >
                 <X className="w-3 h-3 hover:text-red-600" />
               </button>
@@ -260,7 +215,15 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
           {selectedPriceRange !== 0 && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold text-[11px]">
               {PRICE_RANGES[selectedPriceRange].label}
-              <button onClick={() => setSelectedPriceRange(0)} aria-label="Clear price filter">
+              <button onClick={() => setSelectedPriceRange(0)} aria-label="Remove price filter">
+                <X className="w-3 h-3 hover:text-red-600" />
+              </button>
+            </span>
+          )}
+          {sortBy !== "featured" && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-800 border border-slate-200 rounded-full font-bold text-[11px]">
+              Sort: {SORT_OPTIONS.find((s) => s.value === sortBy)?.label}
+              <button onClick={() => setSortBy("featured")} aria-label="Reset sort">
                 <X className="w-3 h-3 hover:text-red-600" />
               </button>
             </span>
@@ -269,122 +232,139 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
             onClick={clearAllFilters}
             className="text-slate-500 hover:text-rose-600 underline font-semibold text-[11px] ml-1"
           >
-            Reset
+            Clear all
           </button>
         </div>
       )}
 
-      {/* Mobile Slide-Over Filter & Sort Drawer (z-[60] renders safely above bottom nav z-50) */}
-      {isMobileFilterOpen && (
-        <div className="md:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex justify-end">
-          <div className="w-full max-w-xs bg-white h-full p-6 space-y-6 shadow-2xl flex flex-col justify-between overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+      {/* ── Slide-Over Sort & Filter Drawer ── */}
+      {isFilterModalOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex justify-end">
+          <div className="w-full max-w-sm bg-white h-full p-6 space-y-6 shadow-2xl flex flex-col justify-between overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b pb-4">
-                <h3 className="text-lg font-black text-slate-900">Filter & Sort</h3>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">Sort & Filter</h3>
+                  <p className="text-xs text-slate-400">Customize catalog view</p>
+                </div>
                 <button
-                  onClick={() => setIsMobileFilterOpen(false)}
-                  className="p-1 rounded-full text-slate-400 hover:text-slate-700"
-                  aria-label="Close filters"
+                  type="button"
+                  onClick={() => setIsFilterModalOpen(false)}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 bg-slate-100"
+                  aria-label="Close modal"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Category Filter */}
+              {/* 1. Category Selection (Does NOT auto-close modal!) */}
               <div className="space-y-2.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Category
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Select Category
                 </label>
                 <div className="space-y-1.5">
-                  {CATEGORIES.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => {
-                        handleCategoryChange(cat);
-                        setIsMobileFilterOpen(false);
-                      }}
-                      className={`w-full text-left py-2 px-3 text-xs rounded-xl font-bold border flex items-center justify-between transition ${
-                        activeCategory === cat
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                          : "bg-slate-50 text-slate-700 border-slate-200"
-                      }`}
-                    >
-                      <span>{cat}</span>
-                      {activeCategory === cat && <Check className="w-4 h-4 text-emerald-600" />}
-                    </button>
-                  ))}
+                  {CATEGORIES.map((cat) => {
+                    const isSelected = pendingCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setPendingCategory(cat)}
+                        className={`w-full text-left py-2.5 px-3.5 text-xs rounded-xl font-bold border flex items-center justify-between transition ${
+                          isSelected
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-400 shadow-xs"
+                            : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        <span>{cat}</span>
+                        {isSelected && <Check className="w-4 h-4 text-emerald-600" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Price Filter */}
+              {/* 2. Price Range Selection */}
               <div className="space-y-2.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Price Range
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {PRICE_RANGES.map((r, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedPriceRange(idx)}
-                      className={`py-2 px-3 text-xs rounded-xl font-bold border transition ${
-                        selectedPriceRange === idx
-                          ? "bg-emerald-600 text-white border-emerald-600"
-                          : "bg-slate-50 text-slate-700 border-slate-200"
-                      }`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
+                  {PRICE_RANGES.map((r, idx) => {
+                    const isSelected = pendingPriceRange === idx;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setPendingPriceRange(idx)}
+                        className={`py-2 px-3 text-xs rounded-xl font-bold border transition ${
+                          isSelected
+                            ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                            : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        {r.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Sort By */}
+              {/* 3. Sort By Selection */}
               <div className="space-y-2.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Sort By
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Sort Order
                 </label>
                 <div className="space-y-1.5">
-                  {SORT_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setSortBy(opt.value)}
-                      className={`w-full text-left py-2 px-3 text-xs rounded-xl font-bold border flex items-center justify-between transition ${
-                        sortBy === opt.value
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                          : "bg-slate-50 text-slate-700 border-slate-200"
-                      }`}
-                    >
-                      <span>{opt.label}</span>
-                      {sortBy === opt.value && <Check className="w-4 h-4 text-emerald-600" />}
-                    </button>
-                  ))}
+                  {SORT_OPTIONS.map((opt) => {
+                    const isSelected = pendingSortBy === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setPendingSortBy(opt.value)}
+                        className={`w-full text-left py-2.5 px-3.5 text-xs rounded-xl font-bold border flex items-center justify-between transition ${
+                          isSelected
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-400 shadow-xs"
+                            : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <Check className="w-4 h-4 text-emerald-600" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            <button
-              onClick={() => setIsMobileFilterOpen(false)}
-              className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-md text-sm sticky bottom-0"
-            >
-              Show {totalItems} Results
-            </button>
+            {/* Sticky "Apply Filters" Button at the bottom */}
+            <div className="space-y-2 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={handleApplyFilters}
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl shadow-lg shadow-emerald-600/25 text-sm transition active:scale-[0.98]"
+              >
+                Apply Filters
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Product Grid */}
+      {/* ── Product Grid: Zero empty space, direct and fast flow ── */}
       {visibleProducts.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-4">
-          <p className="text-slate-500 font-medium">No products match your selected filters.</p>
+        <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-3">
+          <p className="text-slate-500 text-sm font-medium">No products match your selected filters.</p>
           <button
             onClick={clearAllFilters}
-            className="px-6 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl"
+            className="px-5 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl"
           >
             Reset Filters
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-5">
           {visibleProducts.map((product) => (
             <ProductCard key={product.pid} product={product} />
           ))}
@@ -397,17 +377,10 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
       {/* Loading indicator */}
       {hasMore && (
         <div className="flex items-center justify-center py-6">
-          <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-slate-500">
             <div className="w-4 h-4 border-2 border-slate-300 border-t-emerald-600 rounded-full animate-spin" />
             Loading more products…
           </div>
-        </div>
-      )}
-
-      {/* End of catalog */}
-      {!hasMore && totalItems > PAGE_SIZE && (
-        <div className="text-center py-4 text-xs font-semibold text-slate-400">
-          All {totalItems} products loaded ✓
         </div>
       )}
     </div>

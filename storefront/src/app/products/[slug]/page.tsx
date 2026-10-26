@@ -85,8 +85,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   };
 
   return (
-    /* pb-36 on mobile ensures full scrolling clearance above the sticky buy bar! */
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-6 pb-36 sm:pb-16 space-y-4 sm:space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-5 pb-24 sm:pb-10 space-y-4 sm:space-y-6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
@@ -99,8 +98,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
         {/* Left Column: Visual Showcase (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
-          {/* Title & In-Stock Status (no unwanted warehouse stock details) */}
-          <div className="space-y-1.5">
+          {/* Title & In-Stock Status (clean, no duplicate stock badges) */}
+          <div className="space-y-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-snug">
               {product.title}
             </h1>
@@ -136,12 +135,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Right Column: Pricing & Bundle Selector + Accordions (5 cols) */}
-        <div className="lg:col-span-5 space-y-5">
+        {/* Right Column: Pricing & Bundle Selector + Product Details Accordion (5 cols) */}
+        <div className="lg:col-span-5 space-y-4 sm:space-y-5">
           <ProductInteractivePanel product={product} variant={primaryVariant} />
 
-          {/* Compact Accordions: Details, Damage Replacement & FAQs */}
-          <ProductAccordion product={product} variant={primaryVariant} />
+          {/* Compact Product Details & Highlights Accordion (collapsed by default) */}
+          <ProductAccordion product={product} />
         </div>
       </div>
 

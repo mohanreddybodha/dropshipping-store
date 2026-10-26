@@ -1,222 +1,166 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Flame, Check, AlertCircle } from "lucide-react";
-import { Product, Variant, SizeOption } from "../../lib/types";
+import { Check } from "lucide-react";
+import { Product, Variant } from "../../lib/types";
 
 interface SizeSelectorProps {
   product: Product;
   selectedSize: string;
+  selectedColor?: string;
   onSelectSize: (size: string, variant: Variant) => void;
+  onSelectColor?: (color: string) => void;
   currentVariant: Variant;
 }
+
+const APPAREL_SIZES = ["S", "M", "L", "XL"];
+const DEFAULT_COLORS = ["Black", "White", "Navy Blue", "Beige", "Gray"];
 
 export default function SizeSelector({
   product,
   selectedSize,
+  selectedColor,
   onSelectSize,
+  onSelectColor,
   currentVariant,
 }: SizeSelectorProps) {
-  // Determine realistic size options and stock clearance levels
-  const sizeOptions: SizeOption[] = useMemo(() => {
-    // 1. If product already has multiple variants, map each variant directly
-    if (product.variants && product.variants.length > 1) {
-      return product.variants.map((v, idx) => {
-        const name = v.size || v.variant_name || (idx === 0 ? "Standard" : idx === 1 ? "Large" : `Option ${idx + 1}`);
-        return {
-          name,
-          stock: v.us_warehouse_stock,
-          isClearance: v.us_warehouse_stock > 0 && v.us_warehouse_stock < 15,
-          isSoldOut: v.us_warehouse_stock <= 0,
-          sku: v.sku,
-        };
-      });
-    }
+  const titleLower = product.title.toLowerCase();
+  const catLower = (product.category || "").toLowerCase();
 
-    // 2. Intelligently determine size options based on product type/category
-    const titleLower = product.title.toLowerCase();
-    const catLower = (product.category || "").toLowerCase();
-
-    const isApparelOrWearable =
+  // Check if product is apparel / clothing
+  const isApparel = useMemo(() => {
+    return (
+      catLower.includes("apparel") ||
+      catLower.includes("cloth") ||
+      catLower.includes("fashion") ||
+      titleLower.includes("dress") ||
       titleLower.includes("romper") ||
       titleLower.includes("women") ||
       titleLower.includes("hooded") ||
       titleLower.includes("pocket") ||
       titleLower.includes("shirt") ||
       titleLower.includes("sleeve") ||
-      titleLower.includes("hat") ||
-      titleLower.includes("glove");
+      titleLower.includes("jacket") ||
+      titleLower.includes("pants") ||
+      titleLower.includes("legging") ||
+      titleLower.includes("underwear")
+    );
+  }, [titleLower, catLower]);
 
-    const baseStock = currentVariant.us_warehouse_stock || 60;
+  // If product has multiple genuine variants in DB
+  const hasMultipleVariants = product.variants && product.variants.length > 1;
 
-    if (isApparelOrWearable) {
-      return [
-        {
-          name: "S",
-          stock: Math.max(3, baseStock % 9),
-          isClearance: true, // Low clearance stock
-          isSoldOut: false,
-        },
-        {
-          name: "M",
-          stock: Math.max(25, Math.floor(baseStock * 0.55)),
-          isClearance: false,
-          isSoldOut: false,
-        },
-        {
-          name: "L",
-          stock: Math.max(7, baseStock % 14),
-          isClearance: true, // Clearance alert
-          isSoldOut: false,
-        },
-        {
-          name: "XL",
-          stock: 0,
-          isClearance: false,
-          isSoldOut: true, // Sold out clearance state
-        },
-      ];
-    }
-
-    // Hardware, Home, Kitchen, Tech, Auto items
-    const isMultiPackOrDimension =
-      titleLower.includes("pack") ||
-      titleLower.includes("pcs") ||
-      titleLower.includes("set") ||
-      titleLower.includes("shelf") ||
-      titleLower.includes("rack") ||
-      titleLower.includes("board") ||
-      titleLower.includes("light") ||
-      titleLower.includes("cord") ||
-      titleLower.includes("cable") ||
-      titleLower.includes("organizer");
-
-    if (isMultiPackOrDimension) {
-      return [
-        {
-          name: "Standard",
-          stock: Math.max(18, Math.floor(baseStock * 0.7)),
-          isClearance: false,
-          isSoldOut: false,
-        },
-        {
-          name: "Pro / Large",
-          stock: Math.max(5, baseStock % 11),
-          isClearance: true,
-          isSoldOut: false,
-        },
-      ];
-    }
-
-    // Default sizing option for impulse domestic goods
-    return [
-      {
-        name: "Standard",
-        stock: baseStock,
-        isClearance: baseStock < 15,
-        isSoldOut: baseStock <= 0,
-      },
-      {
-        name: "Deluxe / Plus",
-        stock: Math.max(6, baseStock % 12),
-        isClearance: true,
-        isSoldOut: false,
-      },
-    ];
-  }, [product, currentVariant]);
-
-  const activeOption = sizeOptions.find((o) => o.name === selectedSize) || sizeOptions[0];
+  // If not apparel and has only 1 standard variant, DO NOT fabricate mock "Deluxe / Plus" options!
+  if (!isApparel && !hasMultipleVariants) {
+    return null;
+  }
 
   return (
-    <div className="space-y-3 pt-2">
-      <div className="flex items-center justify-between text-xs">
-        <label className="font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-          <span>Select Size / Option:</span>
-          <span className="text-emerald-700 font-extrabold font-mono">[{selectedSize}]</span>
-        </label>
+    <div className="space-y-4 pt-1 border-t border-slate-100">
+      {/* Apparel Size Selection */}
+      {isApparel && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold uppercase tracking-wider text-slate-700">
+              Select Size: <strong className="text-emerald-700 font-mono">[{selectedSize || "M"}]</strong>
+            </span>
+          </div>
 
-        {activeOption && (
-          <span
-            className={`font-bold flex items-center gap-1 ${
-              activeOption.isSoldOut
-                ? "text-rose-600"
-                : activeOption.isClearance
-                ? "text-amber-600"
-                : "text-emerald-700"
-            }`}
-          >
-            {activeOption.isClearance && <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />}
-            {activeOption.isSoldOut
-              ? "Size Sold Out"
-              : activeOption.isClearance
-              ? `Clearance: Only ${activeOption.stock} Left!`
-              : `In Stock: ${activeOption.stock} Units`}
-          </span>
-        )}
-      </div>
-
-      {/* Size Option Selector Pills */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        {sizeOptions.map((opt) => {
-          const isSelected = selectedSize === opt.name;
-          return (
-            <button
-              key={opt.name}
-              type="button"
-              disabled={opt.isSoldOut}
-              onClick={() => onSelectSize(opt.name, currentVariant)}
-              className={`relative py-3 px-3 rounded-2xl border-2 text-center transition-all duration-200 flex flex-col items-center justify-center gap-1 ${
-                opt.isSoldOut
-                  ? "bg-slate-100 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed line-through"
-                  : isSelected
-                  ? "bg-emerald-50/60 border-emerald-600 text-slate-900 shadow-sm"
-                  : "bg-white border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50"
-              }`}
-            >
-              {/* Size Name */}
-              <span className="text-sm font-black tracking-tight">{opt.name}</span>
-
-              {/* Stock Clearance Pill */}
-              <div className="text-[10px] font-bold">
-                {opt.isSoldOut ? (
-                  <span className="text-rose-500">Sold Out</span>
-                ) : opt.isClearance ? (
-                  <span className="inline-flex items-center gap-0.5 text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded-full font-black text-[9px] uppercase tracking-tight">
-                    <Flame className="w-2.5 h-2.5 fill-amber-600 text-amber-600" />
-                    {opt.stock} Left
-                  </span>
-                ) : (
-                  <span className="text-emerald-700 font-semibold">{opt.stock} In Stock</span>
-                )}
-              </div>
-
-              {/* Selected Checkmark Badge */}
-              {isSelected && (
-                <div className="absolute top-1 right-1.5 text-emerald-600">
-                  <Check className="w-3.5 h-3.5" />
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Stock Clearance Alert Banner */}
-      {activeOption?.isClearance && !activeOption.isSoldOut && (
-        <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-center gap-2.5 text-xs text-amber-900">
-          <Flame className="w-4 h-4 text-amber-600 fill-amber-500 flex-shrink-0" />
-          <p className="font-semibold leading-tight">
-            <strong>Stock Clearance Alert:</strong> Only {activeOption.stock} units remaining in domestic fulfillment center. Ships today before clearance inventory exhausts.
-          </p>
+          <div className="grid grid-cols-4 gap-2">
+            {APPAREL_SIZES.map((size) => {
+              const isSelected = (selectedSize || "M") === size;
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => onSelectSize(size, currentVariant)}
+                  className={`py-2 px-3 rounded-xl border text-center transition-all duration-150 font-bold text-xs flex items-center justify-center gap-1 ${
+                    isSelected
+                      ? "bg-slate-900 border-slate-900 text-white shadow-sm"
+                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                  }`}
+                >
+                  <span>{size}</span>
+                  {isSelected && <Check className="w-3 h-3 text-emerald-400" />}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {activeOption?.isSoldOut && (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-2.5 text-xs text-rose-800">
-          <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-          <p className="font-semibold leading-tight">
-            This size is currently sold out in all US warehouses. Please choose another size option above.
-          </p>
+      {/* Apparel Color Selection */}
+      {isApparel && onSelectColor && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold uppercase tracking-wider text-slate-700">
+              Select Color: <strong className="text-emerald-700">[{selectedColor || "Black"}]</strong>
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {DEFAULT_COLORS.map((col) => {
+              const isSelected = (selectedColor || "Black") === col;
+              return (
+                <button
+                  key={col}
+                  type="button"
+                  onClick={() => onSelectColor(col)}
+                  className={`py-1.5 px-3 rounded-xl border text-xs font-semibold transition-all duration-150 flex items-center gap-1.5 ${
+                    isSelected
+                      ? "bg-slate-900 border-slate-900 text-white shadow-sm font-bold"
+                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                  }`}
+                >
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full border border-black/10 ${
+                      col === "Black"
+                        ? "bg-slate-950"
+                        : col === "White"
+                        ? "bg-white"
+                        : col === "Navy Blue"
+                        ? "bg-blue-900"
+                        : col === "Beige"
+                        ? "bg-amber-200"
+                        : "bg-slate-400"
+                    }`}
+                  />
+                  <span>{col}</span>
+                  {isSelected && <Check className="w-3 h-3 text-emerald-400" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Multi-Variant Product Option Selector (if not apparel, but has real distinct variants) */}
+      {!isApparel && hasMultipleVariants && (
+        <div className="space-y-2">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+            Select Option / Model:
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {product.variants.map((v, idx) => {
+              const label = v.variant_name || v.size || `Option ${idx + 1}`;
+              const isSelected = currentVariant.vid === v.vid;
+              return (
+                <button
+                  key={v.vid}
+                  type="button"
+                  onClick={() => onSelectSize(label, v)}
+                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all text-left flex items-center justify-between ${
+                    isSelected
+                      ? "bg-slate-900 border-slate-900 text-white shadow-sm"
+                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="truncate">{label}</span>
+                  {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
