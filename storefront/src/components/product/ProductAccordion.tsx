@@ -35,7 +35,7 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
 
   return (
     <div className="bg-white border border-slate-200/90 rounded-2xl shadow-sm overflow-hidden text-xs">
-      <div className="p-4 sm:p-4.5">
+      <div className="p-3.5 sm:p-4">
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
@@ -47,14 +47,19 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
             Product Details & Highlights
           </span>
           <ChevronDown
-            className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+            className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${
               isOpen ? "rotate-180 text-emerald-600" : ""
             }`}
           />
         </button>
 
-        {isOpen && (
-          <div className="pt-3 space-y-3 text-slate-600 animate-fade-in">
+        {/* Google-style smooth CSS Grid transition (no hardcoded height, silky 60fps) */}
+        <div
+          className={`grid transition-all duration-300 ease-in-out ${
+            isOpen ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="overflow-hidden space-y-3 text-slate-600">
             {cleanDescriptionHtml && (
               <div
                 className="text-xs text-slate-600 leading-relaxed"
@@ -63,7 +68,7 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
             )}
 
             {cleanFeatures.length > 0 && (
-              <div className="grid grid-cols-1 gap-2 pt-1">
+              <div className="grid grid-cols-1 gap-1.5 pt-1">
                 {cleanFeatures.map((feat, idx) => (
                   <div
                     key={idx}
@@ -79,7 +84,7 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
