@@ -1,0 +1,30 @@
+# Environment and secrets
+.env
+.env*.local
+*.env
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases
+data/*.db
+data/*.sqlite3
+
+# Node / Next.js
+storefront/node_modules/
+storefront/.next/
+storefront/out/
+storefront/build/
+storefront/.turbo/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

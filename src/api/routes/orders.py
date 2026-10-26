@@ -1,0 +1,195 @@
+"""Secure Order Processing & Cryptographically Verified Webhook Endpoints."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, ValidationError
+from sqlalchemy.orm import Session
+
+from src.api.security import verify_payment_webhook
+from src.models.database import Order, get_session
+from src.schemas.order import PaymentWebhookPayload
+from src.services.order_router import (
+    CircuitBreakerOpenException,
+    CustomerShippingAddress,
+    LogisticsMissException,
+    OrderLineItem,
+    OrderRouter,
+    OrderRouterException,
+    OrderSubmissionRequest,
+    OrderSubmissionResult,
+)
+
+logger = logging.getLogger("orders_api")
+router = APIRouter()
+
+
+def get_db():
+    session = get_session()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+class OrderLookupResponse(BaseModel):
+    id: int
+    internal_order_number: str
+    cj_order_id: Optional[str]
+    status: str
+    total_retail: float
+    total_wholesale: float
+    net_profit: float
+    carrier_name: str
+    tracking_number: Optional[str]
+    shipping_name: str
+    shipping_city: str
+    shipping_zip: str
+
+
+class CustomerOrderSummary(BaseModel):
+    id: int
+    internal_order_number: str
+    status: str
+    total_retail: float
+    carrier_name: str
+    tracking_number: Optional[str] = None
+    shipping_name: str
+    shipping_city: str
+    shipping_province: str
+    shipping_zip: str
+    created_at: str
+    items: Optional[List[Dict[str, Any]]] = None
+
+
+@router.post("/webhook/payment", response_model=OrderSubmissionResult)
+async def handle_payment_captured_webhook(
+    request: Request,
+    raw_body: bytes = Depends(verify_payment_webhook),
+    db: Session = Depends(get_db),
+):
+    """Cryptographically verified payment captured webhook endpoint.
+
+    Pillars enforced:
+    1. Cryptographic HMAC-SHA256 signature verification (rejects fake webhooks).
+    2. Strict Pydantic v2 input sanitization (extra="forbid", regex validation).
+    3. Atomic database transaction with DLQ fallback.
+    4. 10s timeout and circuit breaker protection.
+    """
+    req_id = getattr(request.state, "request_id", "req_unknown")
+
+    # 1. Parse and validate through strict Pydantic schema
+    try:
+        payload = PaymentWebhookPayload.model_validate_json(raw_body)
+    except ValidationError as val_err:
+        safe_errors = [
+            {"loc": err.get("loc"), "msg": str(err.get("msg")), "type": err.get("type")}
+            for err in val_err.errors()
+        ]
+        logger.warning("[%s] Malformed webhook payload rejected: %s", req_id, safe_errors)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"error": "VALIDATION_ERROR", "details": safe_errors},
+        )
+
+    logger.info("[%s] Processing verified payment webhook for order: %s ($%.2f)", req_id, payload.order_id, payload.amount)
+
+    # 2. Map into OrderSubmissionRequest
+    customer_addr = CustomerShippingAddress(
+        name=payload.customer.name,
+        address1=payload.customer.address1,
+        address2=payload.customer.address2 or "",
+        city=payload.customer.city,
+        province=payload.customer.province,
+        zip_code=payload.customer.zip_code,
+        country_code=payload.customer.country_code,
+        phone=payload.customer.phone,
+        email=payload.customer.email,
+    )
+
+    line_items = [
+        OrderLineItem(
+            variant_id=item.variant_id,
+            sku=item.sku,
+            quantity=item.quantity,
+            unit_price=item.unit_price,
+        )
+        for item in payload.line_items
+    ]
+
+    order_request = OrderSubmissionRequest(
+        order_number=payload.order_id,
+        customer=customer_addr,
+        line_items=line_items,
+        logistic_name=payload.carrier_preference or "USPS US to US",
+        from_country_code="US",
+        pay_type="3",  # Dry-run / hold mode for testing/MVP
+        remark=f"Secure Webhook Order [{req_id}]",
+        stripe_payment_intent_id=payload.payment_intent_id,
+        total_retail=payload.amount,
+        total_wholesale=0.0,
+    )
+
+    # 3. Execute Defensive Order Router
+    router_service = OrderRouter()
+    result = router_service.submit_order(order_request, session=db)
+    return result
+
+
+@router.get("/orders", response_model=List[CustomerOrderSummary])
+def get_orders_by_customer_email(email: str, db: Session = Depends(get_db)):
+    """Fetch customer order history by customer email."""
+    clean_email = email.strip().lower()
+    if not clean_email:
+        raise HTTPException(status_code=400, detail="Email is required")
+
+    orders = (
+        db.query(Order)
+        .filter(Order.customer_email.ilike(clean_email))
+        .order_by(Order.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    return [
+        CustomerOrderSummary(
+            id=o.id,
+            internal_order_number=o.internal_order_number,
+            status=o.status,
+            total_retail=o.total_retail,
+            carrier_name=o.carrier_name or "USPS",
+            tracking_number=o.tracking_number,
+            shipping_name=o.shipping_name,
+            shipping_city=o.shipping_city,
+            shipping_province=o.shipping_province,
+            shipping_zip=o.shipping_zip,
+            created_at=o.created_at.isoformat() if o.created_at else "",
+            items=o.items_json,
+        )
+        for o in orders
+    ]
+
+
+@router.get("/orders/{order_number}", response_model=OrderLookupResponse)
+def get_order_by_number(order_number: str, db: Session = Depends(get_db)):
+    """Fetch order status and tracking details by internal order number."""
+    order = db.query(Order).filter(Order.internal_order_number == order_number).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    return OrderLookupResponse(
+        id=order.id,
+        internal_order_number=order.internal_order_number,
+        cj_order_id=order.cj_order_id,
+        status=order.status,
+        total_retail=order.total_retail,
+        total_wholesale=order.total_wholesale,
+        net_profit=order.net_profit,
+        carrier_name=order.carrier_name,
+        tracking_number=order.tracking_number,
+        shipping_name=order.shipping_name,
+        shipping_city=order.shipping_city,
+        shipping_zip=order.shipping_zip,
+    )
