@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowUpDown, Filter, ChevronLeft, ChevronRight, X, Check } from "lucide-react";
+import { ArrowUpDown, Filter, X, Check, ChevronDown } from "lucide-react";
 import { Product } from "../../lib/types";
 import ProductCard from "./ProductCard";
 
@@ -26,9 +26,19 @@ const SORT_OPTIONS = [
   { label: "Highest Rated", value: "rating" },
 ];
 
+const CATEGORIES = [
+  "All Products",
+  "Home & Kitchen",
+  "Workspace & Tech",
+  "Smart Lighting",
+  "Outdoor & Patio",
+  "Everyday Carry & Auto",
+];
+
+const PAGE_SIZE = 24;
+
 export default function CatalogExplorer({
   initialProducts,
-  categoriesSummary = {},
 }: CatalogExplorerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,9 +50,11 @@ export default function CatalogExplorer({
   // Local Filter States
   const [selectedPriceRange, setSelectedPriceRange] = useState<number>(0);
   const [sortBy, setSortBy] = useState<string>("featured");
-  const [currentPage, setCurrentPage] = useState<number>(1);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState<boolean>(false);
-  const itemsPerPage = 24;
+
+  // Infinite scroll state
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Filter & Sort Pipeline
   const filteredProducts = useMemo(() => {
@@ -53,7 +65,8 @@ export default function CatalogExplorer({
       result = result.filter(
         (p) =>
           (p.category && p.category.toLowerCase().includes(activeCategory.toLowerCase())) ||
-          (p.seo_meta?.category && p.seo_meta.category.toLowerCase().includes(activeCategory.toLowerCase()))
+          (p.seo_meta?.category &&
+            p.seo_meta.category.toLowerCase().includes(activeCategory.toLowerCase()))
       );
     }
 
@@ -85,7 +98,6 @@ export default function CatalogExplorer({
       const priceB = b.variants[0]?.retail_price_1x || 0;
       const ratingA = a.rating || 4.8;
       const ratingB = b.rating || 4.8;
-
       if (sortBy === "price_asc") return priceA - priceB;
       if (sortBy === "price_desc") return priceB - priceA;
       if (sortBy === "rating") return ratingB - ratingA;
@@ -95,13 +107,32 @@ export default function CatalogExplorer({
     return result;
   }, [initialProducts, activeCategory, activeSearch, selectedPriceRange, sortBy]);
 
-  // Pagination calculation
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activeCategory, activeSearch, selectedPriceRange, sortBy]);
+
+  // Infinite scroll via IntersectionObserver
+  const loadMore = useCallback(() => {
+    setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredProducts.length));
+  }, [filteredProducts.length]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
+
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
   const totalItems = filteredProducts.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-  const paginatedItems = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredProducts.slice(start, start + itemsPerPage);
-  }, [filteredProducts, currentPage, itemsPerPage]);
+  const hasMore = visibleCount < totalItems;
 
   const handleCategoryChange = (cat: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -110,82 +141,47 @@ export default function CatalogExplorer({
     } else {
       params.set("category", cat);
     }
-    setCurrentPage(1);
     router.push(`/?${params.toString()}#catalog-section`);
   };
 
   const clearAllFilters = () => {
     setSelectedPriceRange(0);
     setSortBy("featured");
-    setCurrentPage(1);
     router.push("/#catalog-section");
-  };
-
-  const handlePageSelect = (pageNumber: number) => {
-    if (pageNumber === currentPage) return;
-    setCurrentPage(pageNumber);
-    const targetElement = document.getElementById("catalog-section");
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  const getPageNumbers = (): (number | "...")[] => {
-    const pages: (number | "...")[] = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 4) {
-        pages.push(1, 2, 3, 4, 5, "...", totalPages);
-      } else if (currentPage >= totalPages - 3) {
-        pages.push(
-          1,
-          "...",
-          totalPages - 4,
-          totalPages - 3,
-          totalPages - 2,
-          totalPages - 1,
-          totalPages
-        );
-      } else {
-        pages.push(
-          1,
-          "...",
-          currentPage - 1,
-          currentPage,
-          currentPage + 1,
-          "...",
-          totalPages
-        );
-      }
-    }
-    return pages;
   };
 
   return (
     <div id="catalog-section" className="space-y-6">
       {/* Catalog Control Bar */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Results Count & Active Category */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              {activeCategory}
-            </h2>
-            <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full">
-              {totalItems} Items
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 font-medium">
-            Showing {(currentPage - 1) * itemsPerPage + 1}–
-            {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} verified in-stock products
-          </p>
+        {/* Results Count */}
+        <div className="flex items-center gap-2 min-w-0">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">
+            {activeSearch ? `"${activeSearch}"` : activeCategory}
+          </h2>
+          <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full flex-shrink-0">
+            {totalItems}
+          </span>
         </div>
 
         {/* Filter Controls */}
         <div className="flex flex-wrap items-center gap-3">
+          {/* Category dropdown (visible on all screen sizes) */}
+          <div className="relative flex items-center">
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 pointer-events-none" />
+            <select
+              value={activeCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer appearance-none"
+            >
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Mobile Filter Sheet Button */}
           <button
             onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
@@ -193,6 +189,11 @@ export default function CatalogExplorer({
           >
             <Filter className="w-3.5 h-3.5" />
             <span>Filter & Sort</span>
+            {(selectedPriceRange !== 0 || sortBy !== "featured") && (
+              <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[9px] font-black flex items-center justify-center">
+                !
+              </span>
+            )}
           </button>
 
           {/* Desktop Price Range Selector */}
@@ -200,10 +201,7 @@ export default function CatalogExplorer({
             {PRICE_RANGES.map((r, idx) => (
               <button
                 key={idx}
-                onClick={() => {
-                  setSelectedPriceRange(idx);
-                  setCurrentPage(1);
-                }}
+                onClick={() => setSelectedPriceRange(idx)}
                 className={`px-3 py-1.5 rounded-lg transition ${
                   selectedPriceRange === idx
                     ? "bg-white text-slate-900 shadow-sm font-bold"
@@ -220,10 +218,7 @@ export default function CatalogExplorer({
             <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
             <select
               value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => setSortBy(e.target.value)}
               className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl pl-8 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer appearance-none"
             >
               {SORT_OPTIONS.map((opt) => (
@@ -242,7 +237,7 @@ export default function CatalogExplorer({
           <span className="text-slate-500 font-semibold">Active filters:</span>
           {activeCategory !== "All Products" && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold">
-              Category: {activeCategory}
+              {activeCategory}
               <button onClick={() => handleCategoryChange("All Products")}>
                 <X className="w-3 h-3 hover:text-red-600" />
               </button>
@@ -250,7 +245,7 @@ export default function CatalogExplorer({
           )}
           {activeSearch && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold">
-              Search: &quot;{activeSearch}&quot;
+              Search: &ldquo;{activeSearch}&rdquo;
               <button
                 onClick={() => {
                   const params = new URLSearchParams(searchParams.toString());
@@ -264,7 +259,7 @@ export default function CatalogExplorer({
           )}
           {selectedPriceRange !== 0 && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold">
-              Price: {PRICE_RANGES[selectedPriceRange].label}
+              {PRICE_RANGES[selectedPriceRange].label}
               <button onClick={() => setSelectedPriceRange(0)}>
                 <X className="w-3 h-3 hover:text-red-600" />
               </button>
@@ -279,10 +274,10 @@ export default function CatalogExplorer({
         </div>
       )}
 
-      {/* Mobile Slide-Over Filter Drawer */}
+      {/* Mobile Filter Sheet — z-[60] ensures it renders ABOVE bottom nav (z-50) */}
       {isMobileFilterOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-end">
-          <div className="w-full max-w-xs bg-white h-full p-6 space-y-6 shadow-2xl flex flex-col justify-between overflow-y-auto">
+        <div className="md:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex justify-end">
+          <div className="w-full max-w-xs bg-white h-full p-6 space-y-6 shadow-2xl flex flex-col justify-between overflow-y-auto pb-[env(safe-area-inset-bottom)]">
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b pb-4">
                 <h3 className="text-lg font-black text-slate-900">Filter & Sort</h3>
@@ -294,6 +289,32 @@ export default function CatalogExplorer({
                 </button>
               </div>
 
+              {/* Category Filter */}
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Category
+                </label>
+                <div className="space-y-2">
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        handleCategoryChange(cat);
+                        setIsMobileFilterOpen(false);
+                      }}
+                      className={`w-full text-left py-2 px-3 text-xs rounded-xl font-bold border flex items-center justify-between transition ${
+                        activeCategory === cat
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                          : "bg-slate-50 text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      <span>{cat}</span>
+                      {activeCategory === cat && <Check className="w-4 h-4 text-emerald-600" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Price Filter */}
               <div className="space-y-2.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -303,10 +324,7 @@ export default function CatalogExplorer({
                   {PRICE_RANGES.map((r, idx) => (
                     <button
                       key={idx}
-                      onClick={() => {
-                        setSelectedPriceRange(idx);
-                        setCurrentPage(1);
-                      }}
+                      onClick={() => setSelectedPriceRange(idx)}
                       className={`py-2 px-3 text-xs rounded-xl font-bold border transition ${
                         selectedPriceRange === idx
                           ? "bg-emerald-600 text-white border-emerald-600"
@@ -328,10 +346,7 @@ export default function CatalogExplorer({
                   {SORT_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
-                      onClick={() => {
-                        setSortBy(opt.value);
-                        setCurrentPage(1);
-                      }}
+                      onClick={() => setSortBy(opt.value)}
                       className={`w-full text-left py-2 px-3 text-xs rounded-xl font-bold border flex items-center justify-between transition ${
                         sortBy === opt.value
                           ? "bg-emerald-50 text-emerald-800 border-emerald-300"
@@ -348,16 +363,16 @@ export default function CatalogExplorer({
 
             <button
               onClick={() => setIsMobileFilterOpen(false)}
-              className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-md text-sm"
+              className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-md text-sm sticky bottom-0"
             >
-              Apply Filters ({totalItems} Items)
+              Show {totalItems} Results
             </button>
           </div>
         </div>
       )}
 
-      {/* Retail 2/3/4-Column Product Grid */}
-      {paginatedItems.length === 0 ? (
+      {/* Product Grid */}
+      {visibleProducts.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-4">
           <p className="text-slate-500 font-medium">No products match your selected filters.</p>
           <button
@@ -369,69 +384,29 @@ export default function CatalogExplorer({
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-          {paginatedItems.map((product) => (
+          {visibleProducts.map((product) => (
             <ProductCard key={product.pid} product={product} />
           ))}
         </div>
       )}
 
-      {/* Numbered Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold text-slate-700 shadow-sm">
-          {/* Previous Button */}
-          <button
-            onClick={() => handlePageSelect(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition active:scale-95 text-slate-800"
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Previous</span>
-          </button>
+      {/* Infinite Scroll Sentinel */}
+      <div ref={sentinelRef} className="h-4" />
 
-          {/* Numbered Page Buttons */}
-          <div className="flex items-center gap-1.5 flex-wrap justify-center">
-            {getPageNumbers().map((pageItem, index) => {
-              if (pageItem === "...") {
-                return (
-                  <span
-                    key={`ellipsis-${index}`}
-                    className="w-8 h-8 flex items-center justify-center text-slate-400 font-bold select-none"
-                  >
-                    …
-                  </span>
-                );
-              }
-
-              const isCurrent = pageItem === currentPage;
-              return (
-                <button
-                  key={`page-${pageItem}`}
-                  onClick={() => handlePageSelect(pageItem as number)}
-                  className={`w-9 h-9 rounded-xl text-xs font-black transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer ${
-                    isCurrent
-                      ? "bg-slate-950 text-white shadow-md shadow-slate-900/20"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-950"
-                  }`}
-                  aria-label={`Go to page ${pageItem}`}
-                  aria-current={isCurrent ? "page" : undefined}
-                >
-                  {pageItem}
-                </button>
-              );
-            })}
+      {/* Loading indicator */}
+      {hasMore && (
+        <div className="flex items-center justify-center py-6">
+          <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
+            <div className="w-4 h-4 border-2 border-slate-300 border-t-emerald-600 rounded-full animate-spin" />
+            Loading more products…
           </div>
+        </div>
+      )}
 
-          {/* Next Button */}
-          <button
-            onClick={() => handlePageSelect(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition active:scale-95 text-slate-800"
-            aria-label="Next page"
-          >
-            <span>Next</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+      {/* End of catalog */}
+      {!hasMore && totalItems > PAGE_SIZE && (
+        <div className="text-center py-4 text-xs font-semibold text-slate-400">
+          All {totalItems} products loaded ✓
         </div>
       )}
     </div>
