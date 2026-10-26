@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from src.models.database import Product, ProductVariant, get_session
@@ -141,19 +142,33 @@ def get_active_catalog(
         term = f"%{search.strip()}%"
         query = query.filter(Product.title.ilike(term))
 
-    # 3. Price Filter
-    if min_price is not None or max_price is not None:
-        query = query.join(Product.variants)
-        if min_price is not None:
-            query = query.filter(ProductVariant.retail_price >= min_price)
-        if max_price is not None:
-            query = query.filter(ProductVariant.retail_price <= max_price)
+    # 3. Price Filter (using subquery/EXISTS to avoid duplicating product rows)
+    if min_price is not None:
+        query = query.filter(Product.variants.any(ProductVariant.retail_price >= min_price))
+    if max_price is not None:
+        query = query.filter(Product.variants.any(ProductVariant.retail_price <= max_price))
 
     # 4. Sorting
     if sort == "price_asc":
-        query = query.join(Product.variants).order_by(ProductVariant.retail_price.asc())
+        subq = (
+            db.query(
+                ProductVariant.product_id,
+                func.min(ProductVariant.retail_price).label("min_price"),
+            )
+            .group_by(ProductVariant.product_id)
+            .subquery()
+        )
+        query = query.outerjoin(subq, Product.id == subq.c.product_id).order_by(subq.c.min_price.asc())
     elif sort == "price_desc":
-        query = query.join(Product.variants).order_by(ProductVariant.retail_price.desc())
+        subq = (
+            db.query(
+                ProductVariant.product_id,
+                func.max(ProductVariant.retail_price).label("max_price"),
+            )
+            .group_by(ProductVariant.product_id)
+            .subquery()
+        )
+        query = query.outerjoin(subq, Product.id == subq.c.product_id).order_by(subq.c.max_price.desc())
     elif sort == "rating":
         query = query.order_by(Product.id.desc())
     else:  # featured / default
@@ -166,14 +181,14 @@ def get_active_catalog(
         clean_cat = cat_name or "Home & Kitchen"
         categories_summary[clean_cat] = categories_summary.get(clean_cat, 0) + 1
 
-    total_count = query.distinct().count()
+    total_count = query.count()
 
     # Determine pagination vs legacy list
     if page is not None or paginate:
         current_page = page or 1
         page_offset = (current_page - 1) * limit
         total_pages = max(1, math.ceil(total_count / limit))
-        products = query.distinct().offset(page_offset).limit(limit).all()
+        products = query.offset(page_offset).limit(limit).all()
 
         return PaginatedCatalogResponse(
             items=[_build_product_response(p) for p in products],
@@ -184,7 +199,7 @@ def get_active_catalog(
         )
 
     # Legacy flat list support
-    products = query.distinct().offset(offset).limit(limit).all()
+    products = query.offset(offset).limit(limit).all()
     return [_build_product_response(p) for p in products]
 
 

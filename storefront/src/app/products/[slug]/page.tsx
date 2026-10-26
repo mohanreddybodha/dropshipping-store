@@ -6,6 +6,7 @@ import {
   ProductInteractivePanel,
   ProductAccordion,
   MobileStickyBuyBar,
+  ProductBackButton,
 } from "../../../components/product";
 import { Star, Truck, ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
@@ -91,16 +92,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
 
-      {/* Top Left: Continue Shopping Button */}
-      <div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white border border-slate-200/90 px-4 py-2 rounded-xl transition shadow-sm hover:shadow active:scale-95"
-        >
-          <ArrowLeft className="w-4 h-4 text-emerald-600" />
-          <span>Continue Shopping</span>
-        </Link>
-      </div>
+      {/* Mobile-Only Smart Continue Shopping / Back Button */}
+      <ProductBackButton />
 
       {/* Main Product Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">

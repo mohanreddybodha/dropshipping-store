@@ -121,6 +121,49 @@ export default function CatalogExplorer({
     router.push("/#catalog-section");
   };
 
+  const handlePageSelect = (pageNumber: number) => {
+    if (pageNumber === currentPage) return;
+    setCurrentPage(pageNumber);
+    const targetElement = document.getElementById("catalog-section");
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const getPageNumbers = (): (number | "...")[] => {
+    const pages: (number | "...")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, "...", totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(
+          1,
+          "...",
+          totalPages - 4,
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages
+        );
+      } else {
+        pages.push(
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages
+        );
+      }
+    }
+    return pages;
+  };
+
   return (
     <div id="catalog-section" className="space-y-6">
       {/* Catalog Control Bar */}
@@ -332,32 +375,59 @@ export default function CatalogExplorer({
         </div>
       )}
 
-      {/* Pagination Controls */}
+      {/* Numbered Pagination Controls */}
       {totalPages > 1 && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between text-xs font-bold text-slate-700 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold text-slate-700 shadow-sm">
+          {/* Previous Button */}
           <button
-            onClick={() => {
-              setCurrentPage((p) => Math.max(1, p - 1));
-              window.scrollTo({ top: 350, behavior: "smooth" });
-            }}
+            onClick={() => handlePageSelect(currentPage - 1)}
             disabled={currentPage === 1}
-            className="flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition active:scale-95 text-slate-800"
+            aria-label="Previous page"
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Previous</span>
           </button>
 
-          <span className="text-slate-500 font-semibold">
-            Page {currentPage} of {totalPages}
-          </span>
+          {/* Numbered Page Buttons */}
+          <div className="flex items-center gap-1.5 flex-wrap justify-center">
+            {getPageNumbers().map((pageItem, index) => {
+              if (pageItem === "...") {
+                return (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="w-8 h-8 flex items-center justify-center text-slate-400 font-bold select-none"
+                  >
+                    …
+                  </span>
+                );
+              }
 
+              const isCurrent = pageItem === currentPage;
+              return (
+                <button
+                  key={`page-${pageItem}`}
+                  onClick={() => handlePageSelect(pageItem as number)}
+                  className={`w-9 h-9 rounded-xl text-xs font-black transition-all duration-150 active:scale-95 flex items-center justify-center cursor-pointer ${
+                    isCurrent
+                      ? "bg-slate-950 text-white shadow-md shadow-slate-900/20"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-950"
+                  }`}
+                  aria-label={`Go to page ${pageItem}`}
+                  aria-current={isCurrent ? "page" : undefined}
+                >
+                  {pageItem}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Next Button */}
           <button
-            onClick={() => {
-              setCurrentPage((p) => Math.min(totalPages, p + 1));
-              window.scrollTo({ top: 350, behavior: "smooth" });
-            }}
+            onClick={() => handlePageSelect(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition active:scale-95 text-slate-800"
+            aria-label="Next page"
           >
             <span>Next</span>
             <ChevronRight className="w-4 h-4" />

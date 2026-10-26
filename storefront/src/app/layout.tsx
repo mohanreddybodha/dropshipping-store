@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "../lib/cart";
 import { AppShell } from "../components/layout";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Domestic Lab | 3–7 Day Fast US Domestic Shipping",
@@ -18,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased`}>
+      <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased font-sans">
         <CartProvider>
           <AppShell>{children}</AppShell>
         </CartProvider>
