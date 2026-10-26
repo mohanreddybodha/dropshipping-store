@@ -18,61 +18,69 @@ import {
 import { getCustomerOrders } from "../../lib/api";
 import { CustomerOrder } from "../../lib/types";
 
-// ── FAQ Accordion Item ───────────────────────────────────────────────────────
+// ── FAQ Accordion Item with smooth Google-style transition ───────────────────
 function FaqItem({ question, answer }: { question: string; answer: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-slate-100 last:border-0">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between py-3.5 text-left group"
+        className="w-full flex items-center justify-between py-3 text-left group"
         aria-expanded={open}
       >
         <span className="text-xs font-bold text-slate-900 pr-4 group-hover:text-emerald-700 transition">
           {question}
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${
-            open ? "rotate-180" : ""
+          className={`w-3.5 h-3.5 text-slate-400 flex-shrink-0 transition-transform duration-300 ${
+            open ? "rotate-180 text-emerald-600" : ""
           }`}
         />
       </button>
-      {open && (
-        <div className="pb-3.5 text-xs text-slate-500 leading-relaxed pr-6 animate-fade-in">
+      <div
+        className={`grid transition-all duration-300 ease-in-out ${
+          open ? "grid-rows-[1fr] opacity-100 mb-2.5" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden text-xs text-slate-500 leading-relaxed pr-2">
           {answer}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// ── Damaged Package Collapsible Card ─────────────────────────────────────────
+// ── Damaged Package Collapsible Card with smooth transition ──────────────────
 function DamagedPackageCard() {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`rounded-3xl border transition-all duration-200 ${open ? "bg-slate-900 border-transparent" : "bg-white border-slate-200"}`}>
+    <div className={`rounded-2xl border transition-all duration-300 ${open ? "bg-slate-900 border-transparent shadow-md" : "bg-white border-slate-200"}`}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 p-5 sm:p-6 text-left"
+        className="w-full flex items-center gap-3 p-3.5 sm:p-4 text-left"
         aria-expanded={open}
       >
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${open ? "bg-emerald-500/20 border border-emerald-500/30" : "bg-rose-50 border border-rose-200"}`}>
-          <ShieldAlert className={`w-5 h-5 ${open ? "text-emerald-400" : "text-rose-500"}`} />
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${open ? "bg-emerald-500/20 border border-emerald-500/30" : "bg-rose-50 border border-rose-200"}`}>
+          <ShieldAlert className={`w-4 h-4 ${open ? "text-emerald-400" : "text-rose-500"}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className={`text-sm font-bold ${open ? "text-white" : "text-slate-900"}`}>
+          <h3 className={`text-xs sm:text-sm font-bold ${open ? "text-white" : "text-slate-900"}`}>
             Package Arrived Damaged or Defective?
           </h3>
-          <p className={`text-xs mt-0.5 ${open ? "text-slate-400" : "text-slate-500"}`}>
+          <p className={`text-[11px] mt-0.5 ${open ? "text-slate-400" : "text-slate-500"}`}>
             {open ? "Zero-friction domestic replacement protocol" : "Tap to see our replacement guarantee →"}
           </p>
         </div>
         <ChevronDown
-          className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180 text-slate-400" : "text-slate-400"}`}
+          className={`w-4 h-4 flex-shrink-0 transition-transform duration-300 ${open ? "rotate-180 text-emerald-400" : "text-slate-400"}`}
         />
       </button>
-      {open && (
-        <div className="px-5 sm:px-6 pb-6 animate-fade-in">
+      <div
+        className={`grid transition-all duration-300 ease-in-out ${
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden px-4 sm:px-5 pb-4">
           <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
             We guarantee that every product arrives in 100% working order. If your package was
             damaged by the carrier during transit, <strong>do not return it</strong>. Email our
@@ -88,7 +96,7 @@ function DamagedPackageCard() {
             at zero cost.
           </p>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -203,21 +211,20 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 pb-24 md:pb-12 space-y-10">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-5 pb-20 md:pb-6 space-y-4">
       {/* Page Header */}
-      <div className="text-center sm:text-left space-y-2 border-b border-slate-200 pb-6">
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center justify-center sm:justify-start gap-2.5">
-          <Package className="w-7 h-7 text-emerald-600" />
+      <div className="text-center sm:text-left space-y-1 border-b border-slate-200 pb-3">
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center justify-center sm:justify-start gap-2">
+          <Package className="w-6 h-6 text-emerald-600" />
           My Orders & Package Tracking
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 max-w-xl">
-          Enter your checkout email to view real-time delivery status, USPS tracking numbers, and
-          past order receipts.
+        <p className="text-xs text-slate-500 max-w-xl">
+          Enter your checkout email to view real-time delivery status, USPS tracking numbers, and past order receipts.
         </p>
       </div>
 
       {/* Email Lookup Card */}
-      <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
         <form onSubmit={handleSearchSubmit} className="space-y-4">
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
             Lookup Orders by Customer Email:
@@ -391,29 +398,28 @@ export default function ProfilePage() {
       <DamagedPackageCard />
 
       {/* FAQ Accordion */}
-      <div className="border border-slate-200 bg-white rounded-3xl p-6 sm:p-8">
-        <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-4">
-          <HelpCircle className="w-4 h-4 text-emerald-600" />
+      <div className="border border-slate-200/90 bg-white rounded-2xl p-4 sm:p-5 shadow-xs">
+        <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-3">
+          <HelpCircle className="w-3.5 h-3.5 text-emerald-600" />
           Delivery & Order Questions
         </h3>
         <div className="divide-y divide-slate-100">
           <FaqItem
             question="How long does shipping take?"
-            answer="All items are dispatched from verified US warehouses within 24 hours. Standard domestic delivery takes 3 to 5 business days with tracked updates provided by USPS."
+            answer="All items are dispatched from verified US warehouses within 24 hours (Monday through Friday). Standard domestic delivery takes 3 to 5 business days with tracked updates provided by USPS Ground Advantage."
           />
           <FaqItem
             question="Can I update my shipping address after ordering?"
             answer={
               <>
-                Orders enter automated warehouse packing after 30 minutes. If you made a typo,
-                contact{" "}
+                Orders enter automated warehouse packing within 30 minutes. If you made a typo, contact{" "}
                 <a
                   href="mailto:support@domesticlab.com"
                   className="text-emerald-600 underline font-semibold"
                 >
                   support@domesticlab.com
                 </a>{" "}
-                immediately with the subject line <strong>"URGENT ADDRESS CORRECTION"</strong>.
+                immediately with the subject line <strong>&quot;URGENT ADDRESS CORRECTION&quot;</strong>. If the shipping label has not yet printed, we will update it immediately.
               </>
             }
           />
@@ -421,18 +427,18 @@ export default function ProfilePage() {
             question="What will appear on my credit card statement?"
             answer={
               <>
-                Your bank statement will show the charge descriptor as{" "}
+                Your bank statement will show the verified charge descriptor as{" "}
                 <strong>DOMESTICLAB</strong>.
               </>
             }
           />
           <FaqItem
             question="Can I cancel my order?"
-            answer="Orders can be cancelled within 30 minutes of placement. After that, they enter our automated fulfillment pipeline. Contact support immediately if cancellation is needed."
+            answer="Orders can be cancelled within 30 minutes of placement before warehouse processing. Contact support@domesticlab.com immediately with your Order Number for a prompt full refund."
           />
           <FaqItem
             question="Do you offer free returns?"
-            answer="We do not require returns for damaged or defective items — we simply send a free replacement. For unwanted items, contact support within 7 days of delivery to discuss your options."
+            answer="Damaged or defective items are covered 100% with free replacements without needing to return the broken item. For unused products in original packaging, contact support within 7 days of delivery."
           />
         </div>
       </div>

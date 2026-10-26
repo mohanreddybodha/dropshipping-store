@@ -6,6 +6,7 @@ import {
   ProductAccordion,
   MobileStickyBuyBar,
   ProductBackButton,
+  ProductShareButton,
 } from "../../../components/product";
 import { Star, Truck } from "lucide-react";
 import type { Metadata } from "next";
@@ -40,9 +41,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   if (!product) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-16 text-center space-y-4">
-        <h1 className="text-2xl font-bold text-slate-900">Product Unavailable</h1>
-        <p className="text-sm text-slate-500">This item is currently out of stock.</p>
+      <div className="max-w-2xl mx-auto px-4 py-12 text-center space-y-3">
+        <h1 className="text-xl font-bold text-slate-900">Product Unavailable</h1>
+        <p className="text-xs text-slate-500">This item is currently out of stock.</p>
       </div>
     );
   }
@@ -85,25 +86,28 @@ export default async function ProductDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-5 pb-24 sm:pb-10 space-y-4 sm:space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-4 pb-20 md:pb-6 space-y-3 sm:space-y-4">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
 
-      {/* Sleek round back button with no excess top space */}
-      <ProductBackButton />
+      {/* Top Action Row: Back Button on left, Share Button on right (Zero wasted space) */}
+      <div className="flex items-center justify-between">
+        <ProductBackButton />
+        <ProductShareButton title={product.title} />
+      </div>
 
       {/* Main Product Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
         {/* Left Column: Visual Showcase (7 cols) */}
-        <div className="lg:col-span-7 space-y-4">
+        <div className="lg:col-span-7 space-y-3">
           {/* Title & In-Stock Status (clean, no duplicate stock badges) */}
-          <div className="space-y-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-snug">
+          <div className="space-y-0.5">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-snug">
               {product.title}
             </h1>
-            <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+            <p className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-dot" />
               In Stock
             </p>
@@ -120,15 +124,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
           />
 
           {/* Free Delivery & Rating opposite each other below images */}
-          <div className="flex items-center justify-between py-2 px-1 text-xs border-b border-slate-100">
-            <span className="font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 flex items-center gap-1.5">
+          <div className="flex items-center justify-between py-1.5 px-1 text-xs border-b border-slate-100">
+            <span className="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100 flex items-center gap-1.5 text-[11px]">
               <Truck className="w-3.5 h-3.5 text-emerald-600" />
               Free Delivery
             </span>
 
             {/* Clean Rating */}
-            <div className="flex items-center gap-1 text-amber-500 font-bold">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+            <div className="flex items-center gap-1 text-amber-500 font-bold text-xs">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               <span className="text-slate-900 ml-0.5">{rating.toFixed(1)}</span>
               <span className="text-slate-400 font-normal">({reviewCount})</span>
             </div>
@@ -136,10 +140,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
         </div>
 
         {/* Right Column: Pricing & Bundle Selector + Product Details Accordion (5 cols) */}
-        <div className="lg:col-span-5 space-y-4 sm:space-y-5">
+        <div className="lg:col-span-5 space-y-3 sm:space-y-4">
           <ProductInteractivePanel product={product} variant={primaryVariant} />
 
-          {/* Compact Product Details & Highlights Accordion (collapsed by default) */}
+          {/* Compact Product Details & Highlights Accordion (collapsed by default, smooth animated) */}
           <ProductAccordion product={product} />
         </div>
       </div>

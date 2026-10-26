@@ -12,9 +12,29 @@ export default function ErrorBoundary({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log error for diagnostics
+    // If it's a chunk loading failure, auto reload once
+    if (
+      error?.name === "ChunkLoadError" ||
+      error?.message?.includes("Loading chunk") ||
+      error?.message?.includes("Failed to fetch dynamically imported module")
+    ) {
+      const lastReload = sessionStorage.getItem("chunk_reload_ts");
+      const now = Date.now();
+      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+        sessionStorage.setItem("chunk_reload_ts", now.toString());
+        window.location.reload();
+      }
+    }
     console.error("Storefront Client Error Boundary caught:", error);
   }, [error]);
+
+  const handleHardReload = () => {
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    } else {
+      reset();
+    }
+  };
 
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 py-16 text-center">
@@ -34,14 +54,19 @@ export default function ErrorBoundary({
       )}
       <div className="mt-6 flex flex-wrap gap-3 justify-center">
         <button
-          onClick={() => reset()}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-500 transition shadow-sm"
+          onClick={handleHardReload}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-500 transition shadow-sm cursor-pointer"
         >
           <RotateCcw className="w-4 h-4" />
-          Try Again
+          Reload Page
         </button>
         <Link
           href="/"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.location.href = "/";
+            }
+          }}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition"
         >
           <Home className="w-4 h-4" />
