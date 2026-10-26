@@ -13,9 +13,85 @@ import {
   CheckCircle2,
   AlertCircle,
   Mail,
+  ChevronDown,
 } from "lucide-react";
 import { getCustomerOrders } from "../../lib/api";
 import { CustomerOrder } from "../../lib/types";
+
+// ── FAQ Accordion Item ───────────────────────────────────────────────────────
+function FaqItem({ question, answer }: { question: string; answer: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-slate-100 last:border-0">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between py-3.5 text-left group"
+        aria-expanded={open}
+      >
+        <span className="text-xs font-bold text-slate-900 pr-4 group-hover:text-emerald-700 transition">
+          {question}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {open && (
+        <div className="pb-3.5 text-xs text-slate-500 leading-relaxed pr-6 animate-fade-in">
+          {answer}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Damaged Package Collapsible Card ─────────────────────────────────────────
+function DamagedPackageCard() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={`rounded-3xl border transition-all duration-200 ${open ? "bg-slate-900 border-transparent" : "bg-white border-slate-200"}`}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-3 p-5 sm:p-6 text-left"
+        aria-expanded={open}
+      >
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${open ? "bg-emerald-500/20 border border-emerald-500/30" : "bg-rose-50 border border-rose-200"}`}>
+          <ShieldAlert className={`w-5 h-5 ${open ? "text-emerald-400" : "text-rose-500"}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className={`text-sm font-bold ${open ? "text-white" : "text-slate-900"}`}>
+            Package Arrived Damaged or Defective?
+          </h3>
+          <p className={`text-xs mt-0.5 ${open ? "text-slate-400" : "text-slate-500"}`}>
+            {open ? "Zero-friction domestic replacement protocol" : "Tap to see our replacement guarantee →"}
+          </p>
+        </div>
+        <ChevronDown
+          className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180 text-slate-400" : "text-slate-400"}`}
+        />
+      </button>
+      {open && (
+        <div className="px-5 sm:px-6 pb-6 animate-fade-in">
+          <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
+            We guarantee that every product arrives in 100% working order. If your package was
+            damaged by the carrier during transit, <strong>do not return it</strong>. Email our
+            domestic support team at{" "}
+            <a
+              href="mailto:support@domesticlab.com?subject=Damaged%20Item%20Replacement%20Request"
+              className="text-emerald-400 underline font-semibold"
+            >
+              support@domesticlab.com
+            </a>{" "}
+            with your <strong>Order Number</strong> and <strong>1 clear photo</strong> of the
+            damage within 7 days of delivery. We will dispatch an immediate replacement to your door
+            at zero cost.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ProfilePage() {
   const [email, setEmail] = useState("");
@@ -32,7 +108,6 @@ export default function ProfilePage() {
         setEmail(savedEmail);
         fetchOrders(savedEmail);
       } else {
-        // Also check if any orders exist in local storage directly
         const localOrdersRaw = localStorage.getItem("customer_orders");
         if (localOrdersRaw) {
           const parsed = JSON.parse(localOrdersRaw);
@@ -59,10 +134,8 @@ export default function ProfilePage() {
     setHasSearched(true);
 
     try {
-      // 1. Fetch from backend API
       const remoteOrders = await getCustomerOrders(lookupEmail.trim());
 
-      // 2. Fetch locally stored orders (offline fallback / instant checkout persistence)
       let localOrders: CustomerOrder[] = [];
       try {
         const localRaw = localStorage.getItem("customer_orders");
@@ -80,7 +153,6 @@ export default function ProfilePage() {
         // Ignore local parse errors
       }
 
-      // Merge and deduplicate by internal_order_number
       const orderMap = new Map<string, CustomerOrder>();
       localOrders.forEach((o) => orderMap.set(o.internal_order_number, o));
       remoteOrders.forEach((o) => orderMap.set(o.internal_order_number, o));
@@ -92,7 +164,7 @@ export default function ProfilePage() {
       );
 
       setOrders(merged);
-    } catch (err) {
+    } catch {
       setErrorMessage("Unable to retrieve order history. Please try again.");
     } finally {
       setIsLoading(false);
@@ -131,7 +203,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 pb-24 md:pb-12 space-y-10">
       {/* Page Header */}
       <div className="text-center sm:text-left space-y-2 border-b border-slate-200 pb-6">
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center justify-center sm:justify-start gap-2.5">
@@ -139,7 +211,8 @@ export default function ProfilePage() {
           My Orders & Package Tracking
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 max-w-xl">
-          Enter your checkout email to view real-time delivery status, USPS tracking numbers, and past order receipts.
+          Enter your checkout email to view real-time delivery status, USPS tracking numbers, and
+          past order receipts.
         </p>
       </div>
 
@@ -186,7 +259,7 @@ export default function ProfilePage() {
           <span>Order History</span>
           {orders.length > 0 && (
             <span className="text-xs font-semibold text-slate-500">
-              Found {orders.length} {orders.length === 1 ? "order" : "orders"}
+              {orders.length} {orders.length === 1 ? "order" : "orders"}
             </span>
           )}
         </h2>
@@ -201,7 +274,7 @@ export default function ProfilePage() {
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
               {hasSearched
-                ? "Double-check your email spelling or contact our support team if you placed an order under a different address."
+                ? "Double-check your email spelling or contact our support team."
                 : "Enter your checkout email above to load your past purchases and live tracking codes."}
             </p>
             <div className="pt-2">
@@ -235,11 +308,14 @@ export default function ProfilePage() {
                         {renderStatusBadge(order.status)}
                       </div>
                       <p className="text-xs text-slate-400 mt-1">
-                        Placed on {order.created_at ? new Date(order.created_at).toLocaleDateString() : "Recent"} • Total Paid: ${order.total_retail?.toFixed(2) || "0.00"} USD
+                        Placed on{" "}
+                        {order.created_at
+                          ? new Date(order.created_at).toLocaleDateString()
+                          : "Recent"}{" "}
+                        • Total Paid: ${order.total_retail?.toFixed(2) || "0.00"} USD
                       </p>
                     </div>
 
-                    {/* Tracking Button */}
                     {trackingUrl ? (
                       <a
                         href={trackingUrl}
@@ -266,7 +342,8 @@ export default function ProfilePage() {
                         {order.shipping_name || "Customer"}
                       </span>
                       <span className="block text-slate-500">
-                        {order.shipping_city}, {order.shipping_province || "US"} {order.shipping_zip}
+                        {order.shipping_city}, {order.shipping_province || "US"}{" "}
+                        {order.shipping_zip}
                       </span>
                     </div>
                     <div>
@@ -280,7 +357,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Line items if available */}
+                  {/* Line items */}
                   {order.items && order.items.length > 0 && (
                     <div className="pt-2 border-t border-slate-100">
                       <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
@@ -310,58 +387,53 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Edge-Case Protection: Damaged Item Replacement Protocol */}
-      <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-            <ShieldAlert className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-base font-bold">Package Arrived Damaged or Defective?</h3>
-            <p className="text-xs text-slate-400">
-              Zero-friction domestic replacement protocol
-            </p>
-          </div>
-        </div>
+      {/* Collapsible Damaged Package Card */}
+      <DamagedPackageCard />
 
-        <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
-          We guarantee that every product arrives in 100% working order. If your package was damaged by the carrier during transit, <strong>do not return it</strong>. Email our domestic support team at{" "}
-          <a
-            href="mailto:support@domesticlab.com?subject=Damaged%20Item%20Replacement%20Request"
-            className="text-emerald-400 underline font-semibold"
-          >
-            support@domesticlab.com
-          </a>{" "}
-          with your <strong>Order Number</strong> and <strong>1 clear photo</strong> of the damage within 7 days of delivery. We will dispatch an immediate replacement to your door at zero cost.
-        </p>
-      </div>
-
-      {/* Helpful FAQs */}
-      <div className="border border-slate-200 bg-white rounded-3xl p-6 sm:p-8 space-y-4">
-        <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+      {/* FAQ Accordion */}
+      <div className="border border-slate-200 bg-white rounded-3xl p-6 sm:p-8">
+        <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-4">
           <HelpCircle className="w-4 h-4 text-emerald-600" />
           Delivery & Order Questions
         </h3>
-
-        <div className="space-y-3 text-xs text-slate-600">
-          <div>
-            <h4 className="font-bold text-slate-900">How long does shipping take?</h4>
-            <p className="mt-0.5 text-slate-500 leading-relaxed">
-              All items are dispatched from verified US warehouses within 24 hours. Standard domestic delivery takes 3 to 5 business days with tracked updates provided by USPS.
-            </p>
-          </div>
-          <div className="pt-2 border-t border-slate-100">
-            <h4 className="font-bold text-slate-900">Can I update my shipping address after ordering?</h4>
-            <p className="mt-0.5 text-slate-500 leading-relaxed">
-              Orders enter automated warehouse packing after 30 minutes. If you made a typo, contact support@domesticlab.com immediately with the subject line <strong>&ldquo;URGENT ADDRESS CORRECTION&rdquo;</strong>.
-            </p>
-          </div>
-          <div className="pt-2 border-t border-slate-100">
-            <h4 className="font-bold text-slate-900">What will appear on my credit card statement?</h4>
-            <p className="mt-0.5 text-slate-500 leading-relaxed">
-              Your bank statement will show the charge descriptor as <strong>DOMESTICLAB</strong>.
-            </p>
-          </div>
+        <div className="divide-y divide-slate-100">
+          <FaqItem
+            question="How long does shipping take?"
+            answer="All items are dispatched from verified US warehouses within 24 hours. Standard domestic delivery takes 3 to 5 business days with tracked updates provided by USPS."
+          />
+          <FaqItem
+            question="Can I update my shipping address after ordering?"
+            answer={
+              <>
+                Orders enter automated warehouse packing after 30 minutes. If you made a typo,
+                contact{" "}
+                <a
+                  href="mailto:support@domesticlab.com"
+                  className="text-emerald-600 underline font-semibold"
+                >
+                  support@domesticlab.com
+                </a>{" "}
+                immediately with the subject line <strong>"URGENT ADDRESS CORRECTION"</strong>.
+              </>
+            }
+          />
+          <FaqItem
+            question="What will appear on my credit card statement?"
+            answer={
+              <>
+                Your bank statement will show the charge descriptor as{" "}
+                <strong>DOMESTICLAB</strong>.
+              </>
+            }
+          />
+          <FaqItem
+            question="Can I cancel my order?"
+            answer="Orders can be cancelled within 30 minutes of placement. After that, they enter our automated fulfillment pipeline. Contact support immediately if cancellation is needed."
+          />
+          <FaqItem
+            question="Do you offer free returns?"
+            answer="We do not require returns for damaged or defective items — we simply send a free replacement. For unwanted items, contact support within 7 days of delivery to discuss your options."
+          />
         </div>
       </div>
     </div>

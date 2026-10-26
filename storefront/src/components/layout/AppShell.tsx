@@ -7,6 +7,7 @@ import { ArrowLeft, Lock } from "lucide-react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import MobileBottomNav from "./MobileBottomNav";
+import { ToastContainer } from "../ui/Toast";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -68,6 +69,9 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+      {/* Global Toast Notifications */}
+      <ToastContainer />
+
       {/* Header ONLY rendered on the home screen */}
       {isHome && (
         <Suspense fallback={<div className="h-16 bg-white border-b border-slate-200" />}>

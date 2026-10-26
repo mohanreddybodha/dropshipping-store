@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Star, ShoppingBag, Heart } from "lucide-react";
 import { Product } from "../../lib/types";
+import { showToast } from "../ui/Toast";
 
 interface ProductCardProps {
   product: Product;
@@ -33,9 +34,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       if (isSaved) {
         list = list.filter((p) => p.slug !== product.slug);
         setIsSaved(false);
+        showToast("Removed from Watchlist", "watchlist-remove");
       } else {
         list.push(product);
         setIsSaved(true);
+        showToast("Added to Watchlist ❤️", "watchlist-add");
       }
       localStorage.setItem("watchlist_items", JSON.stringify(list));
     } catch {
