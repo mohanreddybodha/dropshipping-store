@@ -18,18 +18,22 @@ export default function ProductInteractivePanel({
 }: ProductInteractivePanelProps) {
   const { addItem } = useCart();
   const [selectedVariant, setSelectedVariant] = useState<Variant>(variant);
-  // Default to 1x Single Unit (per user requirement)
+  // Default to 1x Single Unit
   const [selectedTier, setSelectedTier] = useState<BundleTier>("1x");
 
-  // Determine initial size default
   const titleLower = product.title.toLowerCase();
   const isApparel =
+    titleLower.includes("dress") ||
     titleLower.includes("romper") ||
     titleLower.includes("women") ||
     titleLower.includes("hooded") ||
     titleLower.includes("pocket") ||
-    titleLower.includes("shirt");
-  const [selectedSize, setSelectedSize] = useState<string>(isApparel ? "M" : "Standard");
+    titleLower.includes("shirt") ||
+    titleLower.includes("jacket") ||
+    titleLower.includes("pants");
+
+  const [selectedSize, setSelectedSize] = useState<string>(isApparel ? "M" : "");
+  const [selectedColor, setSelectedColor] = useState<string>(isApparel ? "Black" : "");
 
   const price1x = selectedVariant.retail_price_1x;
   const price2x = selectedVariant.bundle_2_price;
@@ -48,18 +52,21 @@ export default function ProductInteractivePanel({
       ? +(price1x * 3 - price3x).toFixed(2)
       : 0;
 
-  const isLowStock = selectedVariant.us_warehouse_stock < 15;
-
-  // Reactively broadcast tier and price updates so the mobile sticky buy bar stays synchronized!
+  // Reactively broadcast tier, price, size, and color updates to the mobile sticky buy bar
   useEffect(() => {
     if (typeof window !== "undefined") {
       window.dispatchEvent(
         new CustomEvent("product:tier_change", {
-          detail: { tier: selectedTier, price: currentPrice, size: selectedSize },
+          detail: {
+            tier: selectedTier,
+            price: currentPrice,
+            size: selectedSize,
+            color: selectedColor,
+          },
         })
       );
     }
-  }, [selectedTier, currentPrice, selectedSize]);
+  }, [selectedTier, currentPrice, selectedSize, selectedColor]);
 
   const handleSizeChange = (size: string, v: Variant) => {
     setSelectedSize(size);
@@ -67,59 +74,49 @@ export default function ProductInteractivePanel({
   };
 
   const handleAddToCart = () => {
-    addItem(product, selectedVariant, selectedTier, selectedSize);
-    showToast(`Added ${currentUnitCount}x to Cart`, "success");
+    addItem(product, selectedVariant, selectedTier, selectedSize || undefined, selectedColor || undefined);
+    showToast("Added to Cart", "cart-add", "View Cart →", "/cart");
   };
 
   return (
-    <div className="space-y-6 bg-white border border-slate-200 rounded-3xl p-5 sm:p-7 shadow-sm">
-      {/* Inventory Status Indicator */}
-      <div className="flex items-center justify-between text-xs pb-3 border-b border-slate-100">
-        <span className="flex items-center gap-2 font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-          <span
-            className={`w-2 h-2 rounded-full ${
-              isLowStock ? "bg-amber-500 animate-pulse" : "bg-emerald-500 animate-pulse-dot"
-            }`}
-          />
-          {isLowStock ? "High Demand — Limited Clearance Stock" : "In Stock — Ready to Ship"}
-        </span>
-      </div>
-
-      {/* Dynamic Subtotal Banner */}
+    <div className="space-y-5 bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm">
+      {/* Price Banner without duplicate in-stock tags */}
       <div className="flex items-baseline justify-between">
         <div>
           <span className="text-3xl sm:text-4xl font-black text-slate-900">
             ${currentPrice.toFixed(2)}
           </span>
-          <span className="text-sm text-slate-500 ml-2 font-medium">
+          <span className="text-xs text-slate-500 ml-2 font-medium">
             (${unitPrice}/each)
           </span>
         </div>
         {savings > 0 && (
           <span className="text-xs font-black bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full uppercase tracking-wider">
-            You Save ${savings.toFixed(2)}
+            Save ${savings.toFixed(2)}
           </span>
         )}
       </div>
 
-      {/* Size/Option Selector (if multi-variant) */}
+      {/* Genuine Size & Color Options (Only shown when genuine options exist) */}
       <SizeSelector
         product={product}
         currentVariant={selectedVariant}
         selectedSize={selectedSize}
+        selectedColor={selectedColor}
         onSelectSize={handleSizeChange}
+        onSelectColor={setSelectedColor}
       />
 
-      {/* Tiered Bundle Selector: 1x Single Unit is default */}
-      <div className="space-y-3 pt-1">
+      {/* Quantity & Bundle Savings Selector */}
+      <div className="space-y-2.5">
         <label className="block text-xs font-black tracking-wider uppercase text-slate-700">
           Select Quantity & Bundle Savings:
         </label>
 
-        {/* Tier 1: 1x Single Unit (Default) */}
+        {/* 1x Single Unit (Default) */}
         <div
           onClick={() => setSelectedTier("1x")}
-          className={`cursor-pointer rounded-2xl p-4 border-2 transition-all relative flex items-center justify-between ${
+          className={`cursor-pointer rounded-2xl p-3.5 border-2 transition-all relative flex items-center justify-between ${
             selectedTier === "1x"
               ? "border-emerald-600 bg-emerald-50/40 shadow-sm"
               : "border-slate-200 hover:border-slate-300 bg-white"
@@ -139,20 +136,20 @@ export default function ProductInteractivePanel({
           </div>
           <div className="text-right">
             <span className="text-base font-bold text-slate-900">${price1x.toFixed(2)}</span>
-            <p className="text-[11px] text-slate-400">Regular price</p>
+            <p className="text-[10px] text-slate-400">Regular price</p>
           </div>
         </div>
 
-        {/* Tier 2: 2x Units (Double Pack) */}
+        {/* 2x Double Pack */}
         <div
           onClick={() => setSelectedTier("2x")}
-          className={`cursor-pointer rounded-2xl p-4 border-2 transition-all relative flex items-center justify-between ${
+          className={`cursor-pointer rounded-2xl p-3.5 border-2 transition-all relative flex items-center justify-between ${
             selectedTier === "2x"
               ? "border-emerald-600 bg-emerald-50/40 shadow-sm ring-1 ring-emerald-600"
               : "border-slate-200 hover:border-slate-300 bg-white"
           }`}
         >
-          <div className="absolute -top-3 right-4 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-sm">
+          <div className="absolute -top-2.5 right-4 bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm">
             Save 12%
           </div>
           <div className="flex items-center gap-3">
@@ -171,22 +168,20 @@ export default function ProductInteractivePanel({
           </div>
           <div className="text-right">
             <span className="text-base font-black text-slate-900">${price2x.toFixed(2)}</span>
-            <p className="text-[11px] text-slate-400 line-through">
-              ${(price1x * 2).toFixed(2)}
-            </p>
+            <p className="text-[10px] text-slate-400 line-through">${(price1x * 2).toFixed(2)}</p>
           </div>
         </div>
 
-        {/* Tier 3: 3x Units (Family Bundle) */}
+        {/* 3x Family Bundle */}
         <div
           onClick={() => setSelectedTier("3x")}
-          className={`cursor-pointer rounded-2xl p-4 border-2 transition-all relative flex items-center justify-between ${
+          className={`cursor-pointer rounded-2xl p-3.5 border-2 transition-all relative flex items-center justify-between ${
             selectedTier === "3x"
               ? "border-emerald-600 bg-emerald-50/40 shadow-sm"
               : "border-slate-200 hover:border-slate-300 bg-white"
           }`}
         >
-          <div className="absolute -top-3 right-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-sm">
+          <div className="absolute -top-2.5 right-4 bg-slate-900 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm">
             Save 18%
           </div>
           <div className="flex items-center gap-3">
@@ -205,23 +200,22 @@ export default function ProductInteractivePanel({
           </div>
           <div className="text-right">
             <span className="text-base font-black text-slate-900">${price3x.toFixed(2)}</span>
-            <p className="text-[11px] text-slate-400 line-through">
-              ${(price1x * 3).toFixed(2)}
-            </p>
+            <p className="text-[10px] text-slate-400 line-through">${(price1x * 3).toFixed(2)}</p>
           </div>
         </div>
       </div>
 
-      {/* Main Call To Action */}
-      <button
-        onClick={handleAddToCart}
-        className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-base rounded-2xl shadow-xl shadow-emerald-600/25 transition active:scale-[0.98] flex items-center justify-center gap-3"
-      >
-        <ShoppingBag className="w-5 h-5" />
-        <span>
-          Add {currentUnitCount}x {selectedSize} to Cart — ${currentPrice.toFixed(2)}
-        </span>
-      </button>
+      {/* Desktop-Only Add to Cart button (On mobile, the bottom sticky bar handles this!) */}
+      <div className="hidden md:block pt-2">
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-emerald-600/25 transition active:scale-[0.98] flex items-center justify-center gap-2"
+        >
+          <ShoppingBag className="w-4 h-4" />
+          <span>Add to Cart — ${currentPrice.toFixed(2)}</span>
+        </button>
+      </div>
     </div>
   );
 }

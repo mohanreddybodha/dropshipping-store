@@ -15,7 +15,8 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
   const { addItem } = useCart();
   const [currentTier, setCurrentTier] = useState<BundleTier>("1x");
   const [currentPrice, setCurrentPrice] = useState<number>(variant?.retail_price_1x || 24.99);
-  const [currentSize, setCurrentSize] = useState<string>("Standard");
+  const [currentSize, setCurrentSize] = useState<string>("");
+  const [currentColor, setCurrentColor] = useState<string>("");
 
   useEffect(() => {
     if (variant?.retail_price_1x) {
@@ -26,11 +27,19 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
   // Synchronize reactively with bundle tier selections in ProductInteractivePanel
   useEffect(() => {
     const handler = (e: Event) => {
-      const detail = (e as CustomEvent<{ tier: BundleTier; price: number; size?: string }>).detail;
+      const detail = (
+        e as CustomEvent<{
+          tier: BundleTier;
+          price: number;
+          size?: string;
+          color?: string;
+        }>
+      ).detail;
       if (detail) {
         if (detail.tier) setCurrentTier(detail.tier);
         if (detail.price) setCurrentPrice(detail.price);
-        if (detail.size) setCurrentSize(detail.size);
+        if (detail.size !== undefined) setCurrentSize(detail.size);
+        if (detail.color !== undefined) setCurrentColor(detail.color);
       }
     };
     window.addEventListener("product:tier_change", handler);
@@ -40,12 +49,16 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
   if (!variant) return null;
 
   const handleQuickAdd = () => {
-    addItem(product, variant, currentTier, currentSize);
-    showToast(`Added ${currentTier} to Cart`, "success");
+    addItem(product, variant, currentTier, currentSize || undefined, currentColor || undefined);
+    showToast("Added to Cart", "cart-add", "View Cart →", "/cart");
   };
 
   const tierLabel =
-    currentTier === "1x" ? "1 Unit" : currentTier === "2x" ? "2 Units (Save 12%)" : "3 Units (Save 18%)";
+    currentTier === "1x"
+      ? "1 Unit"
+      : currentTier === "2x"
+      ? "2 Units (Save 12%)"
+      : "3 Units (Save 18%)";
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 px-4 flex items-center justify-between shadow-2xl pb-[calc(0.75rem+env(safe-area-inset-bottom))]">

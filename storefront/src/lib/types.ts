@@ -84,6 +84,7 @@ export interface CartItem {
   product: Product;
   variant: Variant;
   selectedSize?: string;
+  selectedColor?: string;
   tier: BundleTier;
   quantity: number;
   unitPrice: number;

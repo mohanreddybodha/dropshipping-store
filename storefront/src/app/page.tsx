@@ -8,7 +8,7 @@ export default async function HomePage() {
   const products = await getCatalog({ limit: 200 });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-8 sm:pb-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-5 pb-6 sm:pb-10">
       <Suspense
         fallback={
           <div className="py-20 text-center text-slate-400 text-sm font-medium">

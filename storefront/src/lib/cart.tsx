@@ -9,9 +9,21 @@ interface CartContextType {
   isHydrated: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (product: Product, variant: Variant, tier: BundleTier, selectedSize?: string) => void;
-  updateQuantity: (vid: string, tier: BundleTier, quantity: number, selectedSize?: string) => void;
-  removeItem: (vid: string, tier: BundleTier, selectedSize?: string) => void;
+  addItem: (
+    product: Product,
+    variant: Variant,
+    tier: BundleTier,
+    selectedSize?: string,
+    selectedColor?: string
+  ) => void;
+  updateQuantity: (
+    vid: string,
+    tier: BundleTier,
+    quantity: number,
+    selectedSize?: string,
+    selectedColor?: string
+  ) => void;
+  removeItem: (vid: string, tier: BundleTier, selectedSize?: string, selectedColor?: string) => void;
   clearCart: () => void;
   totalAmount: number;
   totalSavings: number;
@@ -50,7 +62,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
 
-  const addItem = (product: Product, variant: Variant, tier: BundleTier, selectedSize?: string) => {
+  const addItem = (
+    product: Product,
+    variant: Variant,
+    tier: BundleTier,
+    selectedSize?: string,
+    selectedColor?: string
+  ) => {
     const qty = tier === "1x" ? 1 : tier === "2x" ? 2 : 3;
     let totalPrice = variant.retail_price_1x;
     let savings = 0;
@@ -65,10 +83,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     setItems((prev) => {
       const existingIdx = prev.findIndex(
-        (i) => i.variant.vid === variant.vid && i.tier === tier && i.selectedSize === selectedSize
+        (i) =>
+          i.variant.vid === variant.vid &&
+          i.tier === tier &&
+          i.selectedSize === selectedSize &&
+          i.selectedColor === selectedColor
       );
       if (existingIdx > -1) {
-        return prev; // Item tier & size already in cart
+        return prev;
       }
       return [
         ...prev,
@@ -76,6 +98,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           product,
           variant,
           selectedSize,
+          selectedColor,
           tier,
           quantity: qty,
           unitPrice: +(totalPrice / qty).toFixed(2),
@@ -88,14 +111,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setIsOpen(true);
   };
 
-  const updateQuantity = (vid: string, tier: BundleTier, quantity: number, selectedSize?: string) => {
+  const updateQuantity = (
+    vid: string,
+    tier: BundleTier,
+    quantity: number,
+    selectedSize?: string,
+    selectedColor?: string
+  ) => {
     if (quantity <= 0) {
-      removeItem(vid, tier, selectedSize);
+      removeItem(vid, tier, selectedSize, selectedColor);
       return;
     }
     setItems((prev) =>
       prev.map((i) => {
-        if (i.variant.vid === vid && i.tier === tier && i.selectedSize === selectedSize) {
+        if (
+          i.variant.vid === vid &&
+          i.tier === tier &&
+          i.selectedSize === selectedSize &&
+          i.selectedColor === selectedColor
+        ) {
           const newTotal = +(i.unitPrice * quantity).toFixed(2);
           return {
             ...i,
@@ -108,9 +142,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const removeItem = (vid: string, tier: BundleTier, selectedSize?: string) => {
+  const removeItem = (
+    vid: string,
+    tier: BundleTier,
+    selectedSize?: string,
+    selectedColor?: string
+  ) => {
     setItems((prev) =>
-      prev.filter((i) => !(i.variant.vid === vid && i.tier === tier && i.selectedSize === selectedSize))
+      prev.filter(
+        (i) =>
+          !(
+            i.variant.vid === vid &&
+            i.tier === tier &&
+            i.selectedSize === selectedSize &&
+            i.selectedColor === selectedColor
+          )
+      )
     );
   };
 
