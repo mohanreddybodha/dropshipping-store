@@ -67,7 +67,7 @@ app = FastAPI(
 # 1. Request ID Tracing Middleware
 app.add_middleware(RequestIdMiddleware)
 
-# 2. Strict CORS Configuration
+# 2. Permissive Universal CORS Configuration (Vercel, Localhost, Mobile Web)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -76,9 +76,9 @@ app.add_middleware(
         "http://localhost:3001",
         "http://127.0.0.1:3001",
     ],
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -197,3 +197,35 @@ def root(request: Request) -> Dict[str, str]:
 @app.get("/health", tags=["Health"])
 def health_check() -> Dict[str, str]:
     return {"status": "ok", "security": "zero-trust"}
+
+
+@app.get("/api/diag", tags=["Health"])
+def api_diag():
+    """Diagnostic health check verifying DB connection, tables, and counts."""
+    try:
+        from src.models.database import Order, Product, User, UserCart, UserWatchlist, get_session
+        db = get_session()
+        try:
+            order_count = db.query(Order).count()
+            user_count = db.query(User).count()
+            cart_count = db.query(UserCart).count()
+            watch_count = db.query(UserWatchlist).count()
+            dialect_name = db.get_bind().dialect.name
+            return {
+                "status": "ok",
+                "version": "2.2.0",
+                "database": {
+                    "dialect": dialect_name,
+                    "orders": order_count,
+                    "users": user_count,
+                    "carts": cart_count,
+                    "watchlists": watch_count,
+                },
+            }
+        finally:
+            db.close()
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "db_error", "message": str(exc), "trace": traceback.format_exc()},
+        )

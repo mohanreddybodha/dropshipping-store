@@ -33,6 +33,7 @@ import {
   syncUserAuth,
   lookupOrdersDualFactor,
   getCustomerOrders,
+  createCheckoutOrder,
   FALLBACK_PRODUCTS,
 } from "../../lib/api";
 import { CustomerOrder } from "../../lib/types";
@@ -164,9 +165,45 @@ export default function ProfilePage() {
       setCurrentUser(user);
       setAuthLoading(false);
 
-      if (user && user.email) {
+      if (user) {
         setOrdersLoading(true);
+        const userEmail = user.email || (user.phoneNumber ? `${user.phoneNumber.replace(/\D/g, "")}@phone.domesticlab.com` : `uid_${user.uid.slice(0, 16)}@user.domesticlab.com`);
+
         try {
+          // Push any locally cached orders from previous device activity into the database for immediate cross-device sync
+          try {
+            const rawOrders = localStorage.getItem("customer_orders");
+            if (rawOrders) {
+              const parsedOrders = JSON.parse(rawOrders);
+              if (Array.isArray(parsedOrders) && parsedOrders.length > 0) {
+                for (const lo of parsedOrders) {
+                  const orderEmail = (lo.customer_email || "").toLowerCase();
+                  const currentEmail = (user.email || userEmail).toLowerCase();
+                  if (!orderEmail || orderEmail === currentEmail) {
+                    await createCheckoutOrder({
+                      internal_order_number: lo.internal_order_number,
+                      customer_name: lo.shipping_name || user.displayName || "Valued Customer",
+                      customer_email: user.email || lo.customer_email || userEmail,
+                      customer_phone: lo.customer_phone,
+                      shipping_address: lo.shipping_address || "US Address",
+                      shipping_city: lo.shipping_city || "New York",
+                      shipping_province: lo.shipping_province || "NY",
+                      shipping_zip: lo.shipping_zip || "10001",
+                      shipping_country: lo.shipping_country || "US",
+                      total_retail: lo.total_retail || 0,
+                      carrier_name: lo.carrier_name || "USPS",
+                      tracking_number: lo.tracking_number,
+                      items: lo.items || [],
+                      firebase_uid: user.uid,
+                    }).catch(() => {});
+                  }
+                }
+              }
+            }
+          } catch {
+            // Ignore push sync error
+          }
+
           // Read guest cart & watchlist from localStorage
           let guestCart: any[] = [];
           let guestWatchlist: string[] = [];
@@ -201,7 +238,7 @@ export default function ProfilePage() {
           // Trigger backend cloud sync
           const syncRes = await syncUserAuth({
             firebase_uid: user.uid,
-            email: user.email,
+            email: user.email || userEmail,
             phone_number: user.phoneNumber,
             display_name: user.displayName,
             photo_url: user.photoURL,
@@ -210,16 +247,16 @@ export default function ProfilePage() {
           });
 
           if (syncRes?.orders) {
-            mergeAndSetOrders(user.email, syncRes.orders);
+            mergeAndSetOrders(userEmail, syncRes.orders);
           } else {
             // Fallback: query orders directly
-            const directOrders = await getCustomerOrders(user.email);
-            mergeAndSetOrders(user.email, directOrders);
+            const directOrders = await getCustomerOrders(userEmail);
+            mergeAndSetOrders(userEmail, directOrders);
           }
         } catch (err) {
           console.error("Auth sync failure:", err);
-          const fallbackOrders = await getCustomerOrders(user.email);
-          mergeAndSetOrders(user.email, fallbackOrders);
+          const fallbackOrders = await getCustomerOrders(userEmail);
+          mergeAndSetOrders(userEmail, fallbackOrders);
         } finally {
           setOrdersLoading(false);
         }
@@ -240,7 +277,9 @@ export default function ProfilePage() {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
           localOrders = parsed.filter(
-            (o) => (o.customer_email || "").toLowerCase() === email.toLowerCase()
+            (o) =>
+              !o.customer_email ||
+              (o.customer_email || "").toLowerCase() === (email || "").toLowerCase()
           );
         }
       }
@@ -734,14 +773,9 @@ export default function ProfilePage() {
                                     >
                                       {info.title}
                                     </Link>
-                                    {info.price > 0 && (
-                                      <span className="text-xs font-black text-slate-900 flex-shrink-0">
-                                        ${(info.price * info.quantity).toFixed(2)}
-                                      </span>
-                                    )}
                                   </div>
 
-                                  {/* Badges */}
+                                  {/* Badges: Size, Color, Amount before Unit (no amount/unit) */}
                                   <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-500 pt-0.5">
                                     {info.size && (
                                       <span className="bg-white border border-slate-200 text-slate-700 px-1.5 py-0.2 rounded font-medium">
@@ -753,14 +787,14 @@ export default function ProfilePage() {
                                         Color: {info.color}
                                       </span>
                                     )}
+                                    {info.price > 0 && (
+                                      <span className="font-black text-slate-900 bg-slate-100 border border-slate-200/90 px-1.5 py-0.2 rounded text-[11px]">
+                                        ${(info.price * info.quantity).toFixed(2)}
+                                      </span>
+                                    )}
                                     <span className="bg-emerald-100/70 border border-emerald-200 text-emerald-800 px-1.5 py-0.2 rounded font-bold">
                                       {info.quantity} {info.quantity === 1 ? "Unit" : "Units"}
                                     </span>
-                                    {info.price > 0 && (
-                                      <span className="text-slate-400">
-                                        (${info.price.toFixed(2)}/Unit)
-                                      </span>
-                                    )}
                                   </div>
 
                                   {/* Domestic Fulfillment Badge */}
@@ -914,7 +948,12 @@ export default function ProfilePage() {
                                 <span className="font-semibold flex-1 min-w-0 truncate">
                                   {info.title}
                                 </span>
-                                <span className="font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded text-[10px] flex-shrink-0">
+                                {info.price > 0 && (
+                                  <span className="font-black text-slate-900 bg-slate-100 border border-slate-200/80 px-1.5 py-0.5 rounded text-[10px] flex-shrink-0">
+                                    ${(info.price * info.quantity).toFixed(2)}
+                                  </span>
+                                )}
+                                <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] flex-shrink-0">
                                   {info.quantity} {info.quantity === 1 ? "Unit" : "Units"}
                                 </span>
                               </div>
