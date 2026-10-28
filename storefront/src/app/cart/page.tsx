@@ -16,6 +16,7 @@ import {
 import { Product } from "../../lib/types";
 import { FALLBACK_PRODUCTS, getCatalog } from "../../lib/api";
 import HorizontalProductRow from "../../components/catalog/HorizontalProductRow";
+import { showToast } from "../../components/ui/Toast";
 
 export default function CartPage() {
   const router = useRouter();
@@ -200,7 +201,10 @@ export default function CartPage() {
           {items.length > 0 && (
             <button
               type="button"
-              onClick={clearCart}
+              onClick={() => {
+                clearCart();
+                showToast("Cart cleared", "cart-remove");
+              }}
               className="text-xs font-semibold text-slate-400 hover:text-rose-600 transition"
               title="Reset and clear all cart items"
             >
@@ -348,9 +352,10 @@ export default function CartPage() {
                     {/* Remove Action Button */}
                     <button
                       type="button"
-                      onClick={() =>
-                        removeItem(item.variant.vid, item.tier, item.selectedSize, item.selectedColor)
-                      }
+                      onClick={() => {
+                        removeItem(item.variant.vid, item.tier, item.selectedSize, item.selectedColor);
+                        showToast("Item removed from cart", "cart-remove");
+                      }}
                       className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 active:scale-95 cursor-pointer"
                       aria-label="Remove item"
                     >

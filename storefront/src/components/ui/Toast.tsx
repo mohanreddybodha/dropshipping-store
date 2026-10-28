@@ -7,7 +7,7 @@ import { CheckCircle2, Heart, ShoppingBag, X } from "lucide-react";
 export interface ToastMessage {
   id: string;
   message: string;
-  type?: "success" | "watchlist-add" | "watchlist-remove" | "info" | "cart-add";
+  type?: "success" | "watchlist-add" | "watchlist-remove" | "info" | "cart-add" | "cart-remove";
   actionText?: string;
   actionHref?: string;
 }
@@ -64,6 +64,8 @@ export function ToastContainer() {
               <Heart className="w-4 h-4 text-slate-400 flex-shrink-0" />
             ) : t.type === "cart-add" ? (
               <ShoppingBag className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            ) : t.type === "cart-remove" ? (
+              <ShoppingBag className="w-4 h-4 text-slate-400 flex-shrink-0" />
             ) : (
               <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             )}

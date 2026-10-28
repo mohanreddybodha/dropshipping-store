@@ -185,7 +185,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
       <InfiniteCatalogFeed
         products={suggestedProducts}
         title="Suggested For You"
-        subtitle="Endless discovery from our US domestic collection"
       />
 
       {/* Mobile Sticky Bottom Action Bar */}

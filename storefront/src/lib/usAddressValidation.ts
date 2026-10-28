@@ -194,6 +194,9 @@ const NON_US_LOCATION_TERMS = [
   "kurnool", "secunderabad", "andhra", "telangana", "karnataka", "tamil nadu",
   "maharashtra", "gujarat", "punjab", "haryana", "rajasthan", "kerala",
   "uttar pradesh", "madhya pradesh", "bihar", "odisha", "west bengal",
+  "jubilee hills", "banjara hills", "koramangala", "indiranagar", "hitec city",
+  "whitefield", "powai", "andheri", "bandra", "connaught place", "gachibowli",
+  "madhapur", "kondapur",
   "canada", "united kingdom", "australia", "germany", "france", "china",
 ];
 
@@ -213,29 +216,32 @@ export function validateUsPhone(phone: string, phoneCode = "+1"): ValidationResu
   if (trimmed.startsWith("+") && !trimmed.startsWith("+1")) {
     return {
       isValid: false,
-      error: "Only US (+1) mobile numbers are supported for domestic USPS fulfillment. International phone numbers are not accepted.",
+      error: `International phone numbers (${trimmed.slice(0, 4)}) are not accepted. Domestic fulfillment requires a US (+1) mobile number.`,
+    };
+  }
+
+  // Check for Indian mobile pattern (+91 or starting with 91 with length >= 11)
+  const rawDigits = trimmed.replace(/\D/g, "");
+  if (trimmed.includes("+91") || (rawDigits.startsWith("91") && rawDigits.length >= 11)) {
+    return {
+      isValid: false,
+      error: "Indian mobile numbers (+91) are not supported. Domestic Lab fulfills orders strictly within the United States.",
     };
   }
 
   // Remove all non-digits
-  let digits = trimmed.replace(/\D/g, "");
+  let digits = rawDigits;
 
   // If user included leading US country code 1 with 11 digits, normalize to 10
   if (digits.length === 11 && digits.startsWith("1")) {
     digits = digits.slice(1);
   }
 
-  // If phone has 12 or more digits, likely an international number
+  // If phone has more than 10 digits
   if (digits.length > 10) {
-    if (digits.startsWith("91") && digits.length === 12) {
-      return {
-        isValid: false,
-        error: "Indian mobile number detected (+91). Domestic Lab requires a valid 10-digit US mobile number.",
-      };
-    }
     return {
       isValid: false,
-      error: "Invalid phone number length. US mobile numbers must contain exactly 10 digits.",
+      error: `Invalid US mobile number: too many digits (${digits.length}/10). Please enter a 10-digit US mobile number.`,
     };
   }
 
@@ -396,11 +402,21 @@ export function validateUsCity(city: string): ValidationResult {
 
 /**
  * Auto-formats phone input on typing into (XXX) XXX-XXXX
+ * Preserves international prefix (e.g. +91) or extended digits so validators can explicitly reject them.
  */
 export function formatUsPhoneInput(value: string): string {
+  // If user enters an explicit international prefix, preserve it as-is
+  if (value.startsWith("+") && !value.startsWith("+1")) {
+    return value;
+  }
   const digits = value.replace(/\D/g, "");
+  // If user pasted/entered an Indian number starting with 91 with 11+ digits, preserve it
+  if (digits.startsWith("91") && digits.length >= 11) {
+    return `+91 ${digits.slice(2)}`;
+  }
   if (!digits) return "";
-  if (digits.length <= 3) return `(${digits}`;
-  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  const cleanDigits = (digits.length === 11 && digits.startsWith("1")) ? digits.slice(1) : digits;
+  if (cleanDigits.length <= 3) return `(${cleanDigits}`;
+  if (cleanDigits.length <= 6) return `(${cleanDigits.slice(0, 3)}) ${cleanDigits.slice(3)}`;
+  return `(${cleanDigits.slice(0, 3)}) ${cleanDigits.slice(3, 6)}-${cleanDigits.slice(6, 10)}`;
 }

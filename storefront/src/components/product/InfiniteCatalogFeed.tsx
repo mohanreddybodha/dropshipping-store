@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Sparkles, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 import { Product } from "../../lib/types";
 import ProductCard from "../catalog/ProductCard";
 
 interface InfiniteCatalogFeedProps {
   products: Product[];
   title?: string;
-  subtitle?: string;
 }
 
 const BATCH_SIZE = 12;
@@ -16,7 +16,6 @@ const BATCH_SIZE = 12;
 export default function InfiniteCatalogFeed({
   products,
   title = "Suggested For You",
-  subtitle,
 }: InfiniteCatalogFeedProps) {
   const [visibleCount, setVisibleCount] = useState<number>(BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -49,18 +48,18 @@ export default function InfiniteCatalogFeed({
 
   return (
     <section className="pt-8 border-t border-slate-200/80 space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-        <div>
-          <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
-            <span>{title}</span>
-          </h2>
-          {subtitle && (
-            <p className="text-xs text-slate-500 mt-0.5">
-              {subtitle}
-            </p>
-          )}
-        </div>
+      {/* Clean Header: Heading on left (no AI icon, no description), View All on right */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+          {title}
+        </h2>
+        <Link
+          href="/"
+          className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1 cursor-pointer"
+        >
+          <span>View All</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
