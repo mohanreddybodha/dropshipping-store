@@ -8,9 +8,13 @@ import {
   MobileStickyBuyBar,
   ProductBackButton,
   ProductShareButton,
+  ProductWatchlistButton,
+  InfiniteCatalogFeed,
 } from "../../../components/product";
 import TrackRecentlyViewed from "../../../components/product/TrackRecentlyViewed";
 import ProductCard from "../../../components/catalog/ProductCard";
+import HorizontalProductRow from "../../../components/catalog/HorizontalProductRow";
+import ProductRecentlyViewedRow from "../../../components/product/ProductRecentlyViewedRow";
 import { Star, Truck } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -51,8 +55,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
     );
   }
 
-  // Fetch catalog for suggested & related products
-  const allProducts = await getCatalog({ limit: 60 });
+  // Fetch full catalog for suggested, related & continuous infinite feed
+  const allProducts = await getCatalog({ limit: 200 });
   const categoryName = product.category || "Featured";
 
   // Section 1: Same category products (excluding current product)
@@ -64,14 +68,27 @@ export default async function ProductDetailPage({ params }: PageProps) {
     )
     .slice(0, 4);
 
+  const sameCategorySlugs = new Set(sameCategoryProducts.map((p) => p.slug));
+
   // Section 2: Related products from other categories (excluding current product)
   const relatedProducts = allProducts
     .filter(
       (p) =>
         p.slug !== product.slug &&
+        !sameCategorySlugs.has(p.slug) &&
         p.category?.toLowerCase() !== product.category?.toLowerCase()
     )
     .slice(0, 8);
+
+  const relatedSlugs = new Set(relatedProducts.map((p) => p.slug));
+
+  // Section 3: Remaining products for continuous infinite scroll feed
+  const remainingProducts = allProducts.filter(
+    (p) =>
+      p.slug !== product.slug &&
+      !sameCategorySlugs.has(p.slug) &&
+      !relatedSlugs.has(p.slug)
+  );
 
   const primaryVariant = product.variants[0];
   const rating = product.rating || 4.8;
@@ -111,17 +128,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-4 pb-32 sm:pb-36 md:pb-14 space-y-6 sm:space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-24 sm:pb-28 md:pb-10 space-y-6 sm:space-y-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
       <TrackRecentlyViewed product={product} />
 
-      {/* Top Action Row: Back Button on left, Share Button on right (Zero wasted space) */}
+      {/* Top Action Row: Back Button on left, Watchlist & Share Buttons on right (Zero wasted space) */}
       <div className="flex items-center justify-between">
         <ProductBackButton />
-        <ProductShareButton title={product.title} />
+        <div className="flex items-center gap-2">
+          <ProductWatchlistButton product={product} />
+          <ProductShareButton title={product.title} />
+        </div>
       </div>
 
       {/* Main Product Layout */}
@@ -174,51 +194,31 @@ export default async function ProductDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Suggested Products: Section 1 — More in Same Category */}
+      {/* 1. More in Same Category */}
       {sameCategoryProducts.length > 0 && (
-        <section className="pt-8 border-t border-slate-200/80 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-              More in {categoryName}
-            </h2>
-            <Link
-              href={`/?category=${encodeURIComponent(categoryName)}`}
-              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
-            >
-              <span>View All</span>
-              <span>&rarr;</span>
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {sameCategoryProducts.map((item) => (
-              <ProductCard key={item.slug} product={item} />
-            ))}
-          </div>
-        </section>
+        <HorizontalProductRow
+          title={`More in ${categoryName}`}
+          viewAllHref={`/?category=${encodeURIComponent(categoryName)}`}
+          viewAllText="View All"
+          products={sameCategoryProducts}
+        />
       )}
 
-      {/* Suggested Products: Section 2 — Related & Trending Products */}
+      {/* 2. You May Also Like */}
       {relatedProducts.length > 0 && (
-        <section className="pt-6 border-t border-slate-200/80 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-              You May Also Like
-            </h2>
-            <Link
-              href="/"
-              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
-            >
-              <span>Explore All</span>
-              <span>&rarr;</span>
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-            {relatedProducts.map((item) => (
-              <ProductCard key={item.slug} product={item} />
-            ))}
-          </div>
-        </section>
+        <HorizontalProductRow
+          title="You May Also Like"
+          viewAllHref="/"
+          viewAllText="Explore All"
+          products={relatedProducts}
+        />
       )}
+
+      {/* 3. Recently Viewed */}
+      <ProductRecentlyViewedRow currentSlug={product.slug} />
+
+      {/* 4. Continuous Infinite Discovery Feed of All Remaining Catalog Products */}
+      <InfiniteCatalogFeed products={remainingProducts} />
 
       {/* Mobile Sticky Bottom Action Bar */}
       <MobileStickyBuyBar product={product} variant={primaryVariant} />

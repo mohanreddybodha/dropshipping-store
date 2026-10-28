@@ -276,6 +276,17 @@ export default function ProfilePage() {
     }
   };
 
+  // Prevent background scroll when Dual-Factor modal is open
+  useEffect(() => {
+    if (showLookupModal) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = original;
+      };
+    }
+  }, [showLookupModal]);
+
   // Dual-Factor Guest Order Lookup
   const handleLookupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -350,26 +361,26 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5 pb-20 md:pb-8 space-y-6">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5">
       {/* ── TOP HEADER ── */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <UserIcon className="w-6 h-6 text-emerald-600" />
-            Account & Orders
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-base sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
+            <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 flex-shrink-0" />
+            <span className="truncate">Account & Orders</span>
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Manage your profile, sync cart items, and track US domestic orders in real time.
+          <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+            Manage profile & track orders
           </p>
         </div>
 
         {currentUser && (
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 transition px-3 py-1.5 rounded-xl hover:bg-slate-100 border border-slate-200"
+            className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 text-xs font-bold transition shadow-2xs active:scale-95 whitespace-nowrap"
           >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
+            <LogOut className="w-3.5 h-3.5 text-rose-600 flex-shrink-0" />
+            <span className="whitespace-nowrap">Sign Out</span>
           </button>
         )}
       </div>
@@ -512,12 +523,20 @@ export default function ProfilePage() {
 
           {/* Orders History Section */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
-                <Package className="w-4 h-4 text-emerald-600" />
-                Orders for {currentUser.email} ({orders.length})
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2 gap-1.5">
+              <h2 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5 min-w-0 flex-1">
+                <Package className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span className="flex-shrink-0 whitespace-nowrap">Orders for</span>
+                <span
+                  title={currentUser.email?.toLowerCase()}
+                  className="lowercase truncate flex-1 min-w-0 font-bold text-slate-700 block"
+                >
+                  {currentUser.email?.toLowerCase()}
+                </span>
+                <span className="flex-shrink-0 font-bold text-emerald-700 whitespace-nowrap">
+                  ({orders.length})
+                </span>
               </h2>
-              <span className="text-[11px] text-slate-500">Fast USPS Domestic Dispatch</span>
             </div>
 
             {ordersLoading ? (
@@ -643,7 +662,12 @@ export default function ProfilePage() {
 
       {/* ── DUAL-FACTOR ORDER LOOKUP MODAL ── */}
       {showLookupModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in-50">
+        <div
+          className="fixed inset-0 top-0 left-0 right-0 bottom-0 z-[100] w-screen h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowLookupModal(false);
+          }}
+        >
           <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">

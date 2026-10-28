@@ -340,9 +340,24 @@ def get_engine(database_url: Optional[str] = None) -> Engine:
 
 
 def init_db(engine: Optional[Engine] = None) -> Engine:
-    """Initialize all database tables."""
+    """Initialize all database tables with self-healing column sync."""
     eng = engine or get_engine()
     Base.metadata.create_all(bind=eng)
+
+    # Self-healing column sync for SQLite dev environments
+    if str(eng.url).startswith("sqlite"):
+        try:
+            with eng.connect() as conn:
+                res = conn.exec_driver_sql("PRAGMA table_info(products)").fetchall()
+                cols = {row[1] for row in res}
+                if "specs_json" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE products ADD COLUMN specs_json JSON")
+                if "category" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE products ADD COLUMN category VARCHAR(128) DEFAULT 'Home & Kitchen'")
+                conn.commit()
+        except Exception:
+            pass
+
     return eng
 
 

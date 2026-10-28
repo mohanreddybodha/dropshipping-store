@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { X, Trash2, ArrowRight, Truck } from "lucide-react";
 import { useCart } from "../../lib/cart";
@@ -8,10 +8,21 @@ import { useCart } from "../../lib/cart";
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, totalAmount, totalSavings } = useCart();
 
+  // Prevent background scroll when cart drawer is active
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-[90] overflow-hidden">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"

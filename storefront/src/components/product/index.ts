@@ -5,3 +5,5 @@ export { default as MobileStickyBuyBar } from "./MobileStickyBuyBar";
 export { default as SizeSelector } from "./SizeSelector";
 export { default as ProductBackButton } from "./ProductBackButton";
 export { default as ProductShareButton } from "./ProductShareButton";
+export { default as ProductWatchlistButton } from "./ProductWatchlistButton";
+export { default as InfiniteCatalogFeed } from "./InfiniteCatalogFeed";

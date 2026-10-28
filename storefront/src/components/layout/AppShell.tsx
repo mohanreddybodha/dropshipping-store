@@ -72,15 +72,15 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Global Toast Notifications */}
       <ToastContainer />
 
-      {/* Header ONLY rendered on the home screen */}
+      {/* Top Header: Rendered ONLY on the home page */}
       {isHome && (
         <Suspense fallback={<div className="h-16 bg-white border-b border-slate-200" />}>
           <Navbar />
         </Suspense>
       )}
 
-      {/* Main Content: Adds bottom padding on mobile non-home screens so bottom nav doesn't overlap */}
-      <main className={`flex-1 ${!isProduct && !isHome ? "pb-20 md:pb-0" : ""}`}>{children}</main>
+      {/* Main Content */}
+      <main className="flex-1">{children}</main>
 
       {/* Retail Trust Pillars & Footer on Home (Shown on both mobile & desktop with safe clearance above nav) */}
       {isHome && <Footer />}
