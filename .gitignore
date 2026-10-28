@@ -31,6 +31,7 @@ storefront/.next/
 storefront/out/
 storefront/build/
 storefront/.turbo/
+*.tsbuildinfo
 
 # OS and IDE files
 .DS_Store

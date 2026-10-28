@@ -9,12 +9,9 @@ import {
   ProductBackButton,
   ProductShareButton,
   ProductWatchlistButton,
-  InfiniteCatalogFeed,
 } from "../../../components/product";
 import TrackRecentlyViewed from "../../../components/product/TrackRecentlyViewed";
-import ProductCard from "../../../components/catalog/ProductCard";
 import HorizontalProductRow from "../../../components/catalog/HorizontalProductRow";
-import ProductRecentlyViewedRow from "../../../components/product/ProductRecentlyViewedRow";
 import { Star, Truck } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -55,8 +52,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
     );
   }
 
-  // Fetch full catalog for suggested, related & continuous infinite feed
-  const allProducts = await getCatalog({ limit: 200 });
+  // Fetch catalog for suggested & category products
+  const allProducts = await getCatalog({ limit: 100 });
   const categoryName = product.category || "Featured";
 
   // Section 1: Same category products (excluding current product)
@@ -66,29 +63,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
         p.slug !== product.slug &&
         p.category?.toLowerCase() === product.category?.toLowerCase()
     )
-    .slice(0, 4);
+    .slice(0, 10);
 
   const sameCategorySlugs = new Set(sameCategoryProducts.map((p) => p.slug));
 
-  // Section 2: Related products from other categories (excluding current product)
-  const relatedProducts = allProducts
+  // Section 2: Suggested For You (products excluding current product and same category)
+  const suggestedProducts = allProducts
     .filter(
       (p) =>
         p.slug !== product.slug &&
-        !sameCategorySlugs.has(p.slug) &&
-        p.category?.toLowerCase() !== product.category?.toLowerCase()
+        !sameCategorySlugs.has(p.slug)
     )
-    .slice(0, 8);
-
-  const relatedSlugs = new Set(relatedProducts.map((p) => p.slug));
-
-  // Section 3: Remaining products for continuous infinite scroll feed
-  const remainingProducts = allProducts.filter(
-    (p) =>
-      p.slug !== product.slug &&
-      !sameCategorySlugs.has(p.slug) &&
-      !relatedSlugs.has(p.slug)
-  );
+    .slice(0, 15);
 
   const primaryVariant = product.variants[0];
   const rating = product.rating || 4.8;
@@ -148,15 +134,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
         {/* Left Column: Visual Showcase (7 cols) */}
         <div className="lg:col-span-7 space-y-3">
-          {/* Title & In-Stock Status (clean, no duplicate stock badges) */}
-          <div className="space-y-0.5">
+          {/* Title */}
+          <div>
             <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-snug">
               {product.title}
             </h1>
-            <p className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-dot" />
-              In Stock
-            </p>
           </div>
 
           {/* Interactive Product Gallery */}
@@ -194,31 +176,25 @@ export default async function ProductDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* 1. More in Same Category */}
+      {/* 1. Categorizer */}
       {sameCategoryProducts.length > 0 && (
         <HorizontalProductRow
-          title={`More in ${categoryName}`}
+          title="Categorizer"
           viewAllHref={`/?category=${encodeURIComponent(categoryName)}`}
           viewAllText="View All"
           products={sameCategoryProducts}
         />
       )}
 
-      {/* 2. You May Also Like */}
-      {relatedProducts.length > 0 && (
+      {/* 2. Suggested For You */}
+      {suggestedProducts.length > 0 && (
         <HorizontalProductRow
-          title="You May Also Like"
+          title="Suggested For You"
           viewAllHref="/"
-          viewAllText="Explore All"
-          products={relatedProducts}
+          viewAllText="View All"
+          products={suggestedProducts}
         />
       )}
-
-      {/* 3. Recently Viewed */}
-      <ProductRecentlyViewedRow currentSlug={product.slug} />
-
-      {/* 4. Continuous Infinite Discovery Feed of All Remaining Catalog Products */}
-      <InfiniteCatalogFeed products={remainingProducts} />
 
       {/* Mobile Sticky Bottom Action Bar */}
       <MobileStickyBuyBar product={product} variant={primaryVariant} />

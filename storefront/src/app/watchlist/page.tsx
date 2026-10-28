@@ -2,21 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, Trash2, ArrowLeft, ShoppingBag, Star } from "lucide-react";
+import { Heart, Trash2, ArrowLeft, Star, ShoppingBag } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../../components/ui/Toast";
 import { auth } from "../../lib/firebase";
 import { toggleUserWatchlist, getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
 import HorizontalProductRow from "../../components/catalog/HorizontalProductRow";
 
-/** Watchlist card: clean card with delete icon replacing heart, and rating in bottom-right of image */
+/** Watchlist card: clean card with delete icon replacing heart, rating in bottom-right of image, and consistent 2-line title */
 function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () => void }) {
   const primaryVariant = product.variants[0];
   const retailPrice = primaryVariant?.retail_price_1x || 24.99;
   const comparePrice = +(retailPrice * 1.25).toFixed(2);
   const heroImage = product.hero_image_url || product.images?.[0] || "/placeholder.jpg";
   const rating = product.rating || 4.8;
-  const reviewCount = product.review_count || 128;
 
   return (
     <div className="group block bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-xl hover:border-rose-300 transition-all duration-200 flex flex-col justify-between">
@@ -30,12 +29,6 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
-          {/* Free Shipping Badge */}
-          <div className="absolute top-2 left-2">
-            <span className="bg-emerald-600/90 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md shadow-sm">
-              Free Shipping
-            </span>
-          </div>
 
           {/* DELETE ICON (replaces heart in watchlist) */}
           <button
@@ -51,41 +44,32 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
             <Trash2 className="w-4 h-4" />
           </button>
 
-          {/* Rating Badge in bottom-right corner of image below delete icon */}
+          {/* Rating Badge in bottom-right corner of image (Rating number only, no count) */}
           <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-600 shadow-sm border border-slate-100">
             <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
             <span>{rating.toFixed(1)}</span>
-            <span className="text-slate-400 font-normal">({reviewCount})</span>
           </div>
         </div>
 
-        {/* Title */}
-        <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-rose-700 transition line-clamp-2 leading-snug">
+        {/* Fixed 2-Line Title Container ensuring all cards match in height */}
+        <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-rose-700 transition line-clamp-2 h-9 sm:h-10 leading-snug">
           {product.title}
         </h3>
       </Link>
 
-      {/* Price Row */}
-      <div className="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between">
-        <div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-sm sm:text-base font-black text-slate-900">
-              ${retailPrice.toFixed(2)}
-            </span>
-            <span className="text-[11px] text-slate-400 line-through">
-              ${comparePrice.toFixed(2)}
-            </span>
-          </div>
-          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tight">
-            Save 20%
+      {/* Price & Discount Row (Total consistency with ProductCard, no bag icon) */}
+      <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-sm sm:text-base font-black text-slate-900">
+            ${retailPrice.toFixed(2)}
+          </span>
+          <span className="text-[11px] text-slate-400 line-through">
+            ${comparePrice.toFixed(2)}
           </span>
         </div>
-        <Link
-          href={`/products/${product.slug}`}
-          className="p-2 rounded-xl bg-slate-100 hover:bg-emerald-600 hover:text-white text-slate-700 transition shadow-sm"
-        >
-          <ShoppingBag className="w-4 h-4" />
-        </Link>
+        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-2 py-0.5 rounded-full uppercase tracking-tight">
+          Save 20%
+        </span>
       </div>
     </div>
   );
