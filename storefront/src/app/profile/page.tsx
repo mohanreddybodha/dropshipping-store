@@ -32,8 +32,40 @@ import {
   syncUserAuth,
   lookupOrdersDualFactor,
   getCustomerOrders,
+  FALLBACK_PRODUCTS,
 } from "../../lib/api";
 import { CustomerOrder } from "../../lib/types";
+
+// Helper to resolve product image, title, and link for order items (Flipkart/Amazon style)
+function resolveOrderItemInfo(item: any) {
+  const title = item.product_title || item.title || "Domestic Lab Essential";
+  let imageUrl = item.image_url;
+  let slug = item.slug;
+
+  if (!imageUrl || !slug) {
+    const cleanT = (title || "").toLowerCase();
+    const matched = FALLBACK_PRODUCTS.find(
+      (p) =>
+        p.title.toLowerCase() === cleanT ||
+        cleanT.includes(p.title.toLowerCase()) ||
+        p.title.toLowerCase().includes(cleanT)
+    );
+    if (matched) {
+      if (!imageUrl) imageUrl = matched.hero_image_url || matched.images?.[0];
+      if (!slug) slug = matched.slug;
+    }
+  }
+
+  return {
+    title,
+    imageUrl: imageUrl || "/placeholder.jpg",
+    slug: slug ? `/products/${slug}` : undefined,
+    size: item.size,
+    color: item.color,
+    quantity: item.quantity || 1,
+    price: Number(item.price || item.unit_price || 0),
+  };
+}
 
 // ── Google SVG Icon ──────────────────────────────────────────────────────────
 function GoogleIcon() {
@@ -295,8 +327,14 @@ export default function ProfilePage() {
     setLookupResults(null);
 
     try {
-      let res = await lookupOrdersDualFactor(lookupEmail, lookupZip);
-      if (res.length === 0) {
+      let res: CustomerOrder[] = [];
+      try {
+        res = await lookupOrdersDualFactor(lookupEmail, lookupZip);
+      } catch (apiErr) {
+        console.warn("Dual-factor backend API lookup warning, checking local storage session:", apiErr);
+      }
+
+      if (!res || res.length === 0) {
         // Fallback to checking local session orders (e.g. newly completed checkout)
         try {
           const raw = localStorage.getItem("customer_orders");
@@ -633,23 +671,85 @@ export default function ProfilePage() {
                       )}
                     </div>
 
-                    {/* Order Items */}
+                    {/* Order Product Items (Full Flipkart/Amazon Product Card Presentation) */}
                     {order.items && order.items.length > 0 && (
-                      <div className="divide-y divide-slate-100 pt-1">
-                        {order.items.map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="py-1.5 flex items-center justify-between text-xs text-slate-700"
-                          >
-                            <span className="font-medium line-clamp-1 pr-4">
-                              {item.title || "Catalog Product"}{" "}
-                              {item.size ? `(Size: ${item.size})` : ""}
-                            </span>
-                            <span className="font-semibold text-slate-900 flex-shrink-0">
-                              Qty: {item.quantity || 1}
-                            </span>
-                          </div>
-                        ))}
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                          Ordered Items ({order.items.reduce((acc, i) => acc + (i.quantity || 1), 0)} Units)
+                        </span>
+                        <div className="space-y-2.5">
+                          {order.items.map((item, idx) => {
+                            const info = resolveOrderItemInfo(item);
+                            const productLink = info.slug || "/";
+
+                            return (
+                              <div
+                                key={idx}
+                                className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition group"
+                              >
+                                {/* High-Fidelity Thumbnail */}
+                                <Link
+                                  href={productLink}
+                                  prefetch={true}
+                                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-white border border-slate-200 p-0.5 flex items-center justify-center flex-shrink-0"
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={info.imageUrl}
+                                    alt={info.title}
+                                    className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                                  />
+                                </Link>
+
+                                {/* Product Title & Details */}
+                                <div className="flex-1 min-w-0 space-y-0.5">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <Link
+                                      href={productLink}
+                                      prefetch={true}
+                                      className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 leading-snug"
+                                    >
+                                      {info.title}
+                                    </Link>
+                                    {info.price > 0 && (
+                                      <span className="text-xs font-black text-slate-900 flex-shrink-0">
+                                        ${(info.price * info.quantity).toFixed(2)}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Badges */}
+                                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-500 pt-0.5">
+                                    {info.size && (
+                                      <span className="bg-white border border-slate-200 text-slate-700 px-1.5 py-0.2 rounded font-medium">
+                                        Size: {info.size}
+                                      </span>
+                                    )}
+                                    {info.color && (
+                                      <span className="bg-white border border-slate-200 text-slate-700 px-1.5 py-0.2 rounded font-medium">
+                                        Color: {info.color}
+                                      </span>
+                                    )}
+                                    <span className="bg-emerald-100/70 border border-emerald-200 text-emerald-800 px-1.5 py-0.2 rounded font-bold">
+                                      {info.quantity} {info.quantity === 1 ? "Unit" : "Units"}
+                                    </span>
+                                    {info.price > 0 && (
+                                      <span className="text-slate-400">
+                                        (${info.price.toFixed(2)}/Unit)
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Domestic Fulfillment Badge */}
+                                  <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-medium pt-0.5">
+                                    <Truck className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                                    <span>USPS Domestic Tracked</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -768,6 +868,34 @@ export default function ProfilePage() {
                           </p>
                         )}
                       </div>
+
+                      {/* Purchased Items within Guest Lookup */}
+                      {order.items && order.items.length > 0 && (
+                        <div className="pt-2 border-t border-slate-200/80 space-y-1.5">
+                          {order.items.map((item, idx) => {
+                            const info = resolveOrderItemInfo(item);
+                            return (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-2 text-[11px] text-slate-800 bg-white p-2 rounded-lg border border-slate-200/60"
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={info.imageUrl}
+                                  alt={info.title}
+                                  className="w-8 h-8 object-contain rounded bg-slate-50 border border-slate-100 flex-shrink-0"
+                                />
+                                <span className="font-semibold flex-1 min-w-0 truncate">
+                                  {info.title}
+                                </span>
+                                <span className="font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded text-[10px] flex-shrink-0">
+                                  {info.quantity} {info.quantity === 1 ? "Unit" : "Units"}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

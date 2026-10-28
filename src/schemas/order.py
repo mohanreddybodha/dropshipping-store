@@ -50,6 +50,9 @@ class ShippingAddressSchema(StrictBaseModel):
     @classmethod
     def validate_zip_code(cls, v: str) -> str:
         clean_zip = v.strip()
+        digits = re.sub(r"\D", "", clean_zip)
+        if len(digits) == 6:
+            raise ValueError(f"6-digit postal codes (e.g. Indian PIN codes '{v}') are not supported. US domestic delivery requires 5-digit US ZIP codes.")
         if not US_ZIP_REGEX.match(clean_zip):
             raise ValueError(f"Invalid US postal code format: '{v}'. Must match 12345 or 12345-6789.")
         return clean_zip
@@ -58,8 +61,15 @@ class ShippingAddressSchema(StrictBaseModel):
     @classmethod
     def validate_phone(cls, v: str) -> str:
         clean_phone = v.strip()
-        if not PHONE_REGEX.match(clean_phone):
-            raise ValueError(f"Invalid phone number format: '{v}'.")
+        if clean_phone.startswith("+") and not clean_phone.startswith("+1"):
+            raise ValueError(f"International phone numbers ({v}) are not supported. Domestic delivery requires a US (+1) mobile number.")
+        digits = re.sub(r"\D", "", clean_phone)
+        if len(digits) == 11 and digits.startswith("1"):
+            digits = digits[1:]
+        if len(digits) != 10:
+            raise ValueError(f"US phone number must contain 10 digits (got {len(digits)}): '{v}'.")
+        if digits[0] in ("0", "1") or digits[3] in ("0", "1"):
+            raise ValueError(f"Invalid US NANP phone format: '{v}'. Area code and exchange code cannot begin with 0 or 1.")
         return clean_phone
 
     @field_validator("email")

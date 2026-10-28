@@ -38,7 +38,7 @@ export default function ProductWatchlistButton({ product }: ProductWatchlistButt
       } else {
         list.push(product);
         setIsSaved(true);
-        showToast("Added to Watchlist ❤️", "watchlist-add");
+        showToast("Added to Watchlist", "watchlist-add");
       }
 
       localStorage.setItem("watchlist_items", JSON.stringify(list));

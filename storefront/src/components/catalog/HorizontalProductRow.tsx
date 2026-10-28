@@ -7,7 +7,7 @@ import { Product } from "../../lib/types";
 import ProductCard from "./ProductCard";
 
 interface HorizontalProductRowProps {
-  title: "Categorizer" | "Your Watchlist" | "Recently Viewed" | "Suggested For You";
+  title: string;
   viewAllHref?: string;
   viewAllText?: string;
   products: Product[];
