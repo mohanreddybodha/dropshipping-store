@@ -9,17 +9,50 @@ import {
   Minus,
   ArrowRight,
   ShoppingBag,
-  ShieldCheck,
   Truck,
+  User,
 } from "lucide-react";
+import { Product } from "../../lib/types";
+import ProductCard from "../../components/catalog/ProductCard";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalAmount, totalSavings } = useCart();
   const [mounted, setMounted] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    // Retrieve saved customer user if signed in
+    try {
+      const storedUser = localStorage.getItem("customer_auth_user");
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        setUserEmail(parsed.email || null);
+      } else {
+        const savedEmail = localStorage.getItem("customer_email");
+        if (savedEmail) setUserEmail(savedEmail);
+      }
+    } catch {
+      // Ignore
+    }
+
+    // Retrieve recently viewed products
+    try {
+      const raw = localStorage.getItem("recently_viewed_products");
+      if (raw) {
+        const list: Product[] = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          const cartSlugs = new Set(items.map((i) => i.product.slug));
+          const filtered = list.filter((p) => !cartSlugs.has(p.slug));
+          setRecentlyViewed(filtered.slice(0, 4));
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  }, [items]);
 
   if (!mounted) {
     return (
@@ -57,12 +90,26 @@ export default function CartPage() {
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
+
+        {/* Recently viewed products when cart is empty */}
+        {recentlyViewed.length > 0 && (
+          <div className="pt-10 text-left border-t border-slate-200/80 space-y-4">
+            <h2 className="text-sm font-black text-slate-900 tracking-tight">
+              Recently Viewed Products
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {recentlyViewed.map((item) => (
+                <ProductCard key={item.slug} product={item} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-5 pb-20 md:pb-6 space-y-4">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-5 pb-16 md:pb-6 space-y-6">
       {/* Cart Title Bar */}
       <div className="flex items-center justify-between border-b border-slate-200 pb-3">
         <div>
@@ -205,7 +252,7 @@ export default function CartPage() {
           })}
         </div>
 
-        {/* Right Column: Order Summary & Damage-Free Guarantee (No duplicate FAQs here!) */}
+        {/* Right Column: Order Summary & Account/Checkout Action */}
         <div className="space-y-3.5">
           {/* Order Summary Card */}
           <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
@@ -249,32 +296,60 @@ export default function CartPage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
 
-            {/* Reassurance Micro-List */}
-            <div className="pt-2 space-y-1.5 text-[10px] text-slate-500 border-t border-slate-100">
-              <div className="flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                <span>Tracked 3–5 Business Day Delivery</span>
+            {/* Account / Sign-in Status Prompt */}
+            {userEmail ? (
+              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-[11px] text-slate-700">
+                <span className="truncate">Signed in: <strong>{userEmail}</strong></span>
+                <Link href="/profile" className="text-emerald-700 font-bold hover:underline ml-2 flex-shrink-0">
+                  Orders →
+                </Link>
               </div>
-              <p className="text-[10px] text-slate-400">
-                Charges will appear as <strong>DOMESTICLAB</strong> on your statement.
-              </p>
-            </div>
-          </div>
+            ) : (
+              <div className="p-2.5 bg-slate-50 border border-slate-200/90 rounded-xl flex items-center justify-between text-[11px] text-slate-600">
+                <div className="flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Have an account?</span>
+                </div>
+                <Link
+                  href="/profile"
+                  className="font-bold text-emerald-700 hover:text-emerald-800 transition"
+                >
+                  Sign In →
+                </Link>
+              </div>
+            )}
 
-          {/* Damage-Free Delivery Guarantee Card */}
-          <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs text-xs text-slate-600 space-y-1">
-            <div className="flex items-center gap-2 font-bold text-slate-900 text-xs">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span>Damage-Free Delivery Guarantee</span>
+            {/* Tracked Delivery Reassurance (Without unconfigured payment assumptions) */}
+            <div className="pt-2 flex items-center gap-1.5 text-[10px] text-slate-500 border-t border-slate-100">
+              <Truck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+              <span>Tracked 3–5 Business Day Delivery via USPS</span>
             </div>
-            <p className="text-[11px] text-slate-500 leading-relaxed">
-              Every package is thoroughly inspected. If an item arrives damaged or broken during transit,
-              email us with 1 photo within 7 days of delivery and our support team will dispatch an
-              immediate free replacement at zero extra charge.
-            </p>
           </div>
         </div>
       </div>
+
+      {/* Below Proceed to Checkout: Recently Viewed Products (No empty gap) */}
+      {recentlyViewed.length > 0 && (
+        <section className="pt-6 border-t border-slate-200/80 space-y-3.5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+              Recently Viewed Products
+            </h2>
+            <Link
+              href="/"
+              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
+            >
+              <span>Explore More</span>
+              <span>→</span>
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            {recentlyViewed.map((item) => (
+              <ProductCard key={item.slug} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

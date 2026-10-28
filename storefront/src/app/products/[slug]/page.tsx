@@ -9,6 +9,7 @@ import {
   ProductBackButton,
   ProductShareButton,
 } from "../../../components/product";
+import TrackRecentlyViewed from "../../../components/product/TrackRecentlyViewed";
 import ProductCard from "../../../components/catalog/ProductCard";
 import { Star, Truck } from "lucide-react";
 import type { Metadata } from "next";
@@ -115,6 +116,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
+      <TrackRecentlyViewed product={product} />
 
       {/* Top Action Row: Back Button on left, Share Button on right (Zero wasted space) */}
       <div className="flex items-center justify-between">
@@ -176,14 +178,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {sameCategoryProducts.length > 0 && (
         <section className="pt-8 border-t border-slate-200/80 space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                More in {categoryName}
-              </h2>
-              <p className="text-xs text-slate-500">
-                Top picks in this collection with free domestic delivery
-              </p>
-            </div>
+            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+              More in {categoryName}
+            </h2>
             <Link
               href={`/?category=${encodeURIComponent(categoryName)}`}
               className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
@@ -204,14 +201,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {relatedProducts.length > 0 && (
         <section className="pt-6 border-t border-slate-200/80 space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                You May Also Like
-              </h2>
-              <p className="text-xs text-slate-500">
-                Popular items frequently explored by our shoppers
-              </p>
-            </div>
+            <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+              You May Also Like
+            </h2>
             <Link
               href="/"
               className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
