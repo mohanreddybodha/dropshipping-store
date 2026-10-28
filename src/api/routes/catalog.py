@@ -53,6 +53,7 @@ class ProductResponse(BaseModel):
     images: Optional[List[str]] = None
     pas_description_html: Optional[str] = None
     features: Optional[List[Dict[str, Any]]] = None
+    specs: Optional[Dict[str, Any]] = None
     seo_meta: Optional[Dict[str, Any]] = None
     faq_schema: Optional[List[Dict[str, Any]]] = None
     viral_scripts: Optional[List[Dict[str, Any]]] = None
@@ -108,6 +109,7 @@ def _build_product_response(prod: Product) -> ProductResponse:
         images=prod.images_json,
         pas_description_html=prod.pas_description_html,
         features=prod.features_json,
+        specs=getattr(prod, "specs_json", None),
         seo_meta=prod.seo_meta_json,
         faq_schema=prod.faq_schema_json,
         viral_scripts=prod.viral_scripts_json,

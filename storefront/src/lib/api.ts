@@ -32,6 +32,15 @@ export const FALLBACK_PRODUCTS: Product[] = [
       { title: "USB Rechargeable", desc: "Long-lasting battery powers through full-day use." },
       { title: "Multi-Pack Savings", desc: "Save up to 18% when ordering 2 or 3 for home and travel." }
     ],
+    specs: {
+      material: "Reinforced ABS & Brushless Copper Motor",
+      power_source: "USB Rechargeable & Battery Powered",
+      package_weight: "320g • Compact Ergonomic Form Factor",
+      fulfillment_origin: "US Domestic Distribution Center",
+      carrier_sla: "USPS Tracked Ground (3–5 Business Days)",
+      in_the_box: "1x Turbo Portable Fan, 1x USB-C Cable, 1x User Manual",
+      warranty: "Damage-Free Delivery Guarantee (Free Replacement on Transit Defects)"
+    },
     faq_schema: [
       { question: "How fast will my order arrive?", answer: "Orders ship within 24 hours via tracked USPS with delivery in 3 to 5 business days." },
       { question: "What is the battery life?", answer: "Up to 8 hours of continuous operation on a single charge." },
@@ -82,6 +91,15 @@ export const FALLBACK_PRODUCTS: Product[] = [
       { title: "Fast Domestic Dispatch", desc: "Ships tracked via USPS directly to your door." },
       { title: "Volume Bundle Discounts", desc: "Save up to 18% when ordering 2 or 3 boards." }
     ],
+    specs: {
+      material: "Flexible Magnetic Sheet & Stain-Resistant PET Laminate",
+      power_source: "Non-Powered Mechanical",
+      package_weight: "260g • Roll-Resistant Protective Tube",
+      fulfillment_origin: "US Domestic Distribution Center",
+      carrier_sla: "USPS Tracked Ground (3–5 Business Days)",
+      in_the_box: "1x Large Magnetic Board, 4x Dry-Erase Fine Tip Markers, 1x Eraser",
+      warranty: "Damage-Free Delivery Guarantee (Free Replacement on Transit Defects)"
+    },
     faq_schema: [
       { question: "Will it stick to my stainless steel fridge?", answer: "It adheres firmly to all magnetic stainless steel and steel surfaces." },
       { question: "Does it come with markers?", answer: "Designed for all standard dry-erase markers and chalk pens." }

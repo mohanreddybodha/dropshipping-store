@@ -6,6 +6,9 @@ import { AppShell } from "../components/layout";
 export const metadata: Metadata = {
   title: "Domestic Lab | 3–7 Day Fast US Domestic Shipping",
   description: "Everyday problem-solving products shipped same-day from verified US domestic warehouses via USPS. Arrives in 3–5 business days with live tracked delivery.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
