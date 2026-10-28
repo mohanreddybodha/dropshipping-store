@@ -52,7 +52,7 @@ class ShippingAddressSchema(StrictBaseModel):
         clean_zip = v.strip()
         digits = re.sub(r"\D", "", clean_zip)
         if len(digits) == 6:
-            raise ValueError(f"6-digit postal codes (e.g. Indian PIN codes '{v}') are not supported. US domestic delivery requires 5-digit US ZIP codes.")
+            raise ValueError("Invalid US PIN. US postal codes are 5 digits. Six-digit PIN codes are not supported.")
         if not US_ZIP_REGEX.match(clean_zip):
             raise ValueError(f"Invalid US postal code format: '{v}'. Must match 12345 or 12345-6789.")
         return clean_zip
