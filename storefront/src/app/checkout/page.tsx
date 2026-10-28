@@ -4,7 +4,8 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "../../lib/cart";
-import { FALLBACK_PRODUCTS, createCheckoutOrder } from "../../lib/api";
+import { FALLBACK_PRODUCTS, createCheckoutOrder, getUserAuthState } from "../../lib/api";
+import PayPalButton from "../../components/PayPalButton";
 import { auth } from "../../lib/firebase";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import ThemedDropdown, { ThemedDropdownOption } from "../../components/ui/ThemedDropdown";
@@ -102,65 +103,6 @@ function CheckoutContent() {
   const buyNowSize = searchParams.get("size") || undefined;
   const buyNowColor = searchParams.get("color") || undefined;
 
-  // Initial state has zero hardcoded dummy address values
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phoneCode: "+1",
-    phone: "",
-    address1: "",
-    address2: "",
-    city: "",
-    province: "",
-    zip_code: "",
-    country_code: "US",
-  });
-
-  const [isAuthenticatedUser, setIsAuthenticatedUser] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [confirmedOrder, setConfirmedOrder] = useState<{
-    orderNumber: string;
-    amount: number;
-    shippingSla: string;
-    items: typeof checkoutItems;
-  } | null>(null);
-
-  // Pre-fill authenticated user data ONLY if signed in
-  useEffect(() => {
-    const unsub = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setIsAuthenticatedUser(true);
-        setForm((prev) => ({
-          ...prev,
-          email: user.email || prev.email,
-          name: user.displayName || prev.name,
-        }));
-      } else {
-        setIsAuthenticatedUser(false);
-      }
-    });
-    return () => unsub();
-  }, []);
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      const res = await signInWithPopup(auth, provider);
-      if (res.user) {
-        setIsAuthenticatedUser(true);
-        setForm((prev) => ({
-          ...prev,
-          email: res.user.email || prev.email,
-          name: res.user.displayName || prev.name,
-        }));
-      }
-    } catch (err: unknown) {
-      console.error("Google sign in error", err);
-    }
-  };
-
   // Single item checkout logic when buyNow=true (Flipkart style direct single checkout)
   const singleCartItem = isBuyNow && buyNowVid
     ? items.find(
@@ -197,6 +139,208 @@ function CheckoutContent() {
         },
       ];
 
+  // Initial state has zero hardcoded dummy address values
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phoneCode: "+1",
+    phone: "",
+    address1: "",
+    address2: "",
+    city: "",
+    province: "",
+    zip_code: "",
+    country_code: "US",
+  });
+
+  const [isAuthenticatedUser, setIsAuthenticatedUser] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [confirmedOrder, setConfirmedOrder] = useState<{
+    orderNumber: string;
+    amount: number;
+    shippingSla: string;
+    items: typeof checkoutItems;
+  } | null>(null);
+
+  // Network offline / online recovery listener
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsOffline(!window.navigator.onLine);
+      const handleOnline = () => {
+        setIsOffline(false);
+        setErrorMessage(null);
+      };
+      const handleOffline = () => {
+        setIsOffline(true);
+        setErrorMessage("Network disconnected. Please check your internet connection.");
+      };
+      window.addEventListener("online", handleOnline);
+      window.addEventListener("offline", handleOffline);
+      return () => {
+        window.removeEventListener("online", handleOnline);
+        window.removeEventListener("offline", handleOffline);
+      };
+    }
+  }, []);
+
+  // Multi-tab order synchronization: Prevents paying twice if another tab placed order
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "customer_orders" && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const latest = parsed[0];
+            const diffMs = Date.now() - new Date(latest.created_at).getTime();
+            if (diffMs < 45000 && items.length > 0) {
+              setConfirmedOrder({
+                orderNumber: latest.internal_order_number,
+                amount: latest.total_retail,
+                shippingSla: "3–5 Business Days (Tracked USPS Ground)",
+                items: checkoutItems,
+              });
+              clearCart();
+            }
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [items, checkoutItems, clearCart]);
+
+  // 1. Hydrate delivery address from localStorage (draft or previous saved address) on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const draft = localStorage.getItem("checkout_draft_address");
+      const saved = localStorage.getItem("saved_shipping_address");
+      const dataToLoad = draft ? JSON.parse(draft) : saved ? JSON.parse(saved) : null;
+      if (dataToLoad && typeof dataToLoad === "object") {
+        setForm((prev) => ({
+          ...prev,
+          name: dataToLoad.name || prev.name,
+          email: dataToLoad.email || prev.email,
+          phone: dataToLoad.phone || prev.phone,
+          phoneCode: dataToLoad.phoneCode || "+1",
+          address1: dataToLoad.address1 || prev.address1,
+          address2: dataToLoad.address2 || prev.address2,
+          city: dataToLoad.city || prev.city,
+          province: dataToLoad.province || prev.province,
+          zip_code: dataToLoad.zip_code || prev.zip_code,
+          country_code: "US",
+        }));
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, []);
+
+  // 2. Auto-save delivery address to localStorage on every change (persists across refreshes)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const hasContent = Boolean(
+        form.name.trim() ||
+        form.email.trim() ||
+        form.phone.trim() ||
+        form.address1.trim() ||
+        form.city.trim() ||
+        form.province ||
+        form.zip_code.trim()
+      );
+      if (hasContent) {
+        localStorage.setItem("checkout_draft_address", JSON.stringify(form));
+      }
+    } catch {
+      // Storage write error ignored
+    }
+  }, [form]);
+
+  // 3. Pre-fill authenticated user data & fetch saved address from database
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        setIsAuthenticatedUser(true);
+        setForm((prev) => ({
+          ...prev,
+          email: prev.email || user.email || "",
+          name: prev.name || user.displayName || "",
+          phone: prev.phone || user.phoneNumber || "",
+        }));
+
+        // Fetch recent orders from database to pre-fill past shipping address if not already entered
+        try {
+          const userState = await getUserAuthState(user.uid, user.email, user.phoneNumber);
+          if (userState?.orders && Array.isArray(userState.orders) && userState.orders.length > 0) {
+            const latest = userState.orders[0];
+            setForm((prev) => ({
+              ...prev,
+              name: prev.name || latest.shipping_name || user.displayName || "",
+              email: prev.email || latest.customer_email || user.email || "",
+              phone: prev.phone || latest.customer_phone || user.phoneNumber || "",
+              address1: prev.address1 || latest.shipping_address || "",
+              city: prev.city || latest.shipping_city || "",
+              province: prev.province || latest.shipping_province || "",
+              zip_code: prev.zip_code || latest.shipping_zip || "",
+              country_code: "US",
+            }));
+          }
+        } catch {
+          // Background fetch warning ignored
+        }
+      } else {
+        setIsAuthenticatedUser(false);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const handleClearAddress = () => {
+    setForm({
+      name: auth.currentUser?.displayName || "",
+      email: auth.currentUser?.email || "",
+      phoneCode: "+1",
+      phone: auth.currentUser?.phoneNumber || "",
+      address1: "",
+      address2: "",
+      city: "",
+      province: "",
+      zip_code: "",
+      country_code: "US",
+    });
+    try {
+      localStorage.removeItem("checkout_draft_address");
+      localStorage.removeItem("saved_shipping_address");
+    } catch {
+      // Ignore
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const res = await signInWithPopup(auth, provider);
+      if (res.user) {
+        setIsAuthenticatedUser(true);
+        setForm((prev) => ({
+          ...prev,
+          email: res.user.email || prev.email,
+          name: res.user.displayName || prev.name,
+        }));
+      }
+    } catch (err: unknown) {
+      console.error("Google sign in error", err);
+    }
+  };
+
   const finalAmount = checkoutItems.reduce(
     (acc, curr) => acc + (Number(curr.totalPrice) || 0),
     0
@@ -227,11 +371,7 @@ function CheckoutContent() {
     }
   };
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setErrorMessage(null);
-
+  const validateDeliveryDetails = (): boolean => {
     const errors: Record<string, string> = {};
 
     // 1. Strict US Country Verification
@@ -296,15 +436,100 @@ function CheckoutContent() {
           const el = document.getElementById(`field-${firstInvalid}`);
           if (el) {
             el.scrollIntoView({ behavior: "smooth", block: "center" });
-            const focusTarget = el.tagName === "INPUT" || el.tagName === "BUTTON" || el.tagName === "SELECT"
-              ? el
-              : el.querySelector("input, select, button");
+            const focusTarget =
+              el.tagName === "INPUT" || el.tagName === "BUTTON" || el.tagName === "SELECT"
+                ? el
+                : el.querySelector("input, select, button");
             if (focusTarget && "focus" in focusTarget) {
               (focusTarget as HTMLElement).focus();
             }
           }
         }, 50);
       }
+      return false;
+    }
+
+    setFieldErrors({});
+    return true;
+  };
+
+  const handlePayPalSuccess = (capturedOrder: any) => {
+    const orderId = capturedOrder?.internal_order_number || `ORD-PP-${Date.now().toString().slice(-6)}`;
+    const trackingNum = capturedOrder?.tracking_number || `94001118995625${Date.now().toString().slice(-8)}`;
+
+    const customerEmail =
+      form.email.trim().toLowerCase() ||
+      auth.currentUser?.email?.toLowerCase() ||
+      (form.phone.trim() ? `${form.phone.replace(/\D/g, "")}@domesticorders.com` : "guest@domesticlab.com");
+
+    const customerName = form.name.trim() || auth.currentUser?.displayName || "Valued Customer";
+
+    const orderPayloadItems = checkoutItems.map((item) => ({
+      title: item.product.title,
+      product_title: item.product.title,
+      slug: item.product.slug,
+      image_url: item.product.hero_image_url || item.product.images?.[0] || "",
+      quantity: item.quantity,
+      price: item.unitPrice,
+      size: item.selectedSize,
+      color: item.selectedColor,
+    }));
+
+    try {
+      const orderRecord = {
+        id: capturedOrder?.id || Date.now(),
+        internal_order_number: orderId,
+        customer_email: customerEmail,
+        customer_phone: form.phone,
+        status: "PAYMENT_CAPTURED",
+        total_retail: finalAmount,
+        carrier_name: "USPS",
+        tracking_number: trackingNum,
+        shipping_name: customerName,
+        shipping_address: form.address1,
+        shipping_city: form.city,
+        shipping_province: form.province,
+        shipping_zip: form.zip_code,
+        shipping_country: "US",
+        created_at: new Date().toISOString(),
+        items: orderPayloadItems,
+      };
+
+      const existingRaw = localStorage.getItem("customer_orders");
+      const existing = existingRaw ? JSON.parse(existingRaw) : [];
+      localStorage.setItem("customer_orders", JSON.stringify([orderRecord, ...existing]));
+      localStorage.setItem("customer_email", customerEmail);
+      localStorage.setItem("saved_shipping_address", JSON.stringify(form));
+      localStorage.removeItem("checkout_draft_address");
+    } catch {
+      // Storage write error ignored
+    }
+
+    setConfirmedOrder({
+      orderNumber: orderId,
+      amount: finalAmount,
+      shippingSla: "3–5 Business Days (Tracked USPS Ground)",
+      items: checkoutItems,
+    });
+
+    if (singleCartItem) {
+      removeItem(
+        singleCartItem.variant.vid,
+        singleCartItem.tier,
+        singleCartItem.selectedSize,
+        singleCartItem.selectedColor
+      );
+    } else {
+      clearCart();
+    }
+  };
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    if (!validateDeliveryDetails()) {
       return;
     }
 
@@ -380,6 +605,8 @@ function CheckoutContent() {
         const existing = existingRaw ? JSON.parse(existingRaw) : [];
         localStorage.setItem("customer_orders", JSON.stringify([orderRecord, ...existing]));
         localStorage.setItem("customer_email", customerEmail);
+        localStorage.setItem("saved_shipping_address", JSON.stringify(form));
+        localStorage.removeItem("checkout_draft_address");
       } catch {
         // Storage write error ignored
       }
@@ -512,7 +739,38 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-6 relative">
+      {/* ── FULL-SCREEN ZERO-TRUST PAYMENT PROCESSING SHIELD ── */}
+      {(isPaymentProcessing || isSubmitting) && (
+        <div className="fixed inset-0 z-[9999] bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4 border border-slate-100 animate-in fade-in zoom-in-95 duration-200 relative z-[10000]">
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto ring-8 ring-emerald-50/50">
+              <Lock className="w-8 h-8 animate-pulse text-emerald-600" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base sm:text-lg font-black text-slate-900">
+                Finalizing Your Order...
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                We are validating your transaction with PayPal and generating your tracked USPS domestic dispatch code.
+              </p>
+            </div>
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[11px] font-semibold flex items-center gap-2 text-left">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <span>Please do not refresh, close this window, or press Back while payment is finalizing.</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── NETWORK OFFLINE / RECOVERY BANNER ── */}
+      {isOffline && (
+        <div className="p-3.5 bg-amber-500 text-white rounded-xl shadow-sm text-xs font-bold flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>⚠️ Network Offline: You are currently disconnected from the internet. Reconnecting to finalize payment...</span>
+        </div>
+      )}
+
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 transition active:scale-95"
@@ -625,6 +883,16 @@ function CheckoutContent() {
               Enter your domestic residential or business address for USPS tracked fulfillment.
             </p>
           </div>
+          {Boolean(form.address1 || form.city || form.province || form.zip_code) && (
+            <button
+              type="button"
+              onClick={handleClearAddress}
+              className="text-[11px] font-bold text-slate-400 hover:text-rose-600 transition flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-rose-50 border border-transparent hover:border-rose-200 active:scale-95 flex-shrink-0"
+              title="Clear entered address"
+            >
+              Clear Address
+            </button>
+          )}
         </div>
 
         <div className="space-y-3.5 text-xs font-semibold text-slate-700">
@@ -801,7 +1069,7 @@ function CheckoutContent() {
           </div>
 
           {/* City, State Dropdown, PIN */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 relative z-30">
             <div id="field-city">
               <label className="block mb-1">City</label>
               <input
@@ -825,7 +1093,7 @@ function CheckoutContent() {
             </div>
 
             {/* Custom Themed State Dropdown */}
-            <div id="field-province">
+            <div id="field-province" className="relative z-40">
               <ThemedDropdown
                 label="State"
                 options={US_STATES}
@@ -878,17 +1146,80 @@ function CheckoutContent() {
         </div>
 
         {/* Payment Method Card */}
-        <div className="pt-3 border-t border-slate-100 space-y-2">
+        <div className="pt-3 border-t border-slate-100 space-y-3 relative z-10">
           <div className="flex items-center justify-between text-xs text-slate-700">
             <span className="font-bold flex items-center gap-1.5">
               <Lock className="w-3.5 h-3.5 text-emerald-600" />
               Secure Payment Method
             </span>
-            <span className="text-[11px] text-slate-400">Zero-Trust Processing</span>
+            <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+              PayPal Certified Sandbox
+            </span>
           </div>
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 flex items-center justify-between">
-            <span className="font-medium">💳 Credit / Debit Card & Apple Pay</span>
-            <span className="font-mono text-emerald-700 font-bold text-[11px]">VERIFIED GATEWAY</span>
+
+          {/* Sandbox Testing Credentials & Virtual Card Guide */}
+          <div className="p-3.5 bg-sky-50/80 border border-sky-200 rounded-xl space-y-2 text-xs text-sky-900">
+            <div className="flex items-center justify-between font-bold text-sky-950">
+              <span className="flex items-center gap-1.5">
+                <span>🧪</span>
+                <span>Sandbox Test Mode (Zero Real Money Charged)</span>
+              </span>
+              <span className="text-[10px] bg-sky-200/80 text-sky-900 px-2 py-0.5 rounded font-mono font-semibold">
+                Simulated Gateway
+              </span>
+            </div>
+            <p className="text-[11px] text-sky-800 leading-relaxed">
+              Real Indian debit/credit cards or UPI apps cannot be charged in PayPal sandbox. Use either simulated test method:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+              <div className="p-2 bg-white rounded-lg border border-sky-200/70 space-y-0.5">
+                <span className="font-sans font-bold text-sky-900 text-[10px] block">Option A: Simulated Card (No Login)</span>
+                <div>Card: <span className="font-bold text-slate-900 select-all">4032 0000 0000 0000</span></div>
+                <div>Exp: <span className="text-slate-700">12/28</span> • CVV: <span className="text-slate-700">123</span> • ZIP: <span className="text-slate-700">35012</span></div>
+              </div>
+              <div className="p-2 bg-white rounded-lg border border-sky-200/70 space-y-0.5">
+                <span className="font-sans font-bold text-sky-900 text-[10px] block">Option B: Mock Buyer Login</span>
+                <div className="text-[10px] font-sans text-slate-600 leading-tight">developer.paypal.com ➔ Sandbox ➔ Accounts ➔ Copy the Personal Buyer email &amp; pass ($5,000 balance).</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Official PayPal Smart Button Integration */}
+          <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-3">
+            <div className="flex items-center justify-between text-xs text-slate-600 pb-1 border-b border-slate-200/60">
+              <span className="font-medium">Pay with PayPal, Pay Later, or Card:</span>
+              <span className="font-mono text-[10px] text-slate-400">USD • Zero-Trust Processing</span>
+            </div>
+
+            <PayPalButton
+              amount={finalAmount}
+              internalOrderNumber={`ORD-PP-${Date.now().toString().slice(-6)}`}
+              customerDetails={{
+                name: form.name.trim() || auth.currentUser?.displayName || "Valued Customer",
+                email:
+                  form.email.trim().toLowerCase() ||
+                  auth.currentUser?.email?.toLowerCase() ||
+                  "guest@domesticlab.com",
+                phone: form.phone,
+                address1: form.address1,
+                city: form.city,
+                province: form.province,
+                zip_code: form.zip_code,
+                country_code: form.country_code,
+              }}
+              orderItems={checkoutItems.map((item) => ({
+                title: item.product.title,
+                quantity: item.quantity,
+                unit_price: item.unitPrice,
+                size: item.selectedSize,
+                color: item.selectedColor,
+              }))}
+              firebaseUid={auth.currentUser?.uid}
+              onValidate={validateDeliveryDetails}
+              onProcessingChange={(val) => setIsPaymentProcessing(val)}
+              onSuccess={handlePayPalSuccess}
+              onError={(msg) => setErrorMessage(msg)}
+            />
           </div>
         </div>
 
@@ -899,13 +1230,16 @@ function CheckoutContent() {
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition text-sm disabled:opacity-50 active:scale-98 cursor-pointer"
-        >
-          {isSubmitting ? "Processing Order..." : `Complete Order • $${finalAmount.toFixed(2)} USD`}
-        </button>
+        {/* Alternative Instant Simulation Button for Offline/Developer Testing */}
+        <div className="pt-1">
+          <button
+            type="submit"
+            disabled={isSubmitting || isPaymentProcessing || isOffline}
+            className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-600 font-medium rounded-xl border border-dashed border-slate-300 transition text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            <span>⚡ Fast-track Test Order (Instant Simulation Mode • ${finalAmount.toFixed(2)})</span>
+          </button>
+        </div>
 
         <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
           <Truck className="w-3.5 h-3.5 text-emerald-600" />

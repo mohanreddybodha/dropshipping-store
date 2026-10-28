@@ -275,6 +275,7 @@ export async function createCheckoutOrder(payload: {
   tracking_number?: string;
   items: any[];
   firebase_uid?: string;
+  payment_intent_id?: string;
 }): Promise<any> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/orders/checkout`, {
@@ -292,6 +293,54 @@ export async function createCheckoutOrder(payload: {
     console.warn("Direct order persistence to backend failed, cached locally:", err.message);
     return null;
   }
+}
+
+export async function createPayPalOrder(
+  amount: number,
+  internalOrderNumber?: string
+): Promise<{ order_id: string; status: string }> {
+  const res = await fetch(`${getApiBaseUrl()}/orders/paypal/create`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      amount: +amount.toFixed(2),
+      currency: "USD",
+      internal_order_number: internalOrderNumber,
+    }),
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || err.error || "Failed to create PayPal payment order.");
+  }
+  return await res.json();
+}
+
+export async function capturePayPalOrder(payload: {
+  paypal_order_id: string;
+  internal_order_number?: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  shipping_address: string;
+  shipping_city: string;
+  shipping_province: string;
+  shipping_zip: string;
+  shipping_country?: string;
+  items: any[];
+  firebase_uid?: string;
+}): Promise<any> {
+  const res = await fetch(`${getApiBaseUrl()}/orders/paypal/capture`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || err.error || "PayPal payment capture failed.");
+  }
+  return await res.json();
 }
 
 export async function saveUserCart(

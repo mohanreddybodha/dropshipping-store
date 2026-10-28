@@ -3,10 +3,17 @@
 from __future__ import annotations
 
 import logging
+import os
 import traceback
 import uuid
 from contextlib import asynccontextmanager
 from typing import Dict
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware

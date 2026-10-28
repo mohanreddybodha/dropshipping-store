@@ -10,6 +10,11 @@ const nextConfig = {
   generateBuildId: async () => {
     return 'storefront-build';
   },
+  webpack: (config) => {
+    // Disable symlink resolution to prevent Windows OneDrive NTFS reparse point EINVAL errors
+    config.resolve.symlinks = false;
+    return config;
+  },
   images: {
     remotePatterns: [
       {

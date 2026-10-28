@@ -1,4 +1,6 @@
 const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 const PORT = 3000;
 
@@ -34,4 +36,16 @@ function freePort() {
   }
 }
 
+function cleanStaleBuild() {
+  try {
+    const dotNext = path.join(__dirname, '..', '.next');
+    const buildId = path.join(dotNext, 'BUILD_ID');
+    if (fs.existsSync(buildId)) {
+      console.log('[ensure-port] Detected production build artifacts in .next. Purging for clean dev startup...');
+      fs.rmSync(dotNext, { recursive: true, force: true });
+    }
+  } catch (e) {}
+}
+
 freePort();
+cleanStaleBuild();
