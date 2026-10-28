@@ -48,7 +48,11 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 async def lifespan(app: FastAPI):
     """Application lifespan: initialize database tables on startup."""
     logger.info("Initializing database schema on startup...")
-    init_db()
+    try:
+        init_db()
+        logger.info("Database schema initialized successfully.")
+    except Exception as exc:
+        logger.error("Database initialization failed during lifespan startup: %s", exc)
     yield
     logger.info("Application shutting down...")
 
