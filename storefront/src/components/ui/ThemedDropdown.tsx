@@ -58,7 +58,7 @@ export default function ThemedDropdown({
   }, [isOpen]);
 
   return (
-    <div className={`relative ${className}`} ref={containerRef}>
+    <div className={`relative ${isOpen ? "z-50" : "z-10"} ${className}`} ref={containerRef}>
       {label && (
         <label className="block mb-1 text-xs font-semibold text-slate-700">
           {label}

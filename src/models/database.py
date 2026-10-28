@@ -138,7 +138,7 @@ class Order(Base):
     cj_order_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     customer_email: Mapped[str] = mapped_column(String(256), index=True, nullable=False)
     customer_phone: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    stripe_payment_intent_id: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    stripe_payment_intent_id: Mapped[Optional[str]] = mapped_column(String(256), index=True, nullable=True)
 
     status: Mapped[str] = mapped_column(String(64), default="PAYMENT_CAPTURED", index=True, nullable=False)
     total_retail: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)

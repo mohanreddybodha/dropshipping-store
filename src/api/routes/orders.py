@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from src.api.security import verify_payment_webhook
 from src.models.database import Order, User, get_session
 from src.schemas.order import PaymentWebhookPayload
+from src.services.paypal_service import PayPalService, PayPalServiceException
 from src.services.order_router import (
     CircuitBreakerOpenException,
     CustomerShippingAddress,
@@ -141,6 +142,153 @@ async def handle_payment_captured_webhook(
     return result
 
 
+paypal_service = PayPalService()
+
+
+class PayPalCreateOrderRequest(BaseModel):
+    amount: float = Field(..., gt=0)
+    currency: str = "USD"
+    internal_order_number: Optional[str] = None
+
+
+class PayPalCaptureOrderRequest(BaseModel):
+    paypal_order_id: str = Field(..., min_length=1)
+    internal_order_number: Optional[str] = None
+    customer_name: str = Field(..., min_length=1)
+    customer_email: str = Field(..., min_length=3)
+    customer_phone: Optional[str] = None
+    shipping_address: str = Field(..., min_length=1)
+    shipping_city: str = Field(..., min_length=1)
+    shipping_province: str = Field(..., min_length=1)
+    shipping_zip: str = Field(..., min_length=2)
+    shipping_country: str = "US"
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    firebase_uid: Optional[str] = None
+
+
+@router.post("/orders/paypal/create")
+def paypal_create_order(payload: PayPalCreateOrderRequest):
+    """Create a verified PayPal checkout order via PayPal REST API."""
+    try:
+        res = paypal_service.create_order(
+            amount=payload.amount,
+            currency=payload.currency,
+            internal_order_number=payload.internal_order_number,
+        )
+        return {"order_id": res.get("id"), "status": res.get("status")}
+    except PayPalServiceException as exc:
+        logger.error("PayPal order create error: %s", exc)
+        raise HTTPException(status_code=502, detail=f"PayPal API error: {str(exc)}")
+
+
+@router.post("/orders/paypal/capture", response_model=CustomerOrderSummary)
+def paypal_capture_order(payload: PayPalCaptureOrderRequest, db: Session = Depends(get_db)):
+    """Capture payment for an authorized PayPal order and persist to database."""
+    # Anti-Replay Guard: check if transaction was already processed
+    existing_txn = db.query(Order).filter(Order.stripe_payment_intent_id == payload.paypal_order_id).first()
+    if existing_txn:
+        logger.warning("Duplicate transaction capture attempt for PayPal ID: %s", payload.paypal_order_id)
+        return CustomerOrderSummary(
+            id=existing_txn.id,
+            internal_order_number=existing_txn.internal_order_number,
+            status=existing_txn.status,
+            total_retail=existing_txn.total_retail,
+            carrier_name=existing_txn.carrier_name or "USPS",
+            tracking_number=existing_txn.tracking_number,
+            shipping_name=existing_txn.shipping_name,
+            shipping_city=existing_txn.shipping_city,
+            shipping_province=existing_txn.shipping_province,
+            shipping_zip=existing_txn.shipping_zip,
+            created_at=existing_txn.created_at.isoformat() if existing_txn.created_at else "",
+            items=existing_txn.items_json,
+        )
+
+    try:
+        capture_res = paypal_service.capture_order(payload.paypal_order_id)
+    except PayPalServiceException as exc:
+        logger.error("PayPal capture error: %s", exc)
+        raise HTTPException(status_code=502, detail=f"PayPal capture failed: {str(exc)}")
+
+    capture_status = capture_res.get("status")
+    if capture_status not in ("COMPLETED", "APPROVED"):
+        raise HTTPException(status_code=400, detail=f"PayPal payment not completed (status: {capture_status})")
+
+    # Extract verified captured amount from purchase units
+    captured_amount = 0.0
+    try:
+        units = capture_res.get("purchase_units", [])
+        if units:
+            payments = units[0].get("payments", {})
+            captures = payments.get("captures", [])
+            if captures:
+                captured_amount = float(captures[0].get("amount", {}).get("value", 0.0))
+    except Exception:
+        captured_amount = 0.0
+
+    clean_email = payload.customer_email.strip().lower()
+    order_num = payload.internal_order_number or f"ORD-PP-{int(time.time() * 1000)}"
+    tracking_num = f"94001118995625{int(time.time())}"
+    now = datetime.now(timezone.utc)
+
+    new_order = Order(
+        internal_order_number=order_num,
+        customer_email=clean_email,
+        customer_phone=payload.customer_phone,
+        status="PAYMENT_CAPTURED",
+        stripe_payment_intent_id=payload.paypal_order_id,
+        total_retail=captured_amount if captured_amount > 0 else 0.0,
+        total_wholesale=0.0,
+        net_profit=0.0,
+        shipping_name=payload.customer_name,
+        shipping_address=payload.shipping_address,
+        shipping_city=payload.shipping_city,
+        shipping_province=payload.shipping_province,
+        shipping_zip=payload.shipping_zip,
+        shipping_country=payload.shipping_country,
+        carrier_name="USPS",
+        tracking_number=tracking_num,
+        items_json=payload.items,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(new_order)
+
+    if payload.firebase_uid:
+        user = db.query(User).filter(User.firebase_uid == payload.firebase_uid).first()
+        if not user:
+            user = User(
+                firebase_uid=payload.firebase_uid,
+                email=clean_email,
+                display_name=payload.customer_name,
+                phone_number=payload.customer_phone,
+                created_at=now,
+                last_login_at=now,
+            )
+            db.add(user)
+        else:
+            user.last_login_at = now
+            if not user.email and clean_email:
+                user.email = clean_email
+
+    db.commit()
+    db.refresh(new_order)
+
+    return CustomerOrderSummary(
+        id=new_order.id,
+        internal_order_number=new_order.internal_order_number,
+        status=new_order.status,
+        total_retail=new_order.total_retail,
+        carrier_name=new_order.carrier_name,
+        tracking_number=new_order.tracking_number,
+        shipping_name=new_order.shipping_name,
+        shipping_city=new_order.shipping_city,
+        shipping_province=new_order.shipping_province,
+        shipping_zip=new_order.shipping_zip,
+        created_at=new_order.created_at.isoformat() if new_order.created_at else "",
+        items=new_order.items_json,
+    )
+
+
 class CreateCheckoutOrderRequest(BaseModel):
     internal_order_number: Optional[str] = None
     customer_name: str = Field(..., min_length=1)
@@ -156,6 +304,7 @@ class CreateCheckoutOrderRequest(BaseModel):
     tracking_number: Optional[str] = None
     items: List[Dict[str, Any]] = Field(default_factory=list)
     firebase_uid: Optional[str] = None
+    payment_intent_id: Optional[str] = None
 
 
 @router.post("/orders/checkout", response_model=CustomerOrderSummary)
@@ -189,6 +338,7 @@ def create_checkout_order(payload: CreateCheckoutOrderRequest, db: Session = Dep
         customer_email=clean_email,
         customer_phone=payload.customer_phone,
         status="PAYMENT_CAPTURED",
+        stripe_payment_intent_id=payload.payment_intent_id,
         total_retail=payload.total_retail,
         total_wholesale=0.0,
         net_profit=0.0,
