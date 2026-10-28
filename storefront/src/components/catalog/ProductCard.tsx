@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Star, Heart } from "lucide-react";
+import { Star, Plus } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../ui/Toast";
 
@@ -41,6 +41,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         showToast("Added to Watchlist ❤️", "watchlist-add");
       }
       localStorage.setItem("watchlist_items", JSON.stringify(list));
+      window.dispatchEvent(new Event("watchlist_updated"));
     } catch {
       // Ignore
     }
@@ -49,11 +50,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const primaryVariant = product.variants[0];
   const retailPrice = primaryVariant?.retail_price_1x || 24.99;
   const comparePrice = +(retailPrice * 1.25).toFixed(2);
-  const stock = primaryVariant?.us_warehouse_stock || 50;
-  const isLowStock = stock < 15;
   const heroImage = product.hero_image_url || product.images?.[0] || "/placeholder.jpg";
   const rating = product.rating || 4.8;
-  const reviewCount = product.review_count || 128;
 
   return (
     <Link
@@ -72,52 +70,39 @@ export default function ProductCard({ product }: ProductCardProps) {
             loading="lazy"
           />
 
-          {/* Floating Fast Shipping Badge */}
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
-            <span className="bg-emerald-600/90 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md shadow-sm backdrop-blur-sm">
-              Free Shipping
-            </span>
-          </div>
-
-          {/* Watchlist Quick Toggle Button */}
+          {/* Watchlist Quick Toggle Button (Flipkart-Style Plus Icon) */}
           <button
             type="button"
             onClick={toggleWatchlist}
             aria-label={isSaved ? "Remove from watchlist" : "Add to watchlist"}
-            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-white transition-all duration-150 active:scale-90"
+            title={isSaved ? "In Watchlist" : "Add to Watchlist"}
+            className={`absolute top-2 right-2 w-8 h-8 rounded-full shadow-sm flex items-center justify-center transition-all duration-150 active:scale-90 border ${
+              isSaved
+                ? "bg-emerald-600 text-white border-emerald-600"
+                : "bg-white/95 backdrop-blur-sm text-slate-700 border-slate-200/80 hover:bg-white hover:text-emerald-700"
+            }`}
           >
-            <Heart
-              className={`w-4 h-4 transition-colors ${
-                isSaved ? "fill-rose-500 text-rose-500" : "text-slate-600"
+            <Plus
+              className={`w-4 h-4 stroke-[2.5] transition-transform duration-200 ${
+                isSaved ? "rotate-45" : ""
               }`}
             />
           </button>
 
-          {/* Live Stock Status Indicator */}
-          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-white/95 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-700 shadow-sm border border-slate-100">
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                isLowStock ? "bg-amber-500 animate-pulse" : "bg-emerald-500"
-              }`}
-            />
-            <span>{isLowStock ? "Few Left" : "In Stock"}</span>
-          </div>
-
-          {/* Rating Badge in bottom-right corner of image below watchlist button */}
+          {/* Rating Badge in bottom-right corner of image (Rating number only, no count) */}
           <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-600 shadow-sm border border-slate-100">
             <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
             <span>{rating.toFixed(1)}</span>
-            <span className="text-slate-400 font-normal">({reviewCount})</span>
           </div>
         </div>
 
-        {/* Clean 2-Line Clamped Title */}
-        <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 leading-snug">
+        {/* Fixed 2-Line Title Container ensuring all cards match in height */}
+        <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 h-9 sm:h-10 leading-snug">
           {product.title}
         </h3>
       </div>
 
-      {/* Price & Discount Row (Optimized space without non-functional bag icon) */}
+      {/* Price & Discount Row (Consistent across all cards) */}
       <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between">
         <div className="flex items-baseline gap-1.5">
           <span className="text-sm sm:text-base font-black text-slate-900">

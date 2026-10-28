@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCart } from "../../lib/cart";
 import { FALLBACK_PRODUCTS } from "../../lib/api";
 import { auth } from "../../lib/firebase";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import ThemedDropdown, { ThemedDropdownOption } from "../../components/ui/ThemedDropdown";
 import {
   Truck,
@@ -14,7 +16,6 @@ import {
   AlertCircle,
   ShieldCheck,
   MapPin,
-  Flag,
 } from "lucide-react";
 
 const US_STATES: ThemedDropdownOption[] = [
@@ -84,18 +85,27 @@ const PHONE_CODE_OPTIONS: ThemedDropdownOption[] = [
 ];
 
 function CheckoutContent() {
-  const { items, totalAmount, totalSavings, clearCart } = useCart();
+  const searchParams = useSearchParams();
+  const { items, totalAmount, totalSavings, clearCart, removeItem } = useCart();
 
+  const isBuyNow = searchParams.get("buyNow") === "true";
+  const buyNowVid = searchParams.get("vid");
+  const buyNowTier = searchParams.get("tier");
+  const buyNowQty = parseInt(searchParams.get("qty") || "1", 10);
+  const buyNowSize = searchParams.get("size") || undefined;
+  const buyNowColor = searchParams.get("color") || undefined;
+
+  // Initial state has zero hardcoded dummy address values
   const [form, setForm] = useState({
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
+    name: "",
+    email: "",
     phoneCode: "+1",
-    phone: "213-555-0199",
-    address1: "742 Evergreen Terrace",
+    phone: "",
+    address1: "",
     address2: "",
-    city: "Los Angeles",
-    province: "CA",
-    zip_code: "90001",
+    city: "",
+    province: "",
+    zip_code: "",
     country_code: "US",
   });
 
@@ -108,7 +118,7 @@ function CheckoutContent() {
     shippingSla: string;
   } | null>(null);
 
-  // Pre-fill authenticated user data if signed in
+  // Pre-fill authenticated user data ONLY if signed in
   useEffect(() => {
     const unsub = auth.onAuthStateChanged((user) => {
       if (user) {
@@ -118,25 +128,74 @@ function CheckoutContent() {
           email: user.email || prev.email,
           name: user.displayName || prev.name,
         }));
+      } else {
+        setIsAuthenticatedUser(false);
       }
     });
     return () => unsub();
   }, []);
 
-  const checkoutItems = items.length > 0 ? items : [
-    {
-      product: FALLBACK_PRODUCTS[0],
-      variant: FALLBACK_PRODUCTS[0].variants[0],
-      tier: "2x" as const,
-      quantity: 2,
-      unitPrice: 63.89,
-      totalPrice: 127.78,
-      savings: 17.44,
-    },
-  ];
+  const handleGoogleSignIn = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const res = await signInWithPopup(auth, provider);
+      if (res.user) {
+        setIsAuthenticatedUser(true);
+        setForm((prev) => ({
+          ...prev,
+          email: res.user.email || prev.email,
+          name: res.user.displayName || prev.name,
+        }));
+      }
+    } catch (err: unknown) {
+      console.error("Google sign in error", err);
+    }
+  };
 
-  const finalAmount = items.length > 0 ? totalAmount : 127.78;
-  const finalSavings = items.length > 0 ? totalSavings : 17.44;
+  // Single item checkout logic when buyNow=true (Flipkart style direct single checkout)
+  const singleCartItem = isBuyNow && buyNowVid
+    ? items.find(
+        (i) =>
+          i.variant.vid === buyNowVid &&
+          (!buyNowTier || i.tier === buyNowTier) &&
+          (!buyNowSize || i.selectedSize === buyNowSize) &&
+          (!buyNowColor || i.selectedColor === buyNowColor)
+      ) || items.find((i) => i.variant.vid === buyNowVid)
+    : null;
+
+  const checkoutItems = singleCartItem
+    ? [
+        {
+          ...singleCartItem,
+          quantity: buyNowQty || singleCartItem.quantity || 1,
+          totalPrice: +(
+            Number(singleCartItem.unitPrice || singleCartItem.variant?.retail_price_1x || 24.99) *
+            (buyNowQty || singleCartItem.quantity || 1)
+          ).toFixed(2),
+        },
+      ]
+    : items.length > 0
+    ? items
+    : [
+        {
+          product: FALLBACK_PRODUCTS[0],
+          variant: FALLBACK_PRODUCTS[0].variants[0],
+          tier: "2x" as const,
+          quantity: 2,
+          unitPrice: 63.89,
+          totalPrice: 127.78,
+          savings: 17.44,
+        },
+      ];
+
+  const finalAmount = checkoutItems.reduce(
+    (acc, curr) => acc + (Number(curr.totalPrice) || 0),
+    0
+  );
+  const finalSavings = checkoutItems.reduce(
+    (acc, curr) => acc + (Number(curr.savings) || 0),
+    0
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -147,10 +206,21 @@ function CheckoutContent() {
     setIsSubmitting(true);
     setErrorMessage(null);
 
-    // US Zip validation matching FastAPI Pydantic schema
-    const zipRegex = /^\d{5}(-\d{4})?$/;
-    if (!zipRegex.test(form.zip_code.trim())) {
-      setErrorMessage("Please enter a valid 5-digit US postal code (e.g. 90001).");
+    // Required field validation
+    if (!form.phone.trim()) {
+      setErrorMessage("Please enter Your Mobile number.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!form.address1.trim()) {
+      setErrorMessage("Please enter your Street Address.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!form.city.trim()) {
+      setErrorMessage("Please enter your City.");
       setIsSubmitting(false);
       return;
     }
@@ -161,23 +231,41 @@ function CheckoutContent() {
       return;
     }
 
+    // US Zip validation matching FastAPI Pydantic schema
+    const zipRegex = /^\d{5}(-\d{4})?$/;
+    if (!zipRegex.test(form.zip_code.trim())) {
+      setErrorMessage("Please enter a valid 5-digit US PIN (e.g. 90001).");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const orderId = `ORD-STORE-${Date.now().toString().slice(-6)}`;
 
       // Simulate payment processing
       await new Promise((resolve) => setTimeout(resolve, 800));
 
+      const customerEmail =
+        form.email.trim().toLowerCase() ||
+        auth.currentUser?.email?.toLowerCase() ||
+        (form.phone.trim() ? `${form.phone.replace(/\D/g, "")}@domesticorders.com` : "guest@domesticlab.com");
+
+      const customerName =
+        form.name.trim() ||
+        auth.currentUser?.displayName ||
+        "Valued Customer";
+
       // Persist order locally for instant tracking in /profile
       try {
         const orderRecord = {
           id: Date.now(),
           internal_order_number: orderId,
-          customer_email: form.email.trim().toLowerCase(),
+          customer_email: customerEmail,
           status: "PAYMENT_CAPTURED",
           total_retail: finalAmount,
           carrier_name: "USPS",
           tracking_number: `94001118995625${Date.now().toString().slice(-8)}`,
-          shipping_name: form.name,
+          shipping_name: customerName,
           shipping_city: form.city,
           shipping_province: form.province,
           shipping_zip: form.zip_code,
@@ -194,7 +282,7 @@ function CheckoutContent() {
         const existingRaw = localStorage.getItem("customer_orders");
         const existing = existingRaw ? JSON.parse(existingRaw) : [];
         localStorage.setItem("customer_orders", JSON.stringify([orderRecord, ...existing]));
-        localStorage.setItem("customer_email", form.email.trim().toLowerCase());
+        localStorage.setItem("customer_email", customerEmail);
       } catch {
         // Storage write error ignored
       }
@@ -204,7 +292,17 @@ function CheckoutContent() {
         amount: finalAmount,
         shippingSla: "3–5 Business Days (Tracked USPS)",
       });
-      clearCart();
+
+      if (singleCartItem) {
+        removeItem(
+          singleCartItem.variant.vid,
+          singleCartItem.tier,
+          singleCartItem.selectedSize,
+          singleCartItem.selectedColor
+        );
+      } else {
+        clearCart();
+      }
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Checkout error occurred.");
     } finally {
@@ -219,13 +317,16 @@ function CheckoutContent() {
           <CheckCircle2 className="w-9 h-9" />
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-          Order Confirmed!
-        </h1>
-
-        <p className="text-slate-600 text-xs sm:text-sm max-w-md mx-auto">
-          Thank you for your order. A receipt and USPS domestic tracking updates have been dispatched to <strong>{form.email}</strong>.
-        </p>
+        <div className="space-y-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Domestic Order Verified & Scheduled
+          </span>
+          <h1 className="text-2xl font-black text-slate-900">Payment Authorized</h1>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            Your package has been queued for immediate domestic dispatch from our US distribution facility.
+          </p>
+        </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 text-left space-y-3 max-w-md mx-auto shadow-sm">
           <div className="flex justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
@@ -280,21 +381,21 @@ function CheckoutContent() {
         <ArrowLeft className="w-4 h-4" /> Continue Shopping
       </Link>
 
-      {/* ── PROMINENT US-ONLY DELIVERY BANNER ── */}
-      <div className="bg-emerald-950 text-white rounded-2xl p-4 sm:p-5 shadow-sm border border-emerald-900 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="text-xl">🇺🇸</span>
-            <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-emerald-400">
-              Exclusive US Domestic Shipping Only
+      {/* ── PROMINENT US-ONLY DELIVERY BANNER (Single Line Header on Small Screens) ── */}
+      <div className="bg-emerald-950 text-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-emerald-900 space-y-1.5">
+        <div className="flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0 truncate">
+            <span className="text-base sm:text-lg flex-shrink-0">🇺🇸</span>
+            <span className="text-[11px] sm:text-xs font-black uppercase tracking-tight text-emerald-400 truncate">
+              US Domestic Shipping Only
             </span>
           </div>
-          <span className="text-[10px] bg-emerald-800/80 text-emerald-200 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+          <span className="text-[9px] sm:text-[10px] bg-emerald-800/90 text-emerald-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex-shrink-0">
             USPS Tracked
           </span>
         </div>
-        <p className="text-xs text-emerald-200/90 leading-relaxed">
-          Orders are dispatched directly from our US fulfillment centers via tracked USPS domestic ground (3–5 business days). <strong>Delivery outside the United States is currently unavailable.</strong>
+        <p className="text-[11px] sm:text-xs text-emerald-200/90 leading-relaxed">
+          Orders are dispatched directly from our US fulfillment centers via tracked USPS domestic ground (3–5 business days). <strong>Delivery outside the United States is unavailable.</strong>
         </p>
       </div>
 
@@ -302,7 +403,7 @@ function CheckoutContent() {
       <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <h2 className="text-base font-black text-slate-900">
-            Order Summary ({checkoutItems.reduce((acc, i) => acc + i.quantity, 0)} Items)
+            Order Summary ({checkoutItems.reduce((acc, i) => acc + i.quantity, 0)} {checkoutItems.reduce((acc, i) => acc + i.quantity, 0) === 1 ? "Unit" : "Units"})
           </h2>
         </div>
 
@@ -335,9 +436,12 @@ function CheckoutContent() {
                         Size: {item.selectedSize}
                       </span>
                     )}
-                    <span>Qty: {item.quantity}</span>
+                    <span>
+                      {item.quantity} {item.quantity === 1 ? "Unit" : "Units"}
+                    </span>
                     <span>•</span>
-                    <span>${item.unitPrice.toFixed(2)}/ea</span>
+                    {/* Consistent Unit indicator instead of ea */}
+                    <span>${item.unitPrice.toFixed(2)}/Unit</span>
                   </div>
                 </div>
               </Link>
@@ -373,11 +477,12 @@ function CheckoutContent() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-emerald-600" />
+            <h2 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-emerald-600 flex-shrink-0" />
               US Delivery Address
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            {/* Smaller description below US delivery address */}
+            <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
               Enter your domestic residential or business address for USPS tracked fulfillment.
             </p>
           </div>
@@ -400,61 +505,92 @@ function CheckoutContent() {
           {/* Country Field (Themed Dropdown Locked to US) */}
           <div>
             <ThemedDropdown
-              label="Country / Region (Locked to Domestic Fulfillment)"
+              label="Country"
               options={COUNTRY_OPTIONS}
               value={form.country_code}
               onChange={(val) => setForm({ ...form, country_code: val })}
             />
           </div>
 
-          {/* Full Name */}
-          <div>
-            <label className="block mb-1">Full Name</label>
-            <input
-              type="text"
-              name="name"
-              required
-              value={form.name}
-              onChange={handleChange}
-              placeholder="e.g. Jane Smith"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-            />
-          </div>
-
-          {/* Email & Phone */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <label className="block mb-1">Email Address (for USPS Tracking & Receipt)</label>
-              <input
-                type="email"
-                name="email"
-                required
-                value={form.email}
-                onChange={handleChange}
-                placeholder="e.g. jane.smith@example.com"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block mb-1">US Mobile Phone</label>
-              <div className="flex gap-2">
-                <div className="w-36 flex-shrink-0">
-                  <ThemedDropdown
-                    options={PHONE_CODE_OPTIONS}
-                    value={form.phoneCode}
-                    onChange={(val) => setForm({ ...form, phoneCode: val })}
-                  />
-                </div>
+          {/* Full Name & Email: Rendered ONLY if user is logged in */}
+          {isAuthenticatedUser ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+              <div>
+                <label className="block mb-1 text-slate-700 font-bold">Full Name</label>
                 <input
-                  type="tel"
-                  name="phone"
-                  required
-                  value={form.phone}
+                  type="text"
+                  name="name"
+                  value={form.name}
                   onChange={handleChange}
-                  placeholder="213-555-0199"
-                  className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                  placeholder="Enter Full Name"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
                 />
               </div>
+              <div>
+                <label className="block mb-1 text-slate-700 font-bold">Email Address</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="Enter Email Address"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+              <div className="text-[11px] text-slate-600">
+                <span className="font-bold text-slate-800">Have an account?</span> Sign in with Google to auto-fill your contact details and track orders.
+              </div>
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs rounded-lg border border-slate-300 shadow-2xs transition active:scale-95 flex-shrink-0 cursor-pointer"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span>Sign in with Google</span>
+              </button>
+            </div>
+          )}
+
+          {/* Your Mobile */}
+          <div>
+            <label className="block mb-1">Your Mobile</label>
+            <div className="flex gap-2">
+              <div className="w-36 flex-shrink-0">
+                <ThemedDropdown
+                  options={PHONE_CODE_OPTIONS}
+                  value={form.phoneCode}
+                  onChange={(val) => setForm({ ...form, phoneCode: val })}
+                />
+              </div>
+              <input
+                type="tel"
+                name="phone"
+                required
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="Enter Your Mobile"
+                className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+              />
             </div>
           </div>
 
@@ -467,12 +603,12 @@ function CheckoutContent() {
               required
               value={form.address1}
               onChange={handleChange}
-              placeholder="e.g. 742 Evergreen Terrace"
+              placeholder="Enter Street Address"
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
             />
           </div>
 
-          {/* City, State Dropdown, ZIP */}
+          {/* City, State Dropdown, PIN */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block mb-1">City</label>
@@ -482,7 +618,7 @@ function CheckoutContent() {
                 required
                 value={form.city}
                 onChange={handleChange}
-                placeholder="e.g. Los Angeles"
+                placeholder="Enter City"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
               />
             </div>
@@ -499,14 +635,14 @@ function CheckoutContent() {
             </div>
 
             <div>
-              <label className="block mb-1">5-Digit US ZIP Code</label>
+              <label className="block mb-1">PIN</label>
               <input
                 type="text"
                 name="zip_code"
                 required
                 value={form.zip_code}
                 onChange={handleChange}
-                placeholder="e.g. 90001"
+                placeholder="Enter PIN"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
                 maxLength={10}
               />
@@ -532,7 +668,7 @@ function CheckoutContent() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition text-sm disabled:opacity-50 active:scale-98"
+          className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition text-sm disabled:opacity-50 active:scale-98 cursor-pointer"
         >
           {isSubmitting ? "Processing Order..." : `Complete Order • $${finalAmount.toFixed(2)} USD`}
         </button>

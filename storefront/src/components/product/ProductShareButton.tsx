@@ -34,11 +34,11 @@ export default function ProductShareButton({ title }: ProductShareButtonProps) {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
-      showToast("Product link copied to clipboard!", "general");
+      showToast("Product link copied to clipboard!", "info");
       setTimeout(() => setCopied(false), 2500);
     } catch {
       // In case clipboard fails, fallback to window.prompt
-      showToast("Link: " + window.location.href, "general");
+      showToast("Link: " + window.location.href, "info");
     }
   };
 
@@ -46,24 +46,18 @@ export default function ProductShareButton({ title }: ProductShareButtonProps) {
     <button
       type="button"
       onClick={handleShare}
-      className={`h-9 px-3 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 active:scale-95 shadow-xs ${
+      className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 shadow-sm border ${
         copied
-          ? "bg-emerald-600 text-white"
-          : "bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900"
+          ? "bg-emerald-600 text-white border-emerald-600"
+          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:text-emerald-700"
       }`}
       aria-label="Share product"
       title="Share this product"
     >
       {copied ? (
-        <>
-          <Check className="w-3.5 h-3.5 text-white" />
-          <span>Copied!</span>
-        </>
+        <Check className="w-4 h-4 text-white stroke-[2.5]" />
       ) : (
-        <>
-          <Share2 className="w-3.5 h-3.5 text-slate-600" />
-          <span>Share</span>
-        </>
+        <Share2 className="w-4 h-4 text-slate-700" />
       )}
     </button>
   );

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "../../lib/cart";
 import {
   Trash2,
@@ -10,12 +11,14 @@ import {
   ArrowRight,
   ShoppingBag,
   Truck,
+  Zap,
 } from "lucide-react";
 import { Product } from "../../lib/types";
 import { FALLBACK_PRODUCTS, getCatalog } from "../../lib/api";
 import HorizontalProductRow from "../../components/catalog/HorizontalProductRow";
 
 export default function CartPage() {
+  const router = useRouter();
   const { items, removeItem, updateQuantity, clearCart, totalAmount, totalSavings } = useCart();
   const [mounted, setMounted] = useState(false);
   const [watchlistItems, setWatchlistItems] = useState<Product[]>([]);
@@ -65,6 +68,34 @@ export default function CartPage() {
         setSuggestedItems(FALLBACK_PRODUCTS.filter((p) => !cartSlugs.has(p.slug)).slice(0, 10));
       });
   }, [items]);
+
+  // Dynamic unit text that updates immediately according to user quantity actions
+  const getUnitText = (quantity: number, tier: string) => {
+    const q = Number(quantity) || 1;
+    if (tier === "1x") {
+      return q === 1 ? "1 Unit" : `${q} Units`;
+    }
+    if (tier === "2x") {
+      return `${q * 2} Units (${q}x Double Pack)`;
+    }
+    if (tier === "3x") {
+      return `${q * 3} Units (${q}x Family Pack)`;
+    }
+    return `${q} ${q === 1 ? "Unit" : "Units"}`;
+  };
+
+  // Flipkart-style Buy Now: checks out only this specific product at the user's selected quantity
+  const handleBuyNow = (item: (typeof items)[0]) => {
+    const query = new URLSearchParams({
+      buyNow: "true",
+      vid: item.variant.vid,
+      tier: item.tier,
+      qty: (item.quantity || 1).toString(),
+    });
+    if (item.selectedSize) query.set("size", item.selectedSize);
+    if (item.selectedColor) query.set("color", item.selectedColor);
+    router.push(`/checkout?${query.toString()}`);
+  };
 
   if (!mounted) {
     return (
@@ -175,7 +206,7 @@ export default function CartPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        {/* Left Column: Cart Items List */}
+        {/* Left Column: Cart Items List (Mobile-Optimized Flipkart Card Layout) */}
         <div className="lg:col-span-8 space-y-3.5">
           {items.map((item) => {
             const heroImg =
@@ -186,106 +217,129 @@ export default function CartPage() {
             return (
               <div
                 key={`${item.variant.vid}-${item.tier}-${item.selectedSize || ""}-${item.selectedColor || ""}`}
-                className="bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-row items-center gap-3.5 sm:gap-5 transition hover:border-slate-300"
+                className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs transition hover:border-slate-300 space-y-3"
               >
-                {/* Proportional Thumbnail */}
-                <Link
-                  href={`/products/${item.product.slug}`}
-                  prefetch={true}
-                  className="w-18 h-18 sm:w-24 sm:h-24 min-w-[4.5rem] min-h-[4.5rem] sm:min-w-[6rem] sm:min-h-[6rem] rounded-xl overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0 group block"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={heroImg}
-                    alt={item.product.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                  />
-                </Link>
+                {/* Top Section: High-Fidelity Thumbnail + Product Details & Pricing */}
+                <div className="flex items-start gap-3.5 sm:gap-4">
+                  {/* Clean, Non-distorted Image Container (Compact on mobile) */}
+                  <Link
+                    href={`/products/${item.product.slug}`}
+                    prefetch={true}
+                    className="w-14 h-14 sm:w-20 sm:h-20 min-w-[3.5rem] min-h-[3.5rem] sm:min-w-[5rem] sm:min-h-[5rem] rounded-lg sm:rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 p-1 flex items-center justify-center flex-shrink-0 group block"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={heroImg}
+                      alt={item.product.title}
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
+                    />
+                  </Link>
 
-                {/* Main Product Info & Controls */}
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <div className="flex items-start justify-between gap-3">
-                    <Link
-                      href={`/products/${item.product.slug}`}
-                      prefetch={true}
-                      className="text-xs sm:text-base font-bold text-slate-900 hover:text-emerald-700 transition line-clamp-1 leading-snug"
-                    >
-                      {item.product.title}
-                    </Link>
-                    <span className="text-sm sm:text-base font-black text-slate-900 flex-shrink-0">
-                      ${(Number(item.totalPrice) || Number(item.variant?.retail_price_1x) || 24.99).toFixed(2)}
-                    </span>
-                  </div>
-
-                  {/* Variation tags */}
-                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-xs text-slate-500">
-                    {item.selectedSize && (
-                      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
-                        Size: {item.selectedSize}
-                      </span>
-                    )}
-                    {item.selectedColor && (
-                      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
-                        Color: {item.selectedColor}
-                      </span>
-                    )}
-                    <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md font-bold">
-                      {item.tier === "1x"
-                        ? "Single Unit"
-                        : item.tier === "2x"
-                        ? "2x Double Pack"
-                        : "3x Family Pack"}
-                    </span>
-                    <span className="text-slate-400">
-                      (${(Number(item.unitPrice) || Number(item.variant?.retail_price_1x) || 24.99).toFixed(2)}/unit)
-                    </span>
-                  </div>
-
-                  {/* Quantity Controller & Remove Action */}
-                  <div className="flex items-center justify-between pt-1.5">
-                    <div className="flex items-center border border-slate-200 rounded-lg bg-slate-50 overflow-hidden shadow-inner">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateQuantity(
-                            item.variant.vid,
-                            item.tier,
-                            item.quantity - 1,
-                            item.selectedSize,
-                            item.selectedColor
-                          )
-                        }
-                        className="px-2.5 py-1 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition text-xs font-bold active:scale-90"
-                        aria-label="Decrease quantity"
+                  {/* Main Product Info */}
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <Link
+                        href={`/products/${item.product.slug}`}
+                        prefetch={true}
+                        className="text-xs sm:text-sm font-bold text-slate-900 hover:text-emerald-700 transition line-clamp-2 leading-snug"
                       >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="px-3 py-1 text-xs font-black text-slate-900 bg-white">
-                        {item.quantity}
+                        {item.product.title}
+                      </Link>
+                      <span className="text-sm sm:text-base font-black text-slate-900 flex-shrink-0">
+                        ${(Number(item.totalPrice) || Number(item.variant?.retail_price_1x) || 24.99).toFixed(2)}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateQuantity(
-                            item.variant.vid,
-                            item.tier,
-                            item.quantity + 1,
-                            item.selectedSize,
-                            item.selectedColor
-                          )
-                        }
-                        className="px-2.5 py-1 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition text-xs font-bold active:scale-90"
-                        aria-label="Increase quantity"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
                     </div>
 
+                    {/* Variation tags & Real-Time Dynamic Unit Badge */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 pt-0.5">
+                      {item.selectedSize && (
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
+                          Size: {item.selectedSize}
+                        </span>
+                      )}
+                      {item.selectedColor && (
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
+                          Color: {item.selectedColor}
+                        </span>
+                      )}
+                      {/* Dynamic Unit Badge updating immediately on quantity changes */}
+                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-100/80 px-2 py-0.5 rounded-md font-bold">
+                        {getUnitText(item.quantity, item.tier)}
+                      </span>
+                      <span className="text-slate-400">
+                        (${(Number(item.unitPrice) || Number(item.variant?.retail_price_1x) || 24.99).toFixed(2)}/unit)
+                      </span>
+                    </div>
+
+                    {/* Domestic shipping indicator */}
+                    <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-medium pt-0.5">
+                      <Truck className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                      <span>Free 3–5 Day US Delivery</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Action Bar: Flipkart Style (Quantity Stepper + Buy Now + Remove) */}
+                <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+                  {/* Quantity Stepper */}
+                  <div className="flex items-center border border-slate-200 rounded-lg bg-slate-50 overflow-hidden shadow-inner">
                     <button
+                      type="button"
+                      onClick={() =>
+                        updateQuantity(
+                          item.variant.vid,
+                          item.tier,
+                          item.quantity - 1,
+                          item.selectedSize,
+                          item.selectedColor
+                        )
+                      }
+                      className="w-8 h-7 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition text-xs font-bold active:scale-90 flex items-center justify-center cursor-pointer"
+                      aria-label="Decrease quantity"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <span className="px-3 py-1 text-xs font-black text-slate-900 bg-white min-w-[2rem] text-center">
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateQuantity(
+                          item.variant.vid,
+                          item.tier,
+                          item.quantity + 1,
+                          item.selectedSize,
+                          item.selectedColor
+                        )
+                      }
+                      className="w-8 h-7 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition text-xs font-bold active:scale-90 flex items-center justify-center cursor-pointer"
+                      aria-label="Increase quantity"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {/* Actions: Buy Now (Flipkart style) + Remove */}
+                  <div className="flex items-center gap-2">
+                    {/* Application-Theme Emerald "Buy Now" button placed before Remove */}
+                    <button
+                      type="button"
+                      onClick={() => handleBuyNow(item)}
+                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg shadow-sm transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                      title="Proceed to checkout with only this product"
+                    >
+                      <Zap className="w-3.5 h-3.5 fill-white text-white" />
+                      <span>Buy Now</span>
+                    </button>
+
+                    {/* Remove Action Button */}
+                    <button
+                      type="button"
                       onClick={() =>
                         removeItem(item.variant.vid, item.tier, item.selectedSize, item.selectedColor)
                       }
-                      className="text-xs text-rose-600 hover:text-rose-700 font-semibold p-1.5 rounded-lg hover:bg-rose-50 transition flex items-center gap-1"
+                      className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 active:scale-95 cursor-pointer"
                       aria-label="Remove item"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
