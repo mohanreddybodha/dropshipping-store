@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Heart, ShoppingBag, Package } from "lucide-react";
+import { Home, Heart, ShoppingBag, User } from "lucide-react";
 import { useCart } from "../../lib/cart";
 
 export default function MobileBottomNav() {
@@ -39,9 +39,9 @@ export default function MobileBottomNav() {
       badge: mounted && itemCount > 0 ? itemCount : null,
     },
     {
-      label: "Orders",
+      label: "Profile",
       href: "/profile",
-      icon: Package,
+      icon: User,
       isActive: pathname === "/profile",
     },
   ];

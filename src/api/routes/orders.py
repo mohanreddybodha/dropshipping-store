@@ -193,3 +193,87 @@ def get_order_by_number(order_number: str, db: Session = Depends(get_db)):
         shipping_city=order.shipping_city,
         shipping_zip=order.shipping_zip,
     )
+
+
+class DualFactorOrderLookupRequest(BaseModel):
+    email: str
+    zip_code: str
+
+
+class MaskedOrderView(BaseModel):
+    id: int
+    internal_order_number: str
+    status: str
+    total_retail: float
+    carrier_name: str
+    tracking_number: Optional[str]
+    masked_recipient: str
+    shipping_city: str
+    shipping_province: str
+    shipping_zip: str
+    created_at: str
+    items: Optional[List[Dict[str, Any]]] = None
+
+
+@router.post("/orders/lookup", response_model=List[MaskedOrderView])
+def lookup_orders_with_dual_factor(
+    payload: DualFactorOrderLookupRequest, db: Session = Depends(get_db)
+):
+    """Privacy-preserving order lookup requiring both Customer Email and 5-digit Delivery ZIP code.
+
+    Prevents arbitrary email snooping while allowing customers without active
+    OAuth sessions to view order status, USPS tracking, and package items.
+    """
+    clean_email = payload.email.strip().lower()
+    clean_zip = payload.zip_code.strip()[:5]
+
+    if not clean_email or "@" not in clean_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A valid customer email is required.",
+        )
+
+    if len(clean_zip) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A valid 5-digit delivery ZIP code is required.",
+        )
+
+    orders = (
+        db.query(Order)
+        .filter(
+            Order.customer_email.ilike(clean_email),
+            Order.shipping_zip.like(f"{clean_zip}%"),
+        )
+        .order_by(Order.created_at.desc())
+        .limit(20)
+        .all()
+    )
+
+    results = []
+    for o in orders:
+        name_parts = (o.shipping_name or "").split()
+        masked_name = (
+            f"{name_parts[0][0]}*** {name_parts[-1]}"
+            if len(name_parts) > 1
+            else (f"{name_parts[0][0]}***" if name_parts else "Customer")
+        )
+        results.append(
+            MaskedOrderView(
+                id=o.id,
+                internal_order_number=o.internal_order_number,
+                status=o.status,
+                total_retail=o.total_retail,
+                carrier_name=o.carrier_name or "USPS",
+                tracking_number=o.tracking_number,
+                masked_recipient=masked_name,
+                shipping_city=o.shipping_city,
+                shipping_province=o.shipping_province,
+                shipping_zip=o.shipping_zip,
+                created_at=o.created_at.isoformat() if o.created_at else "",
+                items=o.items_json,
+            )
+        )
+
+    return results
+

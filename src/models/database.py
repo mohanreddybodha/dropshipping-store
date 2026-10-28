@@ -136,7 +136,7 @@ class Order(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     internal_order_number: Mapped[str] = mapped_column(String(128), unique=True, index=True, nullable=False)
     cj_order_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    customer_email: Mapped[str] = mapped_column(String(256), nullable=False)
+    customer_email: Mapped[str] = mapped_column(String(256), index=True, nullable=False)
     customer_phone: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     stripe_payment_intent_id: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
 
@@ -168,6 +168,78 @@ class Order(Base):
             f"<Order(id={self.id}, order_num='{self.internal_order_number}', "
             f"status='{self.status}', total={self.total_retail})>"
         )
+
+
+class User(Base):
+    """User account entity synced from Firebase Auth."""
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    firebase_uid: Mapped[str] = mapped_column(String(128), unique=True, index=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(256), unique=True, index=True, nullable=False)
+    display_name: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    photo_url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    phone_number: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=get_utc_now, nullable=False
+    )
+    last_login_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=get_utc_now, onupdate=get_utc_now, nullable=False
+    )
+
+    carts: Mapped[List[UserCart]] = relationship(
+        "UserCart", back_populates="user", cascade="all, delete-orphan"
+    )
+    watchlist_items: Mapped[List[UserWatchlist]] = relationship(
+        "UserWatchlist", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self) -> str:
+        return f"<User(id={self.id}, email='{self.email}', uid='{self.firebase_uid}')>"
+
+
+class UserCart(Base):
+    """Persistent database cart entity linked to authenticated user."""
+
+    __tablename__ = "user_carts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    product_pid: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    variant_vid: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(512), nullable=False)
+    image_url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    tier: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    selected_size: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    quantity: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    unit_price: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=get_utc_now, onupdate=get_utc_now, nullable=False
+    )
+
+    user: Mapped[User] = relationship("User", back_populates="carts")
+
+    def __repr__(self) -> str:
+        return f"<UserCart(user_id={self.user_id}, vid='{self.variant_vid}', qty={self.quantity})>"
+
+
+class UserWatchlist(Base):
+    """Persistent database watchlist entity linked to authenticated user."""
+
+    __tablename__ = "user_watchlists"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    product_pid: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=get_utc_now, nullable=False
+    )
+
+    user: Mapped[User] = relationship("User", back_populates="watchlist_items")
+
+    def __repr__(self) -> str:
+        return f"<UserWatchlist(user_id={self.user_id}, pid='{self.product_pid}')>"
 
 
 class SyncAuditLog(Base):
