@@ -2,7 +2,6 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
-  OAuthProvider,
   signInWithPopup,
   signOut,
   onAuthStateChanged,
@@ -22,7 +21,6 @@ const firebaseConfig = {
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
-export const appleProvider = new OAuthProvider("apple.com");
 
 export async function loginWithGoogle(): Promise<FirebaseUser | null> {
   try {
@@ -33,19 +31,6 @@ export async function loginWithGoogle(): Promise<FirebaseUser | null> {
       return null;
     }
     console.error("Google login error:", err);
-    throw err;
-  }
-}
-
-export async function loginWithApple(): Promise<FirebaseUser | null> {
-  try {
-    const res = await signInWithPopup(auth, appleProvider);
-    return res.user;
-  } catch (err: any) {
-    if (err?.code === "auth/popup-closed-by-user" || err?.code === "auth/cancelled-popup-request") {
-      return null;
-    }
-    console.error("Apple login error:", err);
     throw err;
   }
 }

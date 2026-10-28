@@ -9,6 +9,7 @@
     "clean": "node -e \"const fs = require('fs'); fs.rmSync('.next', { recursive: true, force: true });\""
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
     "clsx": "^2.1.1",
     "firebase": "^13.1.0",
     "lucide-react": "^0.475.0",
