@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "../../lib/cart";
-import { FALLBACK_PRODUCTS } from "../../lib/api";
+import { FALLBACK_PRODUCTS, createCheckoutOrder } from "../../lib/api";
 import { auth } from "../../lib/firebase";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import ThemedDropdown, { ThemedDropdownOption } from "../../components/ui/ThemedDropdown";
@@ -24,60 +24,6 @@ import {
   ShieldCheck,
   MapPin,
 } from "lucide-react";
-
-/** Crisp, cross-platform US Flag SVG (renders consistently on Windows, macOS, iOS, Android) */
-function USFlagIcon({ className = "w-5 h-3.5" }: { className?: string }) {
-  return (
-    <svg className={`${className} flex-shrink-0 rounded-[2px] shadow-2xs overflow-hidden inline-block align-middle`} viewBox="0 0 741 390">
-      <rect width="741" height="390" fill="#b22234" />
-      <path d="M0,30h741M0,90h741M0,150h741M0,210h741M0,270h741M0,330h741" stroke="#fff" strokeWidth="30" />
-      <rect width="296.4" height="210" fill="#3c3b6e" />
-      <g fill="#fff">
-        <circle cx="29.6" cy="21" r="9" />
-        <circle cx="88.9" cy="21" r="9" />
-        <circle cx="148.2" cy="21" r="9" />
-        <circle cx="207.5" cy="21" r="9" />
-        <circle cx="266.8" cy="21" r="9" />
-        <circle cx="59.3" cy="42" r="9" />
-        <circle cx="118.6" cy="42" r="9" />
-        <circle cx="177.8" cy="42" r="9" />
-        <circle cx="237.1" cy="42" r="9" />
-        <circle cx="29.6" cy="63" r="9" />
-        <circle cx="88.9" cy="63" r="9" />
-        <circle cx="148.2" cy="63" r="9" />
-        <circle cx="207.5" cy="63" r="9" />
-        <circle cx="266.8" cy="63" r="9" />
-        <circle cx="59.3" cy="84" r="9" />
-        <circle cx="118.6" cy="84" r="9" />
-        <circle cx="177.8" cy="84" r="9" />
-        <circle cx="237.1" cy="84" r="9" />
-        <circle cx="29.6" cy="105" r="9" />
-        <circle cx="88.9" cy="105" r="9" />
-        <circle cx="148.2" cy="105" r="9" />
-        <circle cx="207.5" cy="105" r="9" />
-        <circle cx="266.8" cy="105" r="9" />
-        <circle cx="59.3" cy="126" r="9" />
-        <circle cx="118.6" cy="126" r="9" />
-        <circle cx="177.8" cy="126" r="9" />
-        <circle cx="237.1" cy="126" r="9" />
-        <circle cx="29.6" cy="147" r="9" />
-        <circle cx="88.9" cy="147" r="9" />
-        <circle cx="148.2" cy="147" r="9" />
-        <circle cx="207.5" cy="147" r="9" />
-        <circle cx="266.8" cy="147" r="9" />
-        <circle cx="59.3" cy="168" r="9" />
-        <circle cx="118.6" cy="168" r="9" />
-        <circle cx="177.8" cy="168" r="9" />
-        <circle cx="237.1" cy="168" r="9" />
-        <circle cx="29.6" cy="189" r="9" />
-        <circle cx="88.9" cy="189" r="9" />
-        <circle cx="148.2" cy="189" r="9" />
-        <circle cx="207.5" cy="189" r="9" />
-        <circle cx="266.8" cy="189" r="9" />
-      </g>
-    </svg>
-  );
-}
 
 const US_STATES: ThemedDropdownOption[] = [
   { value: "AL", label: "Alabama (AL)" },
@@ -378,7 +324,38 @@ function CheckoutContent() {
         auth.currentUser?.displayName ||
         "Valued Customer";
 
-      // Persist order locally for instant tracking in /profile with full product metadata
+      const orderPayloadItems = checkoutItems.map((item) => ({
+        title: item.product.title,
+        product_title: item.product.title,
+        slug: item.product.slug,
+        image_url: item.product.hero_image_url || item.product.images?.[0] || "",
+        quantity: item.quantity,
+        price: item.unitPrice,
+        size: item.selectedSize,
+        color: item.selectedColor,
+      }));
+
+      const trackingNumber = `94001118995625${Date.now().toString().slice(-8)}`;
+
+      // 1. Persist order to PostgreSQL / SQLite database for cross-device synchronization
+      await createCheckoutOrder({
+        internal_order_number: orderId,
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: form.phone,
+        shipping_address: form.address1,
+        shipping_city: form.city,
+        shipping_province: form.province,
+        shipping_zip: form.zip_code,
+        shipping_country: "US",
+        total_retail: finalAmount,
+        carrier_name: "USPS",
+        tracking_number: trackingNumber,
+        items: orderPayloadItems,
+        firebase_uid: auth.currentUser?.uid,
+      });
+
+      // 2. Persist order locally for instant tracking in /profile with full product metadata
       try {
         const orderRecord = {
           id: Date.now(),
@@ -387,23 +364,14 @@ function CheckoutContent() {
           status: "PAYMENT_CAPTURED",
           total_retail: finalAmount,
           carrier_name: "USPS",
-          tracking_number: `94001118995625${Date.now().toString().slice(-8)}`,
+          tracking_number: trackingNumber,
           shipping_name: customerName,
           shipping_city: form.city,
           shipping_province: form.province,
           shipping_zip: form.zip_code,
           shipping_country: "US",
           created_at: new Date().toISOString(),
-          items: checkoutItems.map((item) => ({
-            title: item.product.title,
-            product_title: item.product.title,
-            slug: item.product.slug,
-            image_url: item.product.hero_image_url || item.product.images?.[0] || "",
-            quantity: item.quantity,
-            price: item.unitPrice,
-            size: item.selectedSize,
-            color: item.selectedColor,
-          })),
+          items: orderPayloadItems,
         };
 
         const existingRaw = localStorage.getItem("customer_orders");
@@ -554,7 +522,7 @@ function CheckoutContent() {
       <div className="bg-emerald-950 text-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-emerald-900 space-y-1.5">
         <div className="flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
           <div className="flex items-center gap-1.5 min-w-0 truncate">
-            <USFlagIcon className="w-5 h-3.5 sm:w-6 sm:h-4" />
+            <span className="text-base sm:text-lg flex-shrink-0 leading-none">🇺🇸</span>
             <span className="text-[11px] sm:text-xs font-black uppercase tracking-tight text-emerald-400 truncate">
               US Domestic Shipping Only
             </span>

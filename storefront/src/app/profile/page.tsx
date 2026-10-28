@@ -43,7 +43,7 @@ function resolveOrderItemInfo(item: any) {
   let imageUrl = item.image_url;
   let slug = item.slug;
 
-  if (!imageUrl || !slug) {
+  if (!imageUrl || imageUrl === "/placeholder.jpg" || !slug) {
     const cleanT = (title || "").toLowerCase();
     const matched = FALLBACK_PRODUCTS.find(
       (p) =>
@@ -52,14 +52,21 @@ function resolveOrderItemInfo(item: any) {
         p.title.toLowerCase().includes(cleanT)
     );
     if (matched) {
-      if (!imageUrl) imageUrl = matched.hero_image_url || matched.images?.[0];
+      if (!imageUrl || imageUrl === "/placeholder.jpg") {
+        imageUrl = matched.hero_image_url || matched.images?.[0];
+      }
       if (!slug) slug = matched.slug;
     }
   }
 
+  // Defensively ensure imageUrl is never a broken link; fallback to catalog hero image
+  if (!imageUrl || imageUrl === "/placeholder.jpg") {
+    imageUrl = FALLBACK_PRODUCTS[0]?.hero_image_url || "";
+  }
+
   return {
     title,
-    imageUrl: imageUrl || "/placeholder.jpg",
+    imageUrl,
     slug: slug ? `/products/${slug}` : undefined,
     size: item.size,
     color: item.color,
@@ -180,10 +187,12 @@ export default function ProfilePage() {
                 }));
               }
             }
-            const rawWatch = localStorage.getItem("user_watchlist");
+            const rawWatch = localStorage.getItem("watchlist_items");
             if (rawWatch) {
               const parsed = JSON.parse(rawWatch);
-              if (Array.isArray(parsed)) guestWatchlist = parsed;
+              if (Array.isArray(parsed)) {
+                guestWatchlist = parsed.map((p: any) => (typeof p === "string" ? p : p.pid)).filter(Boolean);
+              }
             }
           } catch {
             // Ignore parse errors
@@ -193,6 +202,7 @@ export default function ProfilePage() {
           const syncRes = await syncUserAuth({
             firebase_uid: user.uid,
             email: user.email,
+            phone_number: user.phoneNumber,
             display_name: user.displayName,
             photo_url: user.photoURL,
             guest_cart: guestCart,
@@ -701,12 +711,15 @@ export default function ProfilePage() {
                                 <Link
                                   href={productLink}
                                   prefetch={true}
-                                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden bg-white border border-slate-200 p-0.5 flex items-center justify-center flex-shrink-0"
+                                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-white border border-slate-200 p-1 flex items-center justify-center flex-shrink-0 shadow-2xs group-hover:border-emerald-300 transition"
                                 >
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
                                     src={info.imageUrl}
                                     alt={info.title}
+                                    onError={(e) => {
+                                      e.currentTarget.src = FALLBACK_PRODUCTS[0]?.hero_image_url || "";
+                                    }}
                                     className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                                   />
                                 </Link>
@@ -893,7 +906,10 @@ export default function ProfilePage() {
                                 <img
                                   src={info.imageUrl}
                                   alt={info.title}
-                                  className="w-8 h-8 object-contain rounded bg-slate-50 border border-slate-100 flex-shrink-0"
+                                  onError={(e) => {
+                                    e.currentTarget.src = FALLBACK_PRODUCTS[0]?.hero_image_url || "";
+                                  }}
+                                  className="w-10 h-10 object-contain rounded-lg bg-slate-50 border border-slate-200 flex-shrink-0"
                                 />
                                 <span className="font-semibold flex-1 min-w-0 truncate">
                                   {info.title}

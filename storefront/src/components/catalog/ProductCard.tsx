@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Star, Heart } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../ui/Toast";
+import { auth } from "../../lib/firebase";
+import { toggleUserWatchlist } from "../../lib/api";
 
 interface ProductCardProps {
   product: Product;
@@ -42,6 +44,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       }
       localStorage.setItem("watchlist_items", JSON.stringify(list));
       window.dispatchEvent(new Event("watchlist_updated"));
+
+      // Synchronize with database if user is logged in
+      if (auth.currentUser && product.pid) {
+        toggleUserWatchlist(auth.currentUser.uid, product.pid).catch(() => {});
+      }
     } catch {
       // Ignore
     }
