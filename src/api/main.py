@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.api.routes.admin import router as admin_router
+from src.api.routes.auth import router as auth_router
 from src.api.routes.catalog import router as catalog_router
 from src.api.routes.orders import router as orders_router
 from src.models.database import SyncAuditLog, get_session, init_db
@@ -170,6 +171,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # Mount Sub-routers
 app.include_router(catalog_router, prefix="/api", tags=["Catalog"])
 app.include_router(orders_router, prefix="/api", tags=["Orders & Webhooks"])
+app.include_router(auth_router, prefix="/api/auth", tags=["Auth & Cloud Sync"])
 app.include_router(admin_router, prefix="/api", tags=["Admin & DLQ"])
 
 

@@ -16,7 +16,7 @@ import { Product } from "../../lib/types";
 import ProductCard from "../../components/catalog/ProductCard";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, totalAmount, totalSavings } = useCart();
+  const { items, removeItem, updateQuantity, clearCart, totalAmount, totalSavings } = useCart();
   const [mounted, setMounted] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
@@ -117,15 +117,27 @@ export default function CartPage() {
             Shopping Cart
           </h1>
           <p className="text-[11px] text-slate-500 mt-0.5">
-            {items.reduce((acc, curr) => acc + curr.quantity, 0)} items ready for checkout
+            {items.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0)} items ready for checkout
           </p>
         </div>
-        <Link
-          href="/"
-          className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
-        >
-          Continue Shopping →
-        </Link>
+        <div className="flex items-center gap-3">
+          {items.length > 0 && (
+            <button
+              type="button"
+              onClick={clearCart}
+              className="text-[11px] font-semibold text-slate-400 hover:text-rose-600 transition"
+              title="Reset and clear all cart items"
+            >
+              Clear Cart
+            </button>
+          )}
+          <Link
+            href="/"
+            className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
+          >
+            Continue Shopping →
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 items-start">
@@ -167,7 +179,7 @@ export default function CartPage() {
                       {item.product.title}
                     </Link>
                     <span className="text-xs sm:text-sm font-black text-slate-900 flex-shrink-0">
-                      ${item.totalPrice.toFixed(2)}
+                      ${(Number(item.totalPrice) || Number(item.variant?.retail_price_1x) || 24.99).toFixed(2)}
                     </span>
                   </div>
 
@@ -191,7 +203,7 @@ export default function CartPage() {
                         : "3x Family Pack"}
                     </span>
                     <span className="text-slate-400">
-                      (${item.unitPrice.toFixed(2)}/unit)
+                      (${(Number(item.unitPrice) || Number(item.variant?.retail_price_1x) || 24.99).toFixed(2)}/unit)
                     </span>
                   </div>
 

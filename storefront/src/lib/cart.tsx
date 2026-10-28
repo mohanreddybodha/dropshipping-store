@@ -32,16 +32,43 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const CART_STORAGE_KEY = "app_cart";
+const CART_VERSION_KEY = "app_cart_version";
+const CURRENT_CART_VERSION = "2.2";
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load cart from localStorage on client mount (Hydration-safe)
+  // Load cart from localStorage on client mount (Hydration-safe with self-healing migration)
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("app_cart");
-      if (saved) setItems(JSON.parse(saved));
+      const saved = localStorage.getItem(CART_STORAGE_KEY);
+      if (saved) {
+        const parsed: CartItem[] = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Normalize and defensively repair any stale fields from previous builds
+          const sanitized: CartItem[] = parsed
+            .filter((item) => item && item.product && item.variant)
+            .map((item) => {
+              const retail = Number(item.variant?.retail_price_1x) || 24.99;
+              const unitPrice = Number(item.unitPrice) || retail;
+              const tierMultiplier = item.tier === "2x" ? 2 : item.tier === "3x" ? 3 : 1;
+              const totalPrice = Number(item.totalPrice) || +(unitPrice * tierMultiplier).toFixed(2);
+              const quantity = Number(item.quantity) || tierMultiplier;
+              return {
+                ...item,
+                unitPrice,
+                totalPrice,
+                quantity,
+                savings: Number(item.savings) || 0,
+              };
+            });
+          setItems(sanitized);
+        }
+      }
+      localStorage.setItem(CART_VERSION_KEY, CURRENT_CART_VERSION);
     } catch {
       // Ignore storage errors
     } finally {

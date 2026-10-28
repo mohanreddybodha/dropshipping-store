@@ -1,6 +1,6 @@
 import { CustomerOrder, PaginatedCatalogResponse, Product } from "./types";
 
-const rawUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+const rawUrl = process.env.NEXT_PUBLIC_API_URL || "https://dropship-api-pflt.onrender.com/api";
 // Prevent Node 18+ Windows IPv6 ::1 timeout when fetching local backend
 const API_BASE_URL = rawUrl.replace("://localhost:", "://127.0.0.1:");
 
