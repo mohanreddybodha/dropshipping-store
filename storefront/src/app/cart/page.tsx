@@ -10,7 +10,6 @@ import {
   ArrowRight,
   ShoppingBag,
   Truck,
-  User,
 } from "lucide-react";
 import { Product } from "../../lib/types";
 import ProductCard from "../../components/catalog/ProductCard";
@@ -18,25 +17,10 @@ import ProductCard from "../../components/catalog/ProductCard";
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, totalAmount, totalSavings } = useCart();
   const [mounted, setMounted] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
 
   useEffect(() => {
     setMounted(true);
-
-    // Retrieve saved customer user if signed in
-    try {
-      const storedUser = localStorage.getItem("customer_auth_user");
-      if (storedUser) {
-        const parsed = JSON.parse(storedUser);
-        setUserEmail(parsed.email || null);
-      } else {
-        const savedEmail = localStorage.getItem("customer_email");
-        if (savedEmail) setUserEmail(savedEmail);
-      }
-    } catch {
-      // Ignore
-    }
 
     // Retrieve recently viewed products
     try {
@@ -307,29 +291,6 @@ export default function CartPage() {
               <span>Proceed to Checkout</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
-
-            {/* Account / Sign-in Status Prompt */}
-            {userEmail ? (
-              <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-[11px] text-slate-700">
-                <span className="truncate">Signed in: <strong>{userEmail}</strong></span>
-                <Link href="/profile" className="text-emerald-700 font-bold hover:underline ml-2 flex-shrink-0">
-                  Orders →
-                </Link>
-              </div>
-            ) : (
-              <div className="p-2.5 bg-slate-50 border border-slate-200/90 rounded-xl flex items-center justify-between text-[11px] text-slate-600">
-                <div className="flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Have an account?</span>
-                </div>
-                <Link
-                  href="/profile"
-                  className="font-bold text-emerald-700 hover:text-emerald-800 transition"
-                >
-                  Sign In →
-                </Link>
-              </div>
-            )}
 
             {/* Tracked Delivery Reassurance (Without unconfigured payment assumptions) */}
             <div className="pt-2 flex items-center gap-1.5 text-[10px] text-slate-500 border-t border-slate-100">

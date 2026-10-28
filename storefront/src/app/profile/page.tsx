@@ -217,6 +217,27 @@ export default function ProfilePage() {
     setOrders(merged);
   };
 
+  // Helper to format OAuth error codes with actionable guidance
+  const parseAuthError = (err: any, provider: "Google" | "Apple") => {
+    if (err?.code === "auth/popup-closed-by-user" || err?.code === "auth/cancelled-popup-request") {
+      return null;
+    }
+    if (err?.code === "auth/unauthorized-domain") {
+      const currentHost = typeof window !== "undefined" ? window.location.hostname : "your domain";
+      return `Authorized Domain Missing: Please add "${currentHost}" in Firebase Console → Authentication → Settings → Authorized domains.`;
+    }
+    if (err?.code === "auth/operation-not-allowed") {
+      return `${provider} Sign-In is not enabled yet in Firebase Console → Authentication → Sign-in method.`;
+    }
+    if (err?.code === "auth/popup-blocked") {
+      return "Popup was blocked by your browser. Please allow popups for this site and retry.";
+    }
+    if (err?.code === "auth/configuration-not-found") {
+      return `${provider} OAuth is not configured in your Firebase project.`;
+    }
+    return err?.message || `${provider} Sign-In could not be completed. Please try again.`;
+  };
+
   // Google Sign-In Handler
   const handleGoogleSignIn = async () => {
     setLoginPending("google");
@@ -224,9 +245,8 @@ export default function ProfilePage() {
     try {
       await loginWithGoogle();
     } catch (err: any) {
-      if (err?.code !== "auth/popup-closed-by-user") {
-        setAuthError("Google Sign-In was cancelled or failed. Please try again.");
-      }
+      const formatted = parseAuthError(err, "Google");
+      if (formatted) setAuthError(formatted);
     } finally {
       setLoginPending(null);
     }
@@ -239,9 +259,8 @@ export default function ProfilePage() {
     try {
       await loginWithApple();
     } catch (err: any) {
-      if (err?.code !== "auth/popup-closed-by-user") {
-        setAuthError("Apple Sign-In was cancelled or failed. Please try again.");
-      }
+      const formatted = parseAuthError(err, "Apple");
+      if (formatted) setAuthError(formatted);
     } finally {
       setLoginPending(null);
     }

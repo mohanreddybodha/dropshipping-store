@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation";
 import { X, Check } from "lucide-react";
 import { Product } from "../../lib/types";
+import { getCatalog } from "../../lib/api";
 import ProductCard from "./ProductCard";
 
 interface CatalogExplorerProps {
@@ -41,6 +42,26 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Dynamic Product State with Client Hydration Fallback
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+
+  useEffect(() => {
+    if (initialProducts.length > products.length) {
+      setProducts(initialProducts);
+    }
+  }, [initialProducts]);
+
+  useEffect(() => {
+    // If SSR or build only had partial/fallback products, revalidate live catalog
+    if (products.length < 20) {
+      getCatalog({ limit: 200 }).then((live) => {
+        if (live && live.length > products.length) {
+          setProducts(live);
+        }
+      });
+    }
+  }, [products.length]);
+
   // Active URL State
   const activeCategory = searchParams.get("category") || "All Products";
   const activeSearch = searchParams.get("search") || "";
@@ -73,7 +94,7 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
 
   // Filter & Sort Pipeline
   const filteredProducts = useMemo(() => {
-    let result = [...initialProducts];
+    let result = [...products];
 
     // 1. Category Filter
     if (activeCategory && activeCategory !== "All Products") {
@@ -120,7 +141,7 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
     });
 
     return result;
-  }, [initialProducts, activeCategory, activeSearch, selectedPriceRange, sortBy]);
+  }, [products, activeCategory, activeSearch, selectedPriceRange, sortBy]);
 
   // Reset visible count when filters change
   useEffect(() => {

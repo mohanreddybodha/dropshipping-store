@@ -304,9 +304,6 @@ function CheckoutContent() {
           <h2 className="text-base font-black text-slate-900">
             Order Summary ({checkoutItems.reduce((acc, i) => acc + i.quantity, 0)} Items)
           </h2>
-          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-            Free US Domestic Shipping
-          </span>
         </div>
 
         <div className="space-y-3">
