@@ -15,7 +15,6 @@ const SPEC_LABELS: Record<string, string> = {
   fulfillment_origin: "Fulfillment Origin",
   carrier_sla: "Shipping Carrier & SLA",
   in_the_box: "Package Contents",
-  warranty: "Delivery Guarantee",
 };
 
 export default function ProductAccordion({ product }: ProductAccordionProps) {
@@ -26,7 +25,8 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
   const cleanDescriptionHtml = (product.pas_description_html || "")
     .replace(/and backed by our unconditional 30-day money-back guarantee,?/gi, "")
     .replace(/backed by our unconditional 30-day money-back guarantee,?/gi, "")
-    .replace(/30-day money-back guarantee/gi, "damage-free guarantee")
+    .replace(/30-day money-back guarantee/gi, "verified craftsmanship")
+    .replace(/damage-free delivery guarantee/gi, "domestic dispatch")
     .replace(/30-day/gi, "verified");
 
   // Keep genuine features without unverified guarantee claims
@@ -37,13 +37,20 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
       !title.includes("30-day") &&
       !title.includes("money-back") &&
       !desc.includes("30-day") &&
-      !desc.includes("money-back")
+      !desc.includes("money-back") &&
+      !title.includes("guarantee") &&
+      !desc.includes("guarantee")
     );
   });
 
   const specs = product.specs || {};
   const specEntries = Object.entries(specs).filter(
-    ([, val]) => val !== null && val !== undefined && typeof val !== "object" && String(val).trim() !== ""
+    ([key, val]) =>
+      key !== "warranty" &&
+      val !== null &&
+      val !== undefined &&
+      typeof val !== "object" &&
+      String(val).trim() !== ""
   );
 
   return (

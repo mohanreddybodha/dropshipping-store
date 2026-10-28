@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Star, ShoppingBag, Heart } from "lucide-react";
+import { Star, Heart } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../ui/Toast";
 
@@ -117,24 +117,19 @@ export default function ProductCard({ product }: ProductCardProps) {
         </h3>
       </div>
 
-      {/* Price & Action Row */}
-      <div className="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between">
-        <div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-sm sm:text-base font-black text-slate-900">
-              ${retailPrice.toFixed(2)}
-            </span>
-            <span className="text-[11px] text-slate-400 line-through">
-              ${comparePrice.toFixed(2)}
-            </span>
-          </div>
-          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tight">
-            Save 20%
+      {/* Price & Discount Row (Optimized space without non-functional bag icon) */}
+      <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-sm sm:text-base font-black text-slate-900">
+            ${retailPrice.toFixed(2)}
+          </span>
+          <span className="text-[11px] text-slate-400 line-through">
+            ${comparePrice.toFixed(2)}
           </span>
         </div>
 
-        <span className="p-2 rounded-xl bg-slate-100 group-hover:bg-emerald-600 group-hover:text-white text-slate-700 transition shadow-sm">
-          <ShoppingBag className="w-4 h-4" />
+        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-2 py-0.5 rounded-full uppercase tracking-tight">
+          Save 20%
         </span>
       </div>
     </Link>
