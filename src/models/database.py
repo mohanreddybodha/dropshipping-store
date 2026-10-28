@@ -63,6 +63,7 @@ class Product(Base):
     # Rich marketing & conversion copy
     pas_description_html: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     features_json: Mapped[Optional[List[Dict[str, Any]]]] = mapped_column(JSON, nullable=True)
+    specs_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
 
     # Programmatic SEO & AI Video Factory artifacts
     seo_meta_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)

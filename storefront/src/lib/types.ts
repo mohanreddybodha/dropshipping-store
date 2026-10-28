@@ -48,6 +48,7 @@ export interface Product {
   images?: string[];
   pas_description_html?: string;
   features?: Feature[];
+  specs?: Record<string, any>;
   seo_meta?: {
     meta_title?: string;
     meta_description?: string;

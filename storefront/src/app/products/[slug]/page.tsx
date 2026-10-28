@@ -1,5 +1,6 @@
 import React from "react";
-import { getProductBySlug } from "../../../lib/api";
+import Link from "next/link";
+import { getProductBySlug, getCatalog } from "../../../lib/api";
 import {
   ProductGallery,
   ProductInteractivePanel,
@@ -8,6 +9,7 @@ import {
   ProductBackButton,
   ProductShareButton,
 } from "../../../components/product";
+import ProductCard from "../../../components/catalog/ProductCard";
 import { Star, Truck } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -48,6 +50,28 @@ export default async function ProductDetailPage({ params }: PageProps) {
     );
   }
 
+  // Fetch catalog for suggested & related products
+  const allProducts = await getCatalog({ limit: 60 });
+  const categoryName = product.category || "Featured";
+
+  // Section 1: Same category products (excluding current product)
+  const sameCategoryProducts = allProducts
+    .filter(
+      (p) =>
+        p.slug !== product.slug &&
+        p.category?.toLowerCase() === product.category?.toLowerCase()
+    )
+    .slice(0, 4);
+
+  // Section 2: Related products from other categories (excluding current product)
+  const relatedProducts = allProducts
+    .filter(
+      (p) =>
+        p.slug !== product.slug &&
+        p.category?.toLowerCase() !== product.category?.toLowerCase()
+    )
+    .slice(0, 8);
+
   const primaryVariant = product.variants[0];
   const rating = product.rating || 4.8;
   const reviewCount = product.review_count || 142;
@@ -86,7 +110,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-4 pb-20 md:pb-6 space-y-3 sm:space-y-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-4 pb-32 sm:pb-36 md:pb-14 space-y-6 sm:space-y-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
@@ -143,10 +167,66 @@ export default async function ProductDetailPage({ params }: PageProps) {
         <div className="lg:col-span-5 space-y-3 sm:space-y-4">
           <ProductInteractivePanel product={product} variant={primaryVariant} />
 
-          {/* Compact Product Details & Highlights Accordion (collapsed by default, smooth animated) */}
+          {/* Compact Product Details, Specs & Features Accordion (collapsed by default, smooth animated) */}
           <ProductAccordion product={product} />
         </div>
       </div>
+
+      {/* Suggested Products: Section 1 — More in Same Category */}
+      {sameCategoryProducts.length > 0 && (
+        <section className="pt-8 border-t border-slate-200/80 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                More in {categoryName}
+              </h2>
+              <p className="text-xs text-slate-500">
+                Top picks in this collection with free domestic delivery
+              </p>
+            </div>
+            <Link
+              href={`/?category=${encodeURIComponent(categoryName)}`}
+              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
+            >
+              <span>View All</span>
+              <span>&rarr;</span>
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {sameCategoryProducts.map((item) => (
+              <ProductCard key={item.slug} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Suggested Products: Section 2 — Related & Trending Products */}
+      {relatedProducts.length > 0 && (
+        <section className="pt-6 border-t border-slate-200/80 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                You May Also Like
+              </h2>
+              <p className="text-xs text-slate-500">
+                Popular items frequently explored by our shoppers
+              </p>
+            </div>
+            <Link
+              href="/"
+              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
+            >
+              <span>Explore All</span>
+              <span>&rarr;</span>
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            {relatedProducts.map((item) => (
+              <ProductCard key={item.slug} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Mobile Sticky Bottom Action Bar */}
       <MobileStickyBuyBar product={product} variant={primaryVariant} />
