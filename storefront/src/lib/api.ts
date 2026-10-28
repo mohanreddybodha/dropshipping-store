@@ -167,7 +167,7 @@ export async function getCustomerOrders(email: string): Promise<CustomerOrder[]>
     const cleanEmail = encodeURIComponent(email.trim().toLowerCase());
     const res = await fetch(`${API_BASE_URL}/orders?email=${cleanEmail}`, {
       cache: "no-store",
-      signal: AbortSignal.timeout(2000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return [];
     return await res.json();
@@ -185,7 +185,7 @@ export async function lookupOrdersDualFactor(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim(), zip_code: zipCode.trim() }),
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -211,7 +211,7 @@ export async function syncUserAuth(payload: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -236,7 +236,7 @@ export async function getUserAuthState(
 
     const res = await fetch(`${API_BASE_URL}/auth/state?${params.toString()}`, {
       method: "GET",
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return null;
     return await res.json();
@@ -266,7 +266,7 @@ export async function createCheckoutOrder(payload: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
