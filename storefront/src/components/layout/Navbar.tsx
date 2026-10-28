@@ -13,6 +13,7 @@ import {
   Star,
   Truck,
   PackageCheck,
+  User,
 } from "lucide-react";
 import { Product } from "../../lib/types";
 import { FALLBACK_PRODUCTS, getCatalog } from "../../lib/api";
@@ -206,6 +207,16 @@ export default function Navbar() {
                   >
                     <Search className="w-4 h-4 text-slate-700" />
                   </button>
+
+                  {/* Profile Link (Desktop & Tablet) */}
+                  <Link
+                    href="/profile"
+                    className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 items-center justify-center text-slate-700 hover:text-slate-900 transition active:scale-95 shadow-xs"
+                    aria-label="Account & Orders"
+                    title="Account & Orders"
+                  >
+                    <User className="w-4 h-4 text-slate-700" />
+                  </Link>
                 </div>
               </>
             )}

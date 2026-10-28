@@ -223,3 +223,85 @@ export async function getCustomerOrders(email: string): Promise<CustomerOrder[]>
     return [];
   }
 }
+
+export async function lookupOrdersDualFactor(
+  email: string,
+  zipCode: string
+): Promise<CustomerOrder[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/orders/lookup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), zip_code: zipCode.trim() }),
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || "Lookup failed");
+    }
+    return await res.json();
+  } catch (err: any) {
+    throw new Error(err.message || "Failed to retrieve orders.");
+  }
+}
+
+export async function syncUserAuth(payload: {
+  firebase_uid: string;
+  email: string;
+  display_name?: string | null;
+  photo_url?: string | null;
+  guest_cart?: any[];
+  guest_watchlist?: string[];
+}): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/sync`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Sync failed");
+    }
+    return await res.json();
+  } catch (err: any) {
+    console.error("Auth sync error:", err);
+    return null;
+  }
+}
+
+export async function saveUserCart(
+  firebaseUid: string,
+  items: any[]
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/cart/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firebase_uid: firebaseUid, items }),
+      signal: AbortSignal.timeout(3000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function toggleUserWatchlist(
+  firebaseUid: string,
+  productPid: string
+): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/watchlist/toggle`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firebase_uid: firebaseUid, product_pid: productPid }),
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
