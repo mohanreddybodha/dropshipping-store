@@ -96,29 +96,36 @@ export default function WatchlistPage() {
     }
 
     const savedSlugs = new Set(currentSaved.map((p) => p.slug));
+    let recentList: Product[] = [];
 
-    // Retrieve Recently Viewed
+    // 1. Retrieve Recently Viewed (strictly excluding anything already in Watchlist)
     try {
       const rawRecent = localStorage.getItem("recently_viewed_products");
       if (rawRecent) {
         const parsed: Product[] = JSON.parse(rawRecent);
         if (Array.isArray(parsed)) {
-          setRecentlyViewed(parsed.filter((p) => !savedSlugs.has(p.slug)));
+          recentList = parsed.filter((p) => !savedSlugs.has(p.slug));
+          setRecentlyViewed(recentList);
         }
       }
     } catch {
       // Ignore
     }
 
-    // Retrieve Suggested For You
-    getCatalog({ limit: 15 })
+    const recentSlugs = new Set(recentList.map((p) => p.slug));
+
+    // 2. Retrieve Suggested For You (strictly excluding anything in Watchlist OR Recently Viewed)
+    getCatalog({ limit: 30 })
       .then((res) => {
-        if (Array.isArray(res) && res.length > 0) {
-          setSuggestedItems(res.filter((p) => !savedSlugs.has(p.slug)));
-        }
+        const catalogList = Array.isArray(res) && res.length > 0 ? res : FALLBACK_PRODUCTS;
+        setSuggestedItems(
+          catalogList.filter((p) => !savedSlugs.has(p.slug) && !recentSlugs.has(p.slug)).slice(0, 10)
+        );
       })
       .catch(() => {
-        setSuggestedItems(FALLBACK_PRODUCTS.filter((p) => !savedSlugs.has(p.slug)).slice(0, 10));
+        setSuggestedItems(
+          FALLBACK_PRODUCTS.filter((p) => !savedSlugs.has(p.slug) && !recentSlugs.has(p.slug)).slice(0, 10)
+        );
       });
   }, []);
 

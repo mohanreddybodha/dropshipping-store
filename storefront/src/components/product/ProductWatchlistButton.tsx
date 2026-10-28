@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../ui/Toast";
 import { auth } from "../../lib/firebase";
@@ -59,15 +59,15 @@ export default function ProductWatchlistButton({ product }: ProductWatchlistButt
       onClick={handleToggle}
       className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90 shadow-sm border ${
         isSaved
-          ? "bg-emerald-600 text-white border-emerald-600"
-          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:text-emerald-700"
+          ? "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100"
+          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:text-rose-600"
       }`}
       aria-label={isSaved ? "Remove from Watchlist" : "Add to Watchlist"}
       title={isSaved ? "In Watchlist" : "Add to Watchlist"}
     >
-      <Plus
-        className={`w-4 h-4 stroke-[2.5] transition-transform duration-200 ${
-          isSaved ? "rotate-45" : ""
+      <Heart
+        className={`w-4 h-4 transition-colors ${
+          isSaved ? "fill-rose-500 text-rose-500" : "text-slate-600"
         }`}
       />
     </button>

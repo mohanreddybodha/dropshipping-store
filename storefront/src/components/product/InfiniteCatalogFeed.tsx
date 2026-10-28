@@ -7,11 +7,17 @@ import ProductCard from "../catalog/ProductCard";
 
 interface InfiniteCatalogFeedProps {
   products: Product[];
+  title?: string;
+  subtitle?: string;
 }
 
 const BATCH_SIZE = 12;
 
-export default function InfiniteCatalogFeed({ products }: InfiniteCatalogFeedProps) {
+export default function InfiniteCatalogFeed({
+  products,
+  title = "Suggested For You",
+  subtitle,
+}: InfiniteCatalogFeedProps) {
   const [visibleCount, setVisibleCount] = useState<number>(BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -47,11 +53,13 @@ export default function InfiniteCatalogFeed({ products }: InfiniteCatalogFeedPro
         <div>
           <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-600" />
-            <span>More Products to Explore</span>
+            <span>{title}</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Continuous discovery from our US domestic warehouse ({products.length} more available)
-          </p>
+          {subtitle && (
+            <p className="text-xs text-slate-500 mt-0.5">
+              {subtitle}
+            </p>
+          )}
         </div>
       </div>
 

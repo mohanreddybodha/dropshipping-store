@@ -30,58 +30,70 @@ export default function CartPage() {
   useEffect(() => {
     setMounted(true);
     const cartSlugs = new Set(items.map((i) => i.product.slug));
+    let watchlistList: Product[] = [];
+    let recentList: Product[] = [];
 
-    // 1. Retrieve Watchlist items
+    // 1. Retrieve Watchlist items (excluding items in cart)
     try {
       const rawWatchlist = localStorage.getItem("watchlist_items");
       if (rawWatchlist) {
         const parsed: Product[] = JSON.parse(rawWatchlist);
         if (Array.isArray(parsed)) {
-          setWatchlistItems(parsed.filter((p) => !cartSlugs.has(p.slug)));
+          watchlistList = parsed.filter((p) => !cartSlugs.has(p.slug));
+          setWatchlistItems(watchlistList);
         }
       }
     } catch {
       // Ignore
     }
 
-    // 2. Retrieve Recently Viewed items
+    const watchlistSlugs = new Set(watchlistList.map((p) => p.slug));
+
+    // 2. Retrieve Recently Viewed items (strictly excluding items in cart AND items in watchlist)
     try {
       const rawRecent = localStorage.getItem("recently_viewed_products");
       if (rawRecent) {
         const parsed: Product[] = JSON.parse(rawRecent);
         if (Array.isArray(parsed)) {
-          setRecentlyViewed(parsed.filter((p) => !cartSlugs.has(p.slug)));
+          recentList = parsed.filter((p) => !cartSlugs.has(p.slug) && !watchlistSlugs.has(p.slug));
+          setRecentlyViewed(recentList);
         }
       }
     } catch {
       // Ignore
     }
 
-    // 3. Retrieve Suggested For You from catalog
-    getCatalog({ limit: 15 })
+    const recentSlugs = new Set(recentList.map((p) => p.slug));
+
+    // 3. Retrieve Suggested For You (strictly excluding items in cart, watchlist, OR recently viewed)
+    getCatalog({ limit: 30 })
       .then((res) => {
-        if (Array.isArray(res) && res.length > 0) {
-          setSuggestedItems(res.filter((p) => !cartSlugs.has(p.slug)));
-        }
+        const catalogList = Array.isArray(res) && res.length > 0 ? res : FALLBACK_PRODUCTS;
+        setSuggestedItems(
+          catalogList.filter(
+            (p) => !cartSlugs.has(p.slug) && !watchlistSlugs.has(p.slug) && !recentSlugs.has(p.slug)
+          ).slice(0, 10)
+        );
       })
       .catch(() => {
-        setSuggestedItems(FALLBACK_PRODUCTS.filter((p) => !cartSlugs.has(p.slug)).slice(0, 10));
+        setSuggestedItems(
+          FALLBACK_PRODUCTS.filter(
+            (p) => !cartSlugs.has(p.slug) && !watchlistSlugs.has(p.slug) && !recentSlugs.has(p.slug)
+          ).slice(0, 10)
+        );
       });
   }, [items]);
 
-  // Dynamic unit text that updates immediately according to user quantity actions
+  // Dynamic unit text that accurately reflects exact units without double multiplication
   const getUnitText = (quantity: number, tier: string) => {
     const q = Number(quantity) || 1;
-    if (tier === "1x") {
-      return q === 1 ? "1 Unit" : `${q} Units`;
-    }
     if (tier === "2x") {
-      return `${q * 2} Units (${q}x Double Pack)`;
+      return `${q} Units (Double Pack Bundle)`;
     }
     if (tier === "3x") {
-      return `${q * 3} Units (${q}x Family Pack)`;
+      return `${q} Units (Family Pack Bundle)`;
     }
-    return `${q} ${q === 1 ? "Unit" : "Units"}`;
+    return q === 1 ? "1 Unit" : `${q} Units`;
   };
 
   // Flipkart-style Buy Now: checks out only this specific product at the user's selected quantity

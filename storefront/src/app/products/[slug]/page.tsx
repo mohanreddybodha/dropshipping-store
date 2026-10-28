@@ -9,6 +9,7 @@ import {
   ProductBackButton,
   ProductShareButton,
   ProductWatchlistButton,
+  InfiniteCatalogFeed,
 } from "../../../components/product";
 import TrackRecentlyViewed from "../../../components/product/TrackRecentlyViewed";
 import HorizontalProductRow from "../../../components/catalog/HorizontalProductRow";
@@ -52,29 +53,23 @@ export default async function ProductDetailPage({ params }: PageProps) {
     );
   }
 
-  // Fetch catalog for suggested & category products
-  const allProducts = await getCatalog({ limit: 100 });
+  // Fetch full catalog for suggested & category products
+  const allProducts = await getCatalog({ limit: 200 });
   const categoryName = product.category || "Featured";
 
   // Section 1: Same category products (excluding current product)
-  const sameCategoryProducts = allProducts
-    .filter(
-      (p) =>
-        p.slug !== product.slug &&
-        p.category?.toLowerCase() === product.category?.toLowerCase()
-    )
-    .slice(0, 10);
+  const sameCategoryProducts = allProducts.filter(
+    (p) =>
+      p.slug !== product.slug &&
+      p.category?.toLowerCase() === product.category?.toLowerCase()
+  );
 
-  const sameCategorySlugs = new Set(sameCategoryProducts.map((p) => p.slug));
-
-  // Section 2: Suggested For You (products excluding current product and same category)
-  const suggestedProducts = allProducts
-    .filter(
-      (p) =>
-        p.slug !== product.slug &&
-        !sameCategorySlugs.has(p.slug)
-    )
-    .slice(0, 15);
+  // Section 2: Suggested For You (strictly excluding products from the current product's category)
+  const suggestedProducts = allProducts.filter(
+    (p) =>
+      p.slug !== product.slug &&
+      p.category?.toLowerCase() !== product.category?.toLowerCase()
+  );
 
   const primaryVariant = product.variants[0];
   const rating = product.rating || 4.8;
@@ -176,25 +171,22 @@ export default async function ProductDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* 1. Categorizer */}
+      {/* 1. More in Category (Horizontal Swipeable Carousel) */}
       {sameCategoryProducts.length > 0 && (
         <HorizontalProductRow
-          title="Categorizer"
+          title={`More in ${categoryName}`}
           viewAllHref={`/?category=${encodeURIComponent(categoryName)}`}
           viewAllText="View All"
-          products={sameCategoryProducts}
+          products={sameCategoryProducts.slice(0, 10)}
         />
       )}
 
-      {/* 2. Suggested For You */}
-      {suggestedProducts.length > 0 && (
-        <HorizontalProductRow
-          title="Suggested For You"
-          viewAllHref="/"
-          viewAllText="View All"
-          products={suggestedProducts}
-        />
-      )}
+      {/* 2. Suggested For You (Vertical 2-Column Endless Scroll, Zero Category Overlap) */}
+      <InfiniteCatalogFeed
+        products={suggestedProducts}
+        title="Suggested For You"
+        subtitle="Endless discovery from our US domestic collection"
+      />
 
       {/* Mobile Sticky Bottom Action Bar */}
       <MobileStickyBuyBar product={product} variant={primaryVariant} />
