@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { BundleTier, CartItem, Product, Variant } from "./types";
+import { auth } from "./firebase";
+import { saveUserCart } from "./api";
 
 interface CartContextType {
   items: CartItem[];
@@ -83,6 +85,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("app_cart", JSON.stringify(items));
     } catch {
       // Ignore
+    }
+
+    // Defensive cloud sync if user is authenticated with Firebase
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      const payload = items.map((item) => ({
+        variant_vid: item.variant?.vid || "",
+        product_pid: item.product?.pid || "",
+        title: item.product?.title || "",
+        image_url: item.product?.hero_image_url || "",
+        tier: item.tier === "2x" ? 2 : item.tier === "3x" ? 3 : 1,
+        selected_size: item.selectedSize || null,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+      }));
+      saveUserCart(currentUser.uid, payload).catch(() => {});
     }
   }, [items, isHydrated]);
 
