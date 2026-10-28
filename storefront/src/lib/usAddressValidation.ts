@@ -293,7 +293,7 @@ export function validateUsZip(zip: string, stateCode?: string): ValidationResult
   if (pureDigits.length === 6) {
     return {
       isValid: false,
-      error: `Invalid US PIN: "${trimmed}". US postal codes are 5 digits (e.g., 90210). 6-digit PIN codes (such as Indian postal codes) are not supported.`,
+      error: "Invalid US PIN. US postal codes are 5 digits. Six-digit PIN codes are not supported.",
     };
   }
 

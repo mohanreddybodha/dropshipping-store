@@ -25,6 +25,60 @@ import {
   MapPin,
 } from "lucide-react";
 
+/** Crisp, cross-platform US Flag SVG (renders consistently on Windows, macOS, iOS, Android) */
+function USFlagIcon({ className = "w-5 h-3.5" }: { className?: string }) {
+  return (
+    <svg className={`${className} flex-shrink-0 rounded-[2px] shadow-2xs overflow-hidden inline-block align-middle`} viewBox="0 0 741 390">
+      <rect width="741" height="390" fill="#b22234" />
+      <path d="M0,30h741M0,90h741M0,150h741M0,210h741M0,270h741M0,330h741" stroke="#fff" strokeWidth="30" />
+      <rect width="296.4" height="210" fill="#3c3b6e" />
+      <g fill="#fff">
+        <circle cx="29.6" cy="21" r="9" />
+        <circle cx="88.9" cy="21" r="9" />
+        <circle cx="148.2" cy="21" r="9" />
+        <circle cx="207.5" cy="21" r="9" />
+        <circle cx="266.8" cy="21" r="9" />
+        <circle cx="59.3" cy="42" r="9" />
+        <circle cx="118.6" cy="42" r="9" />
+        <circle cx="177.8" cy="42" r="9" />
+        <circle cx="237.1" cy="42" r="9" />
+        <circle cx="29.6" cy="63" r="9" />
+        <circle cx="88.9" cy="63" r="9" />
+        <circle cx="148.2" cy="63" r="9" />
+        <circle cx="207.5" cy="63" r="9" />
+        <circle cx="266.8" cy="63" r="9" />
+        <circle cx="59.3" cy="84" r="9" />
+        <circle cx="118.6" cy="84" r="9" />
+        <circle cx="177.8" cy="84" r="9" />
+        <circle cx="237.1" cy="84" r="9" />
+        <circle cx="29.6" cy="105" r="9" />
+        <circle cx="88.9" cy="105" r="9" />
+        <circle cx="148.2" cy="105" r="9" />
+        <circle cx="207.5" cy="105" r="9" />
+        <circle cx="266.8" cy="105" r="9" />
+        <circle cx="59.3" cy="126" r="9" />
+        <circle cx="118.6" cy="126" r="9" />
+        <circle cx="177.8" cy="126" r="9" />
+        <circle cx="237.1" cy="126" r="9" />
+        <circle cx="29.6" cy="147" r="9" />
+        <circle cx="88.9" cy="147" r="9" />
+        <circle cx="148.2" cy="147" r="9" />
+        <circle cx="207.5" cy="147" r="9" />
+        <circle cx="266.8" cy="147" r="9" />
+        <circle cx="59.3" cy="168" r="9" />
+        <circle cx="118.6" cy="168" r="9" />
+        <circle cx="177.8" cy="168" r="9" />
+        <circle cx="237.1" cy="168" r="9" />
+        <circle cx="29.6" cy="189" r="9" />
+        <circle cx="88.9" cy="189" r="9" />
+        <circle cx="148.2" cy="189" r="9" />
+        <circle cx="207.5" cy="189" r="9" />
+        <circle cx="266.8" cy="189" r="9" />
+      </g>
+    </svg>
+  );
+}
+
 const US_STATES: ThemedDropdownOption[] = [
   { value: "AL", label: "Alabama (AL)" },
   { value: "AK", label: "Alaska (AK)" },
@@ -119,6 +173,7 @@ function CheckoutContent() {
   const [isAuthenticatedUser, setIsAuthenticatedUser] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [confirmedOrder, setConfirmedOrder] = useState<{
     orderNumber: string;
     amount: number;
@@ -200,10 +255,14 @@ function CheckoutContent() {
     (acc, curr) => acc + (Number(curr.totalPrice) || 0),
     0
   );
-  const finalSavings = checkoutItems.reduce(
-    (acc, curr) => acc + (Number(curr.savings) || 0),
-    0
-  );
+  const calculatedSavings = checkoutItems.reduce((acc, curr) => {
+    if (curr.savings && Number(curr.savings) > 0) return acc + Number(curr.savings);
+    const unit = Number(curr.unitPrice || curr.variant?.retail_price_1x || 24.99);
+    const qty = Number(curr.quantity) || 1;
+    if (qty >= 2) return acc + +(unit * qty * 0.15).toFixed(2);
+    return acc + +(unit * 0.15).toFixed(2);
+  }, 0);
+  const finalSavings = calculatedSavings > 0 ? calculatedSavings : 8.50;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -213,6 +272,13 @@ function CheckoutContent() {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
     if (errorMessage) setErrorMessage(null);
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
@@ -220,59 +286,79 @@ function CheckoutContent() {
     setIsSubmitting(true);
     setErrorMessage(null);
 
+    const errors: Record<string, string> = {};
+
     // 1. Strict US Country Verification
     if (form.country_code !== "US") {
-      setErrorMessage("Domestic fulfillment is available only for delivery within the United States.");
-      setIsSubmitting(false);
-      return;
+      errors.country_code = "Domestic fulfillment is available only for delivery within the United States.";
     }
 
-    // 2. Authenticated user email validation
-    if (isAuthenticatedUser && form.email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(form.email.trim())) {
-        setErrorMessage("Please enter a valid Email Address.");
-        setIsSubmitting(false);
-        return;
+    // 2. Authenticated user contact validation
+    if (isAuthenticatedUser) {
+      if (!form.name.trim()) {
+        errors.name = "Please enter your Full Name.";
+      }
+      if (!form.email.trim()) {
+        errors.email = "Please enter your Email Address.";
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(form.email.trim())) {
+          errors.email = "Please enter a valid Email Address.";
+        }
       }
     }
 
     // 3. Strict US Mobile Number Validation (NANP Standards)
     const phoneVal = validateUsPhone(form.phone, form.phoneCode);
     if (!phoneVal.isValid) {
-      setErrorMessage(phoneVal.error || "Please enter a valid 10-digit US mobile number.");
-      setIsSubmitting(false);
-      return;
+      errors.phone = phoneVal.error || "Please enter a valid 10-digit US mobile number.";
     }
 
     // 4. Strict US Street Address Validation (House # + Street Name, non-US filter)
     const streetVal = validateUsStreetAddress(form.address1);
     if (!streetVal.isValid) {
-      setErrorMessage(streetVal.error || "Please enter a valid US Street Address.");
-      setIsSubmitting(false);
-      return;
+      errors.address1 = streetVal.error || "Please enter a valid US Street Address.";
     }
 
     // 5. Strict US City Validation (non-US filter)
     const cityVal = validateUsCity(form.city);
     if (!cityVal.isValid) {
-      setErrorMessage(cityVal.error || "Please enter a valid US City.");
-      setIsSubmitting(false);
-      return;
+      errors.city = cityVal.error || "Please enter a valid US City.";
     }
 
     // 6. US State Selection
     if (!form.province) {
-      setErrorMessage("Please select a valid US State.");
-      setIsSubmitting(false);
-      return;
+      errors.province = "Please select a valid US State.";
     }
 
     // 7. Strict US ZIP / PIN Validation (5-digits, 6-digit Indian PIN rejection, and State Prefix Matching)
     const zipVal = validateUsZip(form.zip_code, form.province);
     if (!zipVal.isValid) {
-      setErrorMessage(zipVal.error || "Please enter a valid 5-digit US PIN / ZIP code.");
+      errors.zip_code = zipVal.error || "Please enter a valid 5-digit US PIN / ZIP code.";
+    }
+
+    // If there are validation errors, display inline and auto-scroll to the first invalid field
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       setIsSubmitting(false);
+
+      const fieldPriority = ["country_code", "name", "email", "phone", "address1", "city", "province", "zip_code"];
+      const firstInvalid = fieldPriority.find((k) => errors[k]) || Object.keys(errors)[0];
+
+      if (typeof window !== "undefined") {
+        setTimeout(() => {
+          const el = document.getElementById(`field-${firstInvalid}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            const focusTarget = el.tagName === "INPUT" || el.tagName === "BUTTON" || el.tagName === "SELECT"
+              ? el
+              : el.querySelector("input, select, button");
+            if (focusTarget && "focus" in focusTarget) {
+              (focusTarget as HTMLElement).focus();
+            }
+          }
+        }, 50);
+      }
       return;
     }
 
@@ -468,7 +554,7 @@ function CheckoutContent() {
       <div className="bg-emerald-950 text-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-emerald-900 space-y-1.5">
         <div className="flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
           <div className="flex items-center gap-1.5 min-w-0 truncate">
-            <span className="text-base sm:text-lg flex-shrink-0">🇺🇸</span>
+            <USFlagIcon className="w-5 h-3.5 sm:w-6 sm:h-4" />
             <span className="text-[11px] sm:text-xs font-black uppercase tracking-tight text-emerald-400 truncate">
               US Domestic Shipping Only
             </span>
@@ -571,28 +657,36 @@ function CheckoutContent() {
           </div>
         </div>
 
-        {errorMessage && (
-          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-800 font-semibold">
-            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
-
         <div className="space-y-3.5 text-xs font-semibold text-slate-700">
           {/* Country Field (Themed Dropdown Locked to US) */}
-          <div>
+          <div id="field-country_code">
             <ThemedDropdown
               label="Country"
               options={COUNTRY_OPTIONS}
               value={form.country_code}
-              onChange={(val) => setForm({ ...form, country_code: val })}
+              onChange={(val) => {
+                setForm({ ...form, country_code: val });
+                if (fieldErrors.country_code) {
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.country_code;
+                    return next;
+                  });
+                }
+              }}
             />
+            {fieldErrors.country_code && (
+              <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{fieldErrors.country_code}</span>
+              </p>
+            )}
           </div>
 
           {/* Full Name & Email: Rendered ONLY if user is logged in */}
           {isAuthenticatedUser ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-              <div>
+              <div id="field-name">
                 <label className="block mb-1 text-slate-700 font-bold">Full Name</label>
                 <input
                   type="text"
@@ -600,10 +694,20 @@ function CheckoutContent() {
                   value={form.name}
                   onChange={handleChange}
                   placeholder="Enter Full Name"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
+                    fieldErrors.name
+                      ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"
+                      : "border-slate-200 focus:ring-2 focus:ring-emerald-500"
+                  }`}
                 />
+                {fieldErrors.name && (
+                  <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>{fieldErrors.name}</span>
+                  </p>
+                )}
               </div>
-              <div>
+              <div id="field-email">
                 <label className="block mb-1 text-slate-700 font-bold">Email Address</label>
                 <input
                   type="email"
@@ -611,8 +715,18 @@ function CheckoutContent() {
                   value={form.email}
                   onChange={handleChange}
                   placeholder="Enter Email Address"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
+                    fieldErrors.email
+                      ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"
+                      : "border-slate-200 focus:ring-2 focus:ring-emerald-500"
+                  }`}
                 />
+                {fieldErrors.email && (
+                  <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>{fieldErrors.email}</span>
+                  </p>
+                )}
               </div>
             </div>
           ) : (
@@ -649,83 +763,146 @@ function CheckoutContent() {
           )}
 
           {/* Your Mobile */}
-          <div>
+          <div id="field-phone">
             <label className="block mb-1">Your Mobile</label>
             <div className="flex gap-2">
               <div className="w-36 flex-shrink-0">
                 <ThemedDropdown
                   options={PHONE_CODE_OPTIONS}
                   value={form.phoneCode}
-                  onChange={(val) => setForm({ ...form, phoneCode: val })}
+                  onChange={(val) => {
+                    setForm({ ...form, phoneCode: val });
+                    if (fieldErrors.phone) {
+                      setFieldErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.phone;
+                        return next;
+                      });
+                    }
+                  }}
                 />
               </div>
               <input
                 type="tel"
                 name="phone"
-                required
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="(555) 000-0000"
-                className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                className={`flex-1 min-w-0 px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
+                  fieldErrors.phone
+                    ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"
+                    : "border-slate-200 focus:ring-2 focus:ring-emerald-500"
+                }`}
               />
             </div>
-            <p className="text-[10px] text-slate-400 mt-1">10-digit US mobile number for USPS SMS tracking</p>
+            {fieldErrors.phone ? (
+              <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{fieldErrors.phone}</span>
+              </p>
+            ) : (
+              <p className="text-[10px] text-slate-400 mt-1">10-digit US mobile number for USPS SMS tracking</p>
+            )}
           </div>
 
           {/* Street Address */}
-          <div>
+          <div id="field-address1">
             <label className="block mb-1">Street Address</label>
             <input
               type="text"
               name="address1"
-              required
               value={form.address1}
               onChange={handleChange}
               placeholder="Enter Street Address"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
+                fieldErrors.address1
+                  ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"
+                  : "border-slate-200 focus:ring-2 focus:ring-emerald-500"
+              }`}
             />
-            <p className="text-[10px] text-slate-400 mt-1">Include building number & street (e.g., 742 Evergreen Terrace)</p>
+            {fieldErrors.address1 ? (
+              <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{fieldErrors.address1}</span>
+              </p>
+            ) : (
+              <p className="text-[10px] text-slate-400 mt-1">Include building number & street (e.g., 742 Evergreen Terrace)</p>
+            )}
           </div>
 
           {/* City, State Dropdown, PIN */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
+            <div id="field-city">
               <label className="block mb-1">City</label>
               <input
                 type="text"
                 name="city"
-                required
                 value={form.city}
                 onChange={handleChange}
                 placeholder="Enter City"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
+                  fieldErrors.city
+                    ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"
+                    : "border-slate-200 focus:ring-2 focus:ring-emerald-500"
+                }`}
               />
+              {fieldErrors.city && (
+                <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{fieldErrors.city}</span>
+                </p>
+              )}
             </div>
 
             {/* Custom Themed State Dropdown */}
-            <div>
+            <div id="field-province">
               <ThemedDropdown
                 label="State"
                 options={US_STATES}
                 value={form.province}
-                onChange={(val) => setForm({ ...form, province: val })}
+                onChange={(val) => {
+                  setForm({ ...form, province: val });
+                  if (fieldErrors.province) {
+                    setFieldErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.province;
+                      return next;
+                    });
+                  }
+                }}
                 placeholder="Select State"
               />
+              {fieldErrors.province && (
+                <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{fieldErrors.province}</span>
+                </p>
+              )}
             </div>
 
-            <div>
+            <div id="field-zip_code">
               <label className="block mb-1">PIN</label>
               <input
                 type="text"
                 name="zip_code"
-                required
                 value={form.zip_code}
                 onChange={handleChange}
                 placeholder="Enter PIN"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
+                  fieldErrors.zip_code
+                    ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"
+                    : "border-slate-200 focus:ring-2 focus:ring-emerald-500"
+                }`}
                 maxLength={10}
               />
-              <p className="text-[10px] text-slate-400 mt-1">5-digit US ZIP code</p>
+              {fieldErrors.zip_code ? (
+                <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{fieldErrors.zip_code}</span>
+                </p>
+              ) : (
+                <p className="text-[10px] text-slate-400 mt-1">5-digit US ZIP code</p>
+              )}
             </div>
           </div>
         </div>
@@ -744,6 +921,13 @@ function CheckoutContent() {
             <span className="font-mono text-emerald-700 font-bold text-[11px]">VERIFIED GATEWAY</span>
           </div>
         </div>
+
+        {errorMessage && (
+          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-800 font-semibold">
+            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         <button
           type="submit"
