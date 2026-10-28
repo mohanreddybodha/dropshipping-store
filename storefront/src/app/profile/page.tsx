@@ -14,6 +14,7 @@ import {
   User as UserIcon,
   LogOut,
   ArrowRight,
+  ArrowLeft,
   ShieldCheck,
   Search,
   X,
@@ -402,14 +403,23 @@ export default function ProfilePage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5">
       {/* ── TOP HEADER ── */}
       <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-base sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
-            <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 flex-shrink-0" />
-            <span className="truncate">Account & Orders</span>
-          </h1>
-          <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
-            Manage profile & track orders
-          </p>
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <Link
+            href="/"
+            className="hidden sm:flex w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 items-center justify-center text-slate-600 transition active:scale-95 flex-shrink-0"
+            aria-label="Back to store"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-base sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
+              <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 flex-shrink-0" />
+              <span className="truncate">Account & Orders</span>
+            </h1>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+              Manage profile & track orders
+            </p>
+          </div>
         </div>
 
         {currentUser && (

@@ -9,6 +9,7 @@ import {
   Plus,
   Minus,
   ArrowRight,
+  ArrowLeft,
   ShoppingBag,
   Truck,
   Zap,
@@ -129,6 +130,18 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-6">
+        {/* Desktop Back Icon */}
+        <div className="hidden sm:flex items-center gap-3">
+          <Link
+            href="/"
+            className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition active:scale-95 flex-shrink-0"
+            aria-label="Back to store"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <span className="text-xs font-bold text-slate-500">Back to Shopping</span>
+        </div>
+
         {/* Centered Empty Cart Card */}
         <div className="max-w-md mx-auto text-center space-y-4 py-8 px-6 sm:px-8 bg-white border border-slate-200/90 rounded-3xl shadow-xs">
           <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
@@ -189,13 +202,22 @@ export default function CartPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-6">
       {/* Cart Title Bar */}
       <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            Shopping Cart
-          </h1>
-          <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
-            {items.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0)} items ready for domestic checkout
-          </p>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="hidden sm:flex w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 items-center justify-center text-slate-600 transition active:scale-95 flex-shrink-0"
+            aria-label="Back to store"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Shopping Cart
+            </h1>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+              {items.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0)} items ready for domestic checkout
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           {items.length > 0 && (

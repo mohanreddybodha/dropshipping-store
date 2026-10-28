@@ -171,7 +171,7 @@ export default function WatchlistPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition active:scale-95"
+            className="hidden sm:flex w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 items-center justify-center text-slate-600 transition active:scale-95 flex-shrink-0"
             aria-label="Back to store"
           >
             <ArrowLeft className="w-4 h-4" />
