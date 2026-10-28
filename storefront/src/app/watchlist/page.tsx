@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Heart, Trash2, ArrowLeft, Star, ShoppingBag } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../../components/ui/Toast";
-import { auth } from "../../lib/firebase";
-import { toggleUserWatchlist, getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
+import { auth, onAuthStateChanged } from "../../lib/firebase";
+import { toggleUserWatchlist, getUserAuthState, getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
 import HorizontalProductRow from "../../components/catalog/HorizontalProductRow";
 
 /** Watchlist card: clean card with delete icon replacing heart, rating in bottom-right of image, and consistent 2-line title */
@@ -127,6 +127,38 @@ export default function WatchlistPage() {
           FALLBACK_PRODUCTS.filter((p) => !savedSlugs.has(p.slug) && !recentSlugs.has(p.slug)).slice(0, 10)
         );
       });
+
+    // 3. Cross-device cloud sync: sync user watchlist on auth
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      try {
+        const remoteState = await getUserAuthState(user.uid, user.email, user.phoneNumber);
+        if (remoteState?.watchlist && Array.isArray(remoteState.watchlist) && remoteState.watchlist.length > 0) {
+          const remotePids = new Set<string>(remoteState.watchlist);
+          setItems((localPrev) => {
+            const merged = [...localPrev];
+            const existingPids = new Set(merged.map((p) => p.pid));
+            for (const pid of remotePids) {
+              if (!existingPids.has(pid)) {
+                const found = FALLBACK_PRODUCTS.find((p) => p.pid === pid);
+                if (found) {
+                  merged.push(found);
+                  existingPids.add(pid);
+                }
+              }
+            }
+            try {
+              localStorage.setItem("watchlist_items", JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
+        }
+      } catch (err) {
+        console.warn("Failed fetching remote watchlist:", err);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleClearAll = () => {

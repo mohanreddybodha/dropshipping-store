@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import logging
+import time
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy.orm import Session
 
 from src.api.security import verify_payment_webhook
-from src.models.database import Order, get_session
+from src.models.database import Order, User, get_session
 from src.schemas.order import PaymentWebhookPayload
 from src.services.order_router import (
     CircuitBreakerOpenException,
@@ -139,18 +141,133 @@ async def handle_payment_captured_webhook(
     return result
 
 
+class CreateCheckoutOrderRequest(BaseModel):
+    internal_order_number: Optional[str] = None
+    customer_name: str = Field(..., min_length=1)
+    customer_email: str = Field(..., min_length=3)
+    customer_phone: Optional[str] = None
+    shipping_address: str = Field(..., min_length=1)
+    shipping_city: str = Field(..., min_length=1)
+    shipping_province: str = Field(..., min_length=1)
+    shipping_zip: str = Field(..., min_length=2)
+    shipping_country: str = "US"
+    total_retail: float = Field(..., ge=0)
+    carrier_name: str = "USPS"
+    tracking_number: Optional[str] = None
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    firebase_uid: Optional[str] = None
+
+
+@router.post("/orders/checkout", response_model=CustomerOrderSummary)
+def create_checkout_order(payload: CreateCheckoutOrderRequest, db: Session = Depends(get_db)):
+    """Persist customer checkout order in the database for synchronized cross-device tracking."""
+    clean_email = payload.customer_email.strip().lower()
+    order_num = payload.internal_order_number or f"ORD-STORE-{int(time.time() * 1000)}"
+
+    existing = db.query(Order).filter(Order.internal_order_number == order_num).first()
+    if existing:
+        return CustomerOrderSummary(
+            id=existing.id,
+            internal_order_number=existing.internal_order_number,
+            status=existing.status,
+            total_retail=existing.total_retail,
+            carrier_name=existing.carrier_name or "USPS",
+            tracking_number=existing.tracking_number,
+            shipping_name=existing.shipping_name,
+            shipping_city=existing.shipping_city,
+            shipping_province=existing.shipping_province,
+            shipping_zip=existing.shipping_zip,
+            created_at=existing.created_at.isoformat() if existing.created_at else "",
+            items=existing.items_json,
+        )
+
+    tracking_num = payload.tracking_number or f"94001118995625{int(time.time())}"
+    now = datetime.now(timezone.utc)
+
+    new_order = Order(
+        internal_order_number=order_num,
+        customer_email=clean_email,
+        customer_phone=payload.customer_phone,
+        status="PAYMENT_CAPTURED",
+        total_retail=payload.total_retail,
+        total_wholesale=0.0,
+        net_profit=0.0,
+        shipping_name=payload.customer_name,
+        shipping_address=payload.shipping_address,
+        shipping_city=payload.shipping_city,
+        shipping_province=payload.shipping_province,
+        shipping_zip=payload.shipping_zip,
+        shipping_country=payload.shipping_country,
+        carrier_name=payload.carrier_name or "USPS",
+        tracking_number=tracking_num,
+        items_json=payload.items,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(new_order)
+
+    # If firebase_uid provided, ensure user exists
+    if payload.firebase_uid:
+        user = db.query(User).filter(User.firebase_uid == payload.firebase_uid).first()
+        if not user:
+            user = User(
+                firebase_uid=payload.firebase_uid,
+                email=clean_email,
+                display_name=payload.customer_name,
+                phone_number=payload.customer_phone,
+                created_at=now,
+                last_login_at=now,
+            )
+            db.add(user)
+        else:
+            user.last_login_at = now
+            if not user.email and clean_email:
+                user.email = clean_email
+
+    db.commit()
+    db.refresh(new_order)
+
+    return CustomerOrderSummary(
+        id=new_order.id,
+        internal_order_number=new_order.internal_order_number,
+        status=new_order.status,
+        total_retail=new_order.total_retail,
+        carrier_name=new_order.carrier_name,
+        tracking_number=new_order.tracking_number,
+        shipping_name=new_order.shipping_name,
+        shipping_city=new_order.shipping_city,
+        shipping_province=new_order.shipping_province,
+        shipping_zip=new_order.shipping_zip,
+        created_at=new_order.created_at.isoformat() if new_order.created_at else "",
+        items=new_order.items_json,
+    )
+
+
 @router.get("/orders", response_model=List[CustomerOrderSummary])
-def get_orders_by_customer_email(email: str, db: Session = Depends(get_db)):
-    """Fetch customer order history by customer email."""
-    clean_email = email.strip().lower()
-    if not clean_email:
+def get_orders_by_customer_email(
+    email: Optional[str] = None, phone: Optional[str] = None, db: Session = Depends(get_db)
+):
+    """Fetch customer order history by customer email and/or phone number."""
+    clean_email = (email or "").strip().lower()
+    clean_phone = (phone or "").strip()
+    clean_phone_digits = "".join(c for c in clean_phone if c.isdigit())
+
+    if not clean_email and not clean_phone_digits:
         raise HTTPException(status_code=400, detail="Email is required")
+
+    from sqlalchemy import or_
+
+    filters = []
+    if clean_email:
+        filters.append(Order.customer_email.ilike(clean_email))
+    if clean_phone_digits:
+        filters.append(Order.customer_phone.ilike(f"%{clean_phone_digits}%"))
 
     orders = (
         db.query(Order)
-        .filter(Order.customer_email.ilike(clean_email))
+        .filter(or_(*filters))
         .order_by(Order.created_at.desc())
-        .limit(20)
+        .limit(50)
         .all()
     )
     return [

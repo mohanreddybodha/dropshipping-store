@@ -14,6 +14,7 @@ from src.api.security import compute_hmac_sha256
 from src.api.main import app
 from src.api.routes.catalog import get_db as catalog_get_db
 from src.api.routes.orders import get_db as orders_get_db
+from src.api.routes.auth import get_db as auth_get_db
 from src.models.database import (
     Base,
     Order,
@@ -100,6 +101,7 @@ def client(test_db_session: Session):
 
     app.dependency_overrides[catalog_get_db] = override_get_db
     app.dependency_overrides[orders_get_db] = override_get_db
+    app.dependency_overrides[auth_get_db] = override_get_db
     test_client = TestClient(app)
     yield test_client
     app.dependency_overrides.clear()
@@ -417,3 +419,70 @@ class TestPaymentWebhookEndpoint:
         """GET /api/orders with empty email returns 400."""
         resp = client.get("/api/orders?email=   ")
         assert resp.status_code == 400
+
+    def test_create_checkout_order_persists_in_db(self, client: TestClient):
+        """POST /api/orders/checkout stores order in DB and returns rich summary."""
+        payload = {
+            "internal_order_number": "ORD-STORE-TEST-99",
+            "customer_name": "Alice Wonder",
+            "customer_email": "alice@wonder.com",
+            "customer_phone": "(213) 555-0199",
+            "shipping_address": "742 Evergreen Terrace",
+            "shipping_city": "Springfield",
+            "shipping_province": "OR",
+            "shipping_zip": "97477",
+            "shipping_country": "US",
+            "total_retail": 49.98,
+            "carrier_name": "USPS",
+            "items": [
+                {
+                    "title": "Turbo Fan",
+                    "product_title": "Turbo Fan",
+                    "slug": "turbo-fan",
+                    "image_url": "https://example.com/fan.jpg",
+                    "quantity": 2,
+                    "price": 24.99,
+                }
+            ],
+            "firebase_uid": "fb_alice_123",
+        }
+        res = client.post("/api/orders/checkout", json=payload)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["internal_order_number"] == "ORD-STORE-TEST-99"
+        assert data["total_retail"] == 49.98
+        assert len(data["items"]) == 1
+
+        # Check that GET /api/orders?email=alice@wonder.com finds it
+        get_res = client.get("/api/orders?email=alice@wonder.com")
+        assert get_res.status_code == 200
+        found = get_res.json()
+        assert len(found) >= 1
+        assert found[0]["internal_order_number"] == "ORD-STORE-TEST-99"
+
+    def test_get_user_auth_state_across_devices(self, client: TestClient):
+        """GET /api/auth/state retrieves unified cart, watchlist, and orders."""
+        # Create an order first for this session
+        order_payload = {
+            "internal_order_number": "ORD-SYNC-TEST-01",
+            "customer_name": "Bob Builder",
+            "customer_email": "bob@builder.com",
+            "shipping_address": "100 Construction Way",
+            "shipping_city": "Denver",
+            "shipping_province": "CO",
+            "shipping_zip": "80202",
+            "total_retail": 19.99,
+            "firebase_uid": "fb_bob_456",
+        }
+        create_res = client.post("/api/orders/checkout", json=order_payload)
+        assert create_res.status_code == 200
+
+        res = client.get("/api/auth/state?firebase_uid=fb_bob_456&email=bob@builder.com")
+        assert res.status_code == 200
+        state = res.json()
+        assert "user" in state
+        assert "cart" in state
+        assert "watchlist" in state
+        assert "orders" in state
+        assert len(state["orders"]) >= 1
+        assert state["orders"][0]["internal_order_number"] == "ORD-SYNC-TEST-01"

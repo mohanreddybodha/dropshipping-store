@@ -199,7 +199,8 @@ export async function lookupOrdersDualFactor(
 
 export async function syncUserAuth(payload: {
   firebase_uid: string;
-  email: string;
+  email?: string | null;
+  phone_number?: string | null;
   display_name?: string | null;
   photo_url?: string | null;
   guest_cart?: any[];
@@ -219,6 +220,61 @@ export async function syncUserAuth(payload: {
     return await res.json();
   } catch {
     // Fail silently without cluttering developer browser console
+    return null;
+  }
+}
+
+export async function getUserAuthState(
+  firebaseUid: string,
+  email?: string | null,
+  phone?: string | null
+): Promise<any> {
+  try {
+    const params = new URLSearchParams({ firebase_uid: firebaseUid });
+    if (email) params.append("email", email);
+    if (phone) params.append("phone", phone);
+
+    const res = await fetch(`${API_BASE_URL}/auth/state?${params.toString()}`, {
+      method: "GET",
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function createCheckoutOrder(payload: {
+  internal_order_number?: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  shipping_address: string;
+  shipping_city: string;
+  shipping_province: string;
+  shipping_zip: string;
+  shipping_country?: string;
+  total_retail: number;
+  carrier_name?: string;
+  tracking_number?: string;
+  items: any[];
+  firebase_uid?: string;
+}): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/orders/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Order checkout failed");
+    }
+    return await res.json();
+  } catch (err: any) {
+    console.warn("Direct order persistence to backend failed, cached locally:", err.message);
     return null;
   }
 }

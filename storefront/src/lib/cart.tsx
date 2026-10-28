@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { BundleTier, CartItem, Product, Variant } from "./types";
-import { auth } from "./firebase";
-import { saveUserCart } from "./api";
+import { auth, onAuthStateChanged } from "./firebase";
+import { saveUserCart, getUserAuthState, FALLBACK_PRODUCTS } from "./api";
 
 interface CartContextType {
   items: CartItem[];
@@ -76,6 +76,71 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsHydrated(true);
     }
+  }, []);
+
+  // Cross-device cloud sync: fetch & merge database cart on user authentication
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      try {
+        const remoteState = await getUserAuthState(
+          user.uid,
+          user.email,
+          user.phoneNumber
+        );
+        if (remoteState?.cart && Array.isArray(remoteState.cart) && remoteState.cart.length > 0) {
+          setItems((localPrev) => {
+            const merged = [...localPrev];
+            for (const rc of remoteState.cart) {
+              const matchedProduct =
+                FALLBACK_PRODUCTS.find(
+                  (p) =>
+                    p.pid === rc.product_pid ||
+                    p.variants?.some((v) => v.vid === rc.variant_vid) ||
+                    p.title.toLowerCase() === (rc.title || "").toLowerCase()
+                ) || FALLBACK_PRODUCTS[0];
+
+              const matchedVariant =
+                matchedProduct.variants?.find((v) => v.vid === rc.variant_vid) ||
+                matchedProduct.variants?.[0];
+
+              const tierStr: BundleTier = rc.tier === 2 ? "2x" : rc.tier === 3 ? "3x" : "1x";
+              const existingIdx = merged.findIndex(
+                (item) =>
+                  item.variant?.vid === rc.variant_vid &&
+                  item.tier === tierStr &&
+                  (item.selectedSize || "") === (rc.selected_size || "")
+              );
+
+              if (existingIdx > -1) {
+                merged[existingIdx] = {
+                  ...merged[existingIdx],
+                  quantity: Math.max(merged[existingIdx].quantity, rc.quantity || 1),
+                };
+              } else if (matchedProduct && matchedVariant) {
+                const retail = matchedVariant.retail_price_1x || 24.99;
+                const unitPrice = rc.unit_price || retail;
+                merged.push({
+                  product: matchedProduct,
+                  variant: matchedVariant,
+                  selectedSize: rc.selected_size || undefined,
+                  tier: tierStr,
+                  quantity: rc.quantity || 1,
+                  unitPrice,
+                  totalPrice: +(unitPrice * (rc.quantity || 1)).toFixed(2),
+                  savings: 0,
+                });
+              }
+            }
+            return merged;
+          });
+        }
+      } catch (err) {
+        console.warn("Failed fetching remote cart:", err);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Save cart to localStorage
