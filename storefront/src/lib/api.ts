@@ -1,9 +1,17 @@
 import { CustomerOrder, PaginatedCatalogResponse, Product } from "./types";
 import seedData from "./seedCatalog.json";
 
-const rawUrl = process.env.NEXT_PUBLIC_API_URL || "https://dropship-api-pflt.onrender.com/api";
-// Prevent Node 18+ Windows IPv6 ::1 timeout when fetching local backend
-const API_BASE_URL = rawUrl.replace("://localhost:", "://127.0.0.1:");
+function resolveApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      return "http://127.0.0.1:8000/api";
+    }
+  }
+  const raw = process.env.NEXT_PUBLIC_API_URL || "https://dropship-api-pflt.onrender.com/api";
+  return raw.replace("://localhost:", "://127.0.0.1:");
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export const FALLBACK_PRODUCTS: Product[] = seedData as unknown as Product[];
 

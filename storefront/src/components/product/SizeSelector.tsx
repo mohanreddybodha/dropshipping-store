@@ -47,11 +47,16 @@ export default function SizeSelector({
     );
   }, [titleLower, catLower]);
 
-  // If product has multiple genuine variants in DB
-  const hasMultipleVariants = product.variants && product.variants.length > 1;
+  // Stock safety enforcement: Only show variants/options with >= 15 US domestic warehouse units
+  const MIN_STOCK_THRESHOLD = 15;
+  const availableVariants = useMemo(() => {
+    return (product.variants || []).filter(
+      (v) => (v.us_warehouse_stock ?? 0) >= MIN_STOCK_THRESHOLD && v.is_available
+    );
+  }, [product.variants]);
 
   // If not apparel and has only 1 standard variant, DO NOT fabricate mock "Deluxe / Plus" options!
-  if (!isApparel && !hasMultipleVariants) {
+  if (!isApparel && availableVariants.length <= 1) {
     return null;
   }
 
@@ -134,15 +139,15 @@ export default function SizeSelector({
         </div>
       )}
 
-      {/* Multi-Variant Product Option Selector (if not apparel, but has real distinct variants) */}
-      {!isApparel && hasMultipleVariants && (
+      {/* Multi-Variant Product Option Selector (Only shows genuine verified options with >= 15 warehouse stock) */}
+      {!isApparel && availableVariants.length > 1 && (
         <div className="space-y-2">
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-            Select Option / Model:
+            Select Model / Specification:
           </label>
           <div className="grid grid-cols-2 gap-2">
-            {product.variants.map((v, idx) => {
-              const label = v.variant_name || v.size || `Option ${idx + 1}`;
+            {availableVariants.map((v, idx) => {
+              const label = v.variant_name || v.size || `Specification ${idx + 1}`;
               const isSelected = currentVariant.vid === v.vid;
               return (
                 <button

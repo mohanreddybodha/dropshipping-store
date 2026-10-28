@@ -88,6 +88,17 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
     return () => window.removeEventListener("app:open_filter", handleOpen);
   }, [activeCategory, selectedPriceRange, sortBy]);
 
+  // Lock background body scroll when filter drawer is open
+  useEffect(() => {
+    if (isFilterModalOpen) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = original;
+      };
+    }
+  }, [isFilterModalOpen]);
+
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -260,7 +271,7 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
 
       {/* ── Slide-Over Sort & Filter Drawer ── */}
       {isFilterModalOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex justify-end">
+        <div className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-md flex justify-end">
           <div className="w-full max-w-sm bg-white h-full p-6 space-y-6 shadow-2xl flex flex-col justify-between overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b pb-4">
