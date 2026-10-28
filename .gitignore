@@ -1,7 +1,10 @@
 # Environment and secrets
 .env
+.env.*
 .env*.local
 *.env
+*.pem
+*.key
 
 # Python artifacts
 __pycache__/
@@ -12,10 +15,14 @@ __pycache__/
 .coverage
 htmlcov/
 
-# Local databases
-data/*.db
-data/*.sqlite3
+# Local databases & development data
+data/
+data/*
+devdata/
+devdata/*
 scratch/
+*.db
+*.sqlite3
 run-server.js
 
 # Node / Next.js

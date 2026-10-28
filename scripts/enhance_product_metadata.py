@@ -7,9 +7,12 @@ import os
 import re
 import json
 import psycopg2
+import dotenv
 from typing import Dict, Any, List
 
-DATABASE_URL = "postgresql://neondb_owner:npg_pEKR0JZQV7iF@ep-wild-cloud-arw2ln3b-pooler.c-4.us-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+# Load environment variables safely from .env (never hardcode credentials)
+dotenv.load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_product_insights(title: str, category: str) -> Dict[str, Any]:
     t = title.lower()
@@ -151,6 +154,8 @@ def get_product_insights(title: str, category: str) -> Dict[str, Any]:
     }
 
 def main():
+    if not DATABASE_URL:
+        raise ValueError("DATABASE_URL must be configured in environment or .env file.")
     print("Connecting to Neon PostgreSQL...")
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()

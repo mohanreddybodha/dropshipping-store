@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Heart, Trash2, ArrowLeft, ShoppingBag, Star } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../../components/ui/Toast";
+import { auth } from "../../lib/firebase";
+import { toggleUserWatchlist } from "../../lib/api";
 
 /** Watchlist card: same layout as ProductCard but with a delete icon replacing the heart */
 function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () => void }) {
@@ -116,10 +118,16 @@ export default function WatchlistPage() {
 
   const handleRemoveItem = (slug: string) => {
     try {
+      const target = items.find((p) => p.slug === slug);
       const updated = items.filter((p) => p.slug !== slug);
       localStorage.setItem("watchlist_items", JSON.stringify(updated));
       setItems(updated);
       showToast("Removed from Watchlist", "watchlist-remove");
+
+      // Defensive cloud sync if authenticated
+      if (auth.currentUser && target?.pid) {
+        toggleUserWatchlist(auth.currentUser.uid, target.pid).catch(() => {});
+      }
     } catch {
       // Storage write error
     }
