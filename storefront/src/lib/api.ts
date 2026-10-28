@@ -2,13 +2,11 @@ import { CustomerOrder, PaginatedCatalogResponse, Product } from "./types";
 import seedData from "./seedCatalog.json";
 
 function resolveApiBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-      return "http://127.0.0.1:8000/api";
-    }
+  // Use configured environment variable across both local and production
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
   }
-  const raw = process.env.NEXT_PUBLIC_API_URL || "https://dropship-api-pflt.onrender.com/api";
-  return raw.replace("://localhost:", "://127.0.0.1:");
+  return "https://dropship-api-pflt.onrender.com/api";
 }
 
 const API_BASE_URL = resolveApiBaseUrl();
@@ -219,8 +217,8 @@ export async function syncUserAuth(payload: {
       throw new Error(err.detail || "Sync failed");
     }
     return await res.json();
-  } catch (err: any) {
-    console.error("Auth sync error:", err);
+  } catch {
+    // Fail silently without cluttering developer browser console
     return null;
   }
 }

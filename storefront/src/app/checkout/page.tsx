@@ -9,6 +9,13 @@ import { auth } from "../../lib/firebase";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import ThemedDropdown, { ThemedDropdownOption } from "../../components/ui/ThemedDropdown";
 import {
+  validateUsPhone,
+  validateUsZip,
+  validateUsStreetAddress,
+  validateUsCity,
+  formatUsPhoneInput,
+} from "../../lib/usAddressValidation";
+import {
   Truck,
   Lock,
   ArrowLeft,
@@ -116,6 +123,7 @@ function CheckoutContent() {
     orderNumber: string;
     amount: number;
     shippingSla: string;
+    items: typeof checkoutItems;
   } | null>(null);
 
   // Pre-fill authenticated user data ONLY if signed in
@@ -198,7 +206,13 @@ function CheckoutContent() {
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "phone") {
+      setForm((prev) => ({ ...prev, phone: formatUsPhoneInput(value) }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+    if (errorMessage) setErrorMessage(null);
   };
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
@@ -206,35 +220,58 @@ function CheckoutContent() {
     setIsSubmitting(true);
     setErrorMessage(null);
 
-    // Required field validation
-    if (!form.phone.trim()) {
-      setErrorMessage("Please enter Your Mobile number.");
+    // 1. Strict US Country Verification
+    if (form.country_code !== "US") {
+      setErrorMessage("Domestic fulfillment is available only for delivery within the United States.");
       setIsSubmitting(false);
       return;
     }
 
-    if (!form.address1.trim()) {
-      setErrorMessage("Please enter your Street Address.");
+    // 2. Authenticated user email validation
+    if (isAuthenticatedUser && form.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email.trim())) {
+        setErrorMessage("Please enter a valid Email Address.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    // 3. Strict US Mobile Number Validation (NANP Standards)
+    const phoneVal = validateUsPhone(form.phone, form.phoneCode);
+    if (!phoneVal.isValid) {
+      setErrorMessage(phoneVal.error || "Please enter a valid 10-digit US mobile number.");
       setIsSubmitting(false);
       return;
     }
 
-    if (!form.city.trim()) {
-      setErrorMessage("Please enter your City.");
+    // 4. Strict US Street Address Validation (House # + Street Name, non-US filter)
+    const streetVal = validateUsStreetAddress(form.address1);
+    if (!streetVal.isValid) {
+      setErrorMessage(streetVal.error || "Please enter a valid US Street Address.");
       setIsSubmitting(false);
       return;
     }
 
+    // 5. Strict US City Validation (non-US filter)
+    const cityVal = validateUsCity(form.city);
+    if (!cityVal.isValid) {
+      setErrorMessage(cityVal.error || "Please enter a valid US City.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // 6. US State Selection
     if (!form.province) {
-      setErrorMessage("Please select a US State.");
+      setErrorMessage("Please select a valid US State.");
       setIsSubmitting(false);
       return;
     }
 
-    // US Zip validation matching FastAPI Pydantic schema
-    const zipRegex = /^\d{5}(-\d{4})?$/;
-    if (!zipRegex.test(form.zip_code.trim())) {
-      setErrorMessage("Please enter a valid 5-digit US PIN (e.g. 90001).");
+    // 7. Strict US ZIP / PIN Validation (5-digits, 6-digit Indian PIN rejection, and State Prefix Matching)
+    const zipVal = validateUsZip(form.zip_code, form.province);
+    if (!zipVal.isValid) {
+      setErrorMessage(zipVal.error || "Please enter a valid 5-digit US PIN / ZIP code.");
       setIsSubmitting(false);
       return;
     }
@@ -255,7 +292,7 @@ function CheckoutContent() {
         auth.currentUser?.displayName ||
         "Valued Customer";
 
-      // Persist order locally for instant tracking in /profile
+      // Persist order locally for instant tracking in /profile with full product metadata
       try {
         const orderRecord = {
           id: Date.now(),
@@ -273,9 +310,13 @@ function CheckoutContent() {
           created_at: new Date().toISOString(),
           items: checkoutItems.map((item) => ({
             title: item.product.title,
+            product_title: item.product.title,
+            slug: item.product.slug,
+            image_url: item.product.hero_image_url || item.product.images?.[0] || "",
             quantity: item.quantity,
             price: item.unitPrice,
             size: item.selectedSize,
+            color: item.selectedColor,
           })),
         };
 
@@ -291,6 +332,7 @@ function CheckoutContent() {
         orderNumber: orderId,
         amount: finalAmount,
         shippingSla: "3–5 Business Days (Tracked USPS)",
+        items: checkoutItems,
       });
 
       if (singleCartItem) {
@@ -346,6 +388,47 @@ function CheckoutContent() {
             <span>${confirmedOrder.amount.toFixed(2)} USD</span>
           </div>
         </div>
+
+        {/* Ordered Product Cards for better identification */}
+        {confirmedOrder.items && confirmedOrder.items.length > 0 && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-left space-y-3 max-w-md mx-auto shadow-sm">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Purchased Domestic Items ({confirmedOrder.items.reduce((acc, i) => acc + (i.quantity || 1), 0)}{" "}
+              {confirmedOrder.items.reduce((acc, i) => acc + (i.quantity || 1), 0) === 1 ? "Unit" : "Units"})
+            </h3>
+            <div className="divide-y divide-slate-100">
+              {confirmedOrder.items.map((item, idx) => {
+                const heroImg = item.product.hero_image_url || item.product.images?.[0] || "/placeholder.jpg";
+                return (
+                  <div key={idx} className="py-2.5 flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={heroImg}
+                      alt={item.product.title}
+                      className="w-12 h-12 object-contain rounded-lg border border-slate-200 p-0.5 bg-slate-50 flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs font-bold text-slate-900 line-clamp-1">
+                        {item.product.title}
+                      </h4>
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
+                        {item.selectedSize && (
+                          <span className="bg-slate-100 px-1.5 py-0.2 rounded font-medium">
+                            Size: {item.selectedSize}
+                          </span>
+                        )}
+                        <span className="font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">
+                          {item.quantity} {item.quantity === 1 ? "Unit" : "Units"}
+                        </span>
+                        <span>${Number(item.unitPrice || 0).toFixed(2)}/Unit</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-left max-w-md mx-auto text-xs text-amber-900 space-y-1">
           <p className="font-bold">⚠️ Address Verification (30-Min Window):</p>
@@ -486,12 +569,6 @@ function CheckoutContent() {
               Enter your domestic residential or business address for USPS tracked fulfillment.
             </p>
           </div>
-          {isAuthenticatedUser && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Signed In
-            </span>
-          )}
         </div>
 
         {errorMessage && (
@@ -588,10 +665,11 @@ function CheckoutContent() {
                 required
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="Enter Your Mobile"
+                placeholder="(555) 000-0000"
                 className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
               />
             </div>
+            <p className="text-[10px] text-slate-400 mt-1">10-digit US mobile number for USPS SMS tracking</p>
           </div>
 
           {/* Street Address */}
@@ -606,6 +684,7 @@ function CheckoutContent() {
               placeholder="Enter Street Address"
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
             />
+            <p className="text-[10px] text-slate-400 mt-1">Include building number & street (e.g., 742 Evergreen Terrace)</p>
           </div>
 
           {/* City, State Dropdown, PIN */}
@@ -646,6 +725,7 @@ function CheckoutContent() {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
                 maxLength={10}
               />
+              <p className="text-[10px] text-slate-400 mt-1">5-digit US ZIP code</p>
             </div>
           </div>
         </div>

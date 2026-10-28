@@ -95,11 +95,14 @@ export interface CartItem {
 
 export interface CustomerOrderItem {
   title?: string;
+  product_title?: string;
   sku?: string;
   quantity?: number;
   price?: number;
   image_url?: string;
+  slug?: string;
   size?: string;
+  color?: string;
 }
 
 export interface CustomerOrder {

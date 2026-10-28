@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Star, Plus } from "lucide-react";
+import { Star, Heart } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../ui/Toast";
 
@@ -70,21 +70,17 @@ export default function ProductCard({ product }: ProductCardProps) {
             loading="lazy"
           />
 
-          {/* Watchlist Quick Toggle Button (Flipkart-Style Plus Icon) */}
+          {/* Watchlist Quick Toggle Button (Classic Love Icon) */}
           <button
             type="button"
             onClick={toggleWatchlist}
             aria-label={isSaved ? "Remove from watchlist" : "Add to watchlist"}
             title={isSaved ? "In Watchlist" : "Add to Watchlist"}
-            className={`absolute top-2 right-2 w-8 h-8 rounded-full shadow-sm flex items-center justify-center transition-all duration-150 active:scale-90 border ${
-              isSaved
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white/95 backdrop-blur-sm text-slate-700 border-slate-200/80 hover:bg-white hover:text-emerald-700"
-            }`}
+            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-white transition-all duration-150 active:scale-90 border border-slate-100"
           >
-            <Plus
-              className={`w-4 h-4 stroke-[2.5] transition-transform duration-200 ${
-                isSaved ? "rotate-45" : ""
+            <Heart
+              className={`w-4 h-4 transition-colors ${
+                isSaved ? "fill-rose-500 text-rose-500" : "text-slate-600"
               }`}
             />
           </button>

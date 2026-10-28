@@ -660,10 +660,10 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ── DUAL-FACTOR ORDER LOOKUP MODAL ── */}
+      {/* ── DUAL-FACTOR ORDER LOOKUP MODAL (Clean Full-Screen Dark Overlay) ── */}
       {showLookupModal && (
         <div
-          className="fixed inset-0 top-0 left-0 right-0 bottom-0 z-[100] w-screen h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] w-full h-full min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-black/60 animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowLookupModal(false);
           }}
