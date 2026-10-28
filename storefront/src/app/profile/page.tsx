@@ -25,7 +25,6 @@ import {
 import {
   auth,
   loginWithGoogle,
-  loginWithApple,
   logoutUser,
   FirebaseUser,
 } from "../../lib/firebase";
@@ -100,15 +99,6 @@ function GoogleIcon() {
   );
 }
 
-// ── Apple SVG Icon ───────────────────────────────────────────────────────────
-function AppleIcon() {
-  return (
-    <svg className="w-5 h-5 flex-shrink-0 fill-current" viewBox="0 0 24 24">
-      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.47c.61-.75 1.04-1.79.92-2.84-.96.04-2.13.65-2.77 1.41-.56.65-.99 1.71-.86 2.73 1.08.08 2.1-.56 2.71-1.3z" />
-    </svg>
-  );
-}
-
 // ── FAQ Accordion Item ───────────────────────────────────────────────────────
 function FaqItem({ question, answer }: { question: string; answer: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -144,7 +134,7 @@ function FaqItem({ question, answer }: { question: string; answer: React.ReactNo
 export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [loginPending, setLoginPending] = useState<"google" | "apple" | null>(null);
+  const [loginPending, setLoginPending] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Orders State
@@ -300,7 +290,7 @@ export default function ProfilePage() {
   };
 
   // Helper to format OAuth error codes with actionable guidance
-  const parseAuthError = (err: any, provider: "Google" | "Apple") => {
+  const parseAuthError = (err: any) => {
     if (err?.code === "auth/popup-closed-by-user" || err?.code === "auth/cancelled-popup-request") {
       return null;
     }
@@ -309,42 +299,28 @@ export default function ProfilePage() {
       return `Authorized Domain Missing: Please add "${currentHost}" in Firebase Console → Authentication → Settings → Authorized domains.`;
     }
     if (err?.code === "auth/operation-not-allowed") {
-      return `${provider} Sign-In is not enabled yet in Firebase Console → Authentication → Sign-in method.`;
+      return "Google Sign-In is not enabled yet in Firebase Console → Authentication → Sign-in method.";
     }
     if (err?.code === "auth/popup-blocked") {
       return "Popup was blocked by your browser. Please allow popups for this site and retry.";
     }
     if (err?.code === "auth/configuration-not-found") {
-      return `${provider} OAuth is not configured in your Firebase project.`;
+      return "Google OAuth is not configured in your Firebase project.";
     }
-    return err?.message || `${provider} Sign-In could not be completed. Please try again.`;
+    return err?.message || "Google Sign-In could not be completed. Please try again.";
   };
 
   // Google Sign-In Handler
   const handleGoogleSignIn = async () => {
-    setLoginPending("google");
+    setLoginPending(true);
     setAuthError(null);
     try {
       await loginWithGoogle();
     } catch (err: any) {
-      const formatted = parseAuthError(err, "Google");
+      const formatted = parseAuthError(err);
       if (formatted) setAuthError(formatted);
     } finally {
-      setLoginPending(null);
-    }
-  };
-
-  // Apple Sign-In Handler
-  const handleAppleSignIn = async () => {
-    setLoginPending("apple");
-    setAuthError(null);
-    try {
-      await loginWithApple();
-    } catch (err: any) {
-      const formatted = parseAuthError(err, "Apple");
-      if (formatted) setAuthError(formatted);
-    } finally {
-      setLoginPending(null);
+      setLoginPending(false);
     }
   };
 
@@ -500,42 +476,39 @@ export default function ProfilePage() {
                 Secure Account Access
               </span>
               <h2 className="text-lg sm:text-xl font-black text-slate-900 pt-1">
-                Sign in with Google or Apple
+                Sign in with Google
               </h2>
               <p className="text-xs text-slate-500 max-w-lg leading-relaxed">
-                Sign in securely without remembering passwords. Automatically sync your cart, save watchlist items permanently, and review USPS delivery status across all your devices.
+                Sign in securely with your Google account. Automatically sync your cart, save watchlist items permanently, and review USPS delivery status across all your devices.
               </p>
             </div>
 
             {authError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-800 font-semibold">
-                <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                <span>{authError}</span>
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl space-y-2 text-xs text-rose-800 font-medium">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed flex-1">{authError}</span>
+                  <button
+                    onClick={() => setAuthError(null)}
+                    className="text-rose-400 hover:text-rose-700 text-sm font-bold ml-1 px-1"
+                    aria-label="Dismiss error"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
             )}
 
-            {/* OAuth Sign-In Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-1">
-              {/* Google Button */}
+            {/* Google Sign-In Button */}
+            <div className="pt-1">
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
-                disabled={loginPending !== null}
-                className="flex-1 flex items-center justify-center gap-3 px-5 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs sm:text-sm rounded-xl border border-slate-300 shadow-2xs hover:border-slate-400 transition active:scale-98 disabled:opacity-60"
+                disabled={loginPending}
+                className="w-full sm:w-auto min-w-[240px] flex items-center justify-center gap-3 px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs sm:text-sm rounded-xl border border-slate-300 shadow-2xs hover:border-slate-400 transition active:scale-98 disabled:opacity-60"
               >
                 <GoogleIcon />
-                <span>{loginPending === "google" ? "Connecting to Google..." : "Continue with Google"}</span>
-              </button>
-
-              {/* Apple Button */}
-              <button
-                type="button"
-                onClick={handleAppleSignIn}
-                disabled={loginPending !== null}
-                className="flex-1 flex items-center justify-center gap-3 px-5 py-3.5 bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl transition shadow-xs active:scale-98 disabled:opacity-60"
-              >
-                <AppleIcon />
-                <span>{loginPending === "apple" ? "Connecting to Apple..." : "Continue with Apple"}</span>
+                <span>{loginPending ? "Connecting to Google..." : "Continue with Google"}</span>
               </button>
             </div>
 

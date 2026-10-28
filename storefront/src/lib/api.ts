@@ -1,15 +1,24 @@
 import { CustomerOrder, PaginatedCatalogResponse, Product } from "./types";
 import seedData from "./seedCatalog.json";
 
-function resolveApiBaseUrl(): string {
-  // Use configured environment variable across both local and production
+export function getApiBaseUrl(): string {
+  // 1. If explicit NEXT_PUBLIC_API_URL is configured
   if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
+    const raw = process.env.NEXT_PUBLIC_API_URL.trim();
+    if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("/")) {
+      return raw.replace(/\/$/, "");
+    }
   }
-  return "https://dropship-api-pflt.onrender.com/api";
+  // 2. Client-side browser defaults to same-origin /api
+  if (typeof window !== "undefined") {
+    return "/api";
+  }
+  // 3. Server-side Next.js SSR defaults to Vercel or local port
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}/api`;
+  }
+  return `http://localhost:${process.env.PORT || 3000}/api`;
 }
-
-const API_BASE_URL = resolveApiBaseUrl();
 
 export const FALLBACK_PRODUCTS: Product[] = seedData as unknown as Product[];
 
@@ -86,7 +95,7 @@ export async function getCatalog(options?: CatalogQueryOptions): Promise<Product
     else params.set("limit", "200");
 
     const queryStr = params.toString() ? `?${params.toString()}` : "";
-    const res = await fetch(`${API_BASE_URL}/catalog${queryStr}`, {
+    const res = await fetch(`${getApiBaseUrl()}/catalog${queryStr}`, {
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(8000),
     });
@@ -119,7 +128,7 @@ export async function getPaginatedCatalog(options?: CatalogQueryOptions): Promis
     if (options?.limit) params.set("limit", options.limit.toString());
     else params.set("limit", "24");
 
-    const res = await fetch(`${API_BASE_URL}/catalog?${params.toString()}`, {
+    const res = await fetch(`${getApiBaseUrl()}/catalog?${params.toString()}`, {
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(8000),
     });
@@ -150,7 +159,7 @@ export async function getPaginatedCatalog(options?: CatalogQueryOptions): Promis
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/catalog/${slug}`, {
+    const res = await fetch(`${getApiBaseUrl()}/catalog/${slug}`, {
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(8000),
     });
@@ -165,12 +174,15 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 export async function getCustomerOrders(email: string): Promise<CustomerOrder[]> {
   try {
     const cleanEmail = encodeURIComponent(email.trim().toLowerCase());
-    const res = await fetch(`${API_BASE_URL}/orders?email=${cleanEmail}`, {
+    const res = await fetch(`${getApiBaseUrl()}/orders?email=${cleanEmail}`, {
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return [];
-    return await res.json();
+    const data = await res.json();
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.items)) return data.items;
+    return [];
   } catch {
     return [];
   }
@@ -181,7 +193,7 @@ export async function lookupOrdersDualFactor(
   zipCode: string
 ): Promise<CustomerOrder[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/lookup`, {
+    const res = await fetch(`${getApiBaseUrl()}/orders/lookup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim(), zip_code: zipCode.trim() }),
@@ -189,9 +201,12 @@ export async function lookupOrdersDualFactor(
     });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.detail || "Lookup failed");
+      throw new Error(errData.error || errData.detail || "Lookup failed");
     }
-    return await res.json();
+    const data = await res.json();
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.items)) return data.items;
+    return [];
   } catch (err: any) {
     throw new Error(err.message || "Failed to retrieve orders.");
   }
@@ -207,7 +222,7 @@ export async function syncUserAuth(payload: {
   guest_watchlist?: string[];
 }): Promise<any> {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/sync`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/sync`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -215,7 +230,7 @@ export async function syncUserAuth(payload: {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Sync failed");
+      throw new Error(err.error || err.detail || "Sync failed");
     }
     return await res.json();
   } catch {
@@ -234,7 +249,7 @@ export async function getUserAuthState(
     if (email) params.append("email", email);
     if (phone) params.append("phone", phone);
 
-    const res = await fetch(`${API_BASE_URL}/auth/state?${params.toString()}`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/state?${params.toString()}`, {
       method: "GET",
       signal: AbortSignal.timeout(8000),
     });
@@ -262,7 +277,7 @@ export async function createCheckoutOrder(payload: {
   firebase_uid?: string;
 }): Promise<any> {
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/checkout`, {
+    const res = await fetch(`${getApiBaseUrl()}/orders/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -270,7 +285,7 @@ export async function createCheckoutOrder(payload: {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Order checkout failed");
+      throw new Error(err.error || err.detail || "Order checkout failed");
     }
     return await res.json();
   } catch (err: any) {
@@ -284,7 +299,7 @@ export async function saveUserCart(
   items: any[]
 ): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/cart/save`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/cart/save`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ firebase_uid: firebaseUid, items }),
@@ -301,7 +316,7 @@ export async function toggleUserWatchlist(
   productPid: string
 ): Promise<any> {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/watchlist/toggle`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/watchlist/toggle`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ firebase_uid: firebaseUid, product_pid: productPid }),
