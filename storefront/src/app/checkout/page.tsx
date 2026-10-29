@@ -16,7 +16,6 @@ import {
   formatUsPhoneInput,
 } from "../../lib/usAddressValidation";
 import {
-  Truck,
   Lock,
   ArrowLeft,
   CheckCircle2,
@@ -1160,45 +1159,8 @@ function CheckoutContent() {
           </div>
         </div>
 
-        {/* Payment Method Card */}
+        {/* Payment Section */}
         <div className="pt-3 border-t border-slate-100 space-y-3 relative z-10">
-          <div className="flex items-center justify-between text-xs text-slate-700">
-            <span className="font-bold flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-emerald-600" />
-              Secure Payment Method
-            </span>
-            <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-              PayPal Certified Sandbox
-            </span>
-          </div>
-
-          {/* Sandbox Testing Credentials & Virtual Card Guide */}
-          <div className="p-3.5 bg-sky-50/80 border border-sky-200 rounded-xl space-y-2 text-xs text-sky-900">
-            <div className="flex items-center justify-between font-bold text-sky-950">
-              <span className="flex items-center gap-1.5">
-                <span>🧪</span>
-                <span>Sandbox Test Mode (Zero Real Money Charged)</span>
-              </span>
-              <span className="text-[10px] bg-sky-200/80 text-sky-900 px-2 py-0.5 rounded font-mono font-semibold">
-                Simulated Gateway
-              </span>
-            </div>
-            <p className="text-[11px] text-sky-800 leading-relaxed">
-              Real Indian debit/credit cards or UPI apps cannot be charged in PayPal sandbox. Use either simulated test method:
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
-              <div className="p-2 bg-white rounded-lg border border-sky-200/70 space-y-1">
-                <span className="font-sans font-bold text-sky-900 text-[10px] block">Option A: Simulated Card (No Login)</span>
-                <div>Card: <span className="font-bold text-slate-900 select-all">4868 7191 9682 9038</span> <span className="text-[10px] text-emerald-700 font-sans font-medium">(No OTP Required)</span></div>
-                <div>Exp: <span className="text-slate-700">12/28</span> • CVV: <span className="text-slate-700">123</span> • ZIP: <span className="text-slate-700">35012</span></div>
-                <div className="text-[10px] font-sans text-amber-800 pt-0.5">⚠️ If OTP prompt appears: Enter <strong className="font-mono text-slate-900 select-all">111111</strong> or <strong className="font-mono text-slate-900 select-all">123456</strong> (Mock 3DS).</div>
-              </div>
-              <div className="p-2 bg-white rounded-lg border border-sky-200/70 space-y-1">
-                <span className="font-sans font-bold text-sky-900 text-[10px] block">Option B: Mock US Buyer Login</span>
-                <div className="text-[10px] font-sans text-slate-600 leading-tight">developer.paypal.com ➔ Sandbox ➔ Accounts ➔ Create a <strong>US (Personal)</strong> account ➔ Copy email &amp; pass ($5,000 balance).</div>
-              </div>
-            </div>
-          </div>
 
           {/* Official PayPal Smart Button Integration */}
           <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-3">
@@ -1246,21 +1208,6 @@ function CheckoutContent() {
           </div>
         )}
 
-        {/* Alternative Instant Simulation Button for Offline/Developer Testing */}
-        <div className="pt-1">
-          <button
-            type="submit"
-            disabled={isSubmitting || isPaymentProcessing || isOffline}
-            className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-600 font-medium rounded-xl border border-dashed border-slate-300 transition text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-          >
-            <span>⚡ Fast-track Test Order (Instant Simulation Mode • ${finalAmount.toFixed(2)})</span>
-          </button>
-        </div>
-
-        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
-          <Truck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Ships in 24 hours via tracked USPS Domestic Ground (US-Only)</span>
-        </div>
       </form>
     </div>
   );
