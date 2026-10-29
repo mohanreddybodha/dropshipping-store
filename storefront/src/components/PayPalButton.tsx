@@ -157,11 +157,7 @@ export default function PayPalButton({
 
             try {
               isLockedRef.current = true;
-              const res = await createPayPalOrder(
-                current.amount,
-                current.internalOrderNumber,
-                current.customerDetails
-              );
+              const res = await createPayPalOrder(current.amount, current.internalOrderNumber);
               isLockedRef.current = false;
               return res.order_id;
             } catch (err: any) {

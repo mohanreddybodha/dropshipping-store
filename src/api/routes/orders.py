@@ -149,7 +149,6 @@ class PayPalCreateOrderRequest(BaseModel):
     amount: float = Field(..., gt=0)
     currency: str = "USD"
     internal_order_number: Optional[str] = None
-    customer: Optional[Dict[str, Any]] = None
 
 
 class PayPalCaptureOrderRequest(BaseModel):
@@ -175,7 +174,6 @@ def paypal_create_order(payload: PayPalCreateOrderRequest):
             amount=payload.amount,
             currency=payload.currency,
             internal_order_number=payload.internal_order_number,
-            customer=payload.customer,
         )
         return {"order_id": res.get("id"), "status": res.get("status")}
     except PayPalServiceException as exc:
