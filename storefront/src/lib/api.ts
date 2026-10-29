@@ -297,7 +297,8 @@ export async function createCheckoutOrder(payload: {
 
 export async function createPayPalOrder(
   amount: number,
-  internalOrderNumber?: string
+  internalOrderNumber?: string,
+  customer?: any
 ): Promise<{ order_id: string; status: string }> {
   const res = await fetch(`${getApiBaseUrl()}/orders/paypal/create`, {
     method: "POST",
@@ -306,6 +307,7 @@ export async function createPayPalOrder(
       amount: +amount.toFixed(2),
       currency: "USD",
       internal_order_number: internalOrderNumber,
+      customer: customer || undefined,
     }),
     signal: AbortSignal.timeout(12000),
   });

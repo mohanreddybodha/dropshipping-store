@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { amount, currency = "USD", internal_order_number } = body;
+    const { amount, currency = "USD", internal_order_number, customer } = body;
 
     const clientId = process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
     const secret = process.env.PAYPAL_CLIENT_SECRET;
@@ -49,6 +49,51 @@ export async function POST(req: NextRequest) {
     const orderNum = internal_order_number || `ORD-PP-${Date.now().toString().slice(-6)}`;
     const parsedAmount = Math.max(0.01, Number(amount) || 24.99);
 
+    const orderPayload: any = {
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          reference_id: orderNum,
+          description: `Domestic Order ${orderNum}`,
+          amount: {
+            currency_code: currency.toUpperCase(),
+            value: parsedAmount.toFixed(2),
+          },
+        },
+      ],
+      application_context: {
+        brand_name: "Domestic Direct",
+        landing_page: "NO_PREFERENCE",
+        shipping_preference: "NO_SHIPPING",
+        user_action: "PAY_NOW",
+      },
+    };
+
+    // Pre-populate customer details to eliminate guest card entry friction
+    if (customer && customer.email) {
+      const nameParts = (customer.name || "").trim().split(/\s+/);
+      const givenName = nameParts[0] || "Valued";
+      const surname = nameParts.slice(1).join(" ") || "Customer";
+
+      orderPayload.payer = {
+        email_address: customer.email,
+        name: {
+          given_name: givenName,
+          surname: surname,
+        },
+      };
+
+      if (customer.address1 && customer.city && customer.province && customer.zip_code) {
+        orderPayload.payer.address = {
+          address_line_1: customer.address1,
+          admin_area_2: customer.city,
+          admin_area_1: customer.province,
+          postal_code: customer.zip_code,
+          country_code: customer.country_code || "US",
+        };
+      }
+    }
+
     const orderRes = await fetch(`${baseUrl}/v2/checkout/orders`, {
       method: "POST",
       headers: {
@@ -57,25 +102,7 @@ export async function POST(req: NextRequest) {
         // Strict Idempotency Key: Prevents duplicate orders if client retries creation
         "PayPal-Request-Id": `create-${orderNum}`,
       },
-      body: JSON.stringify({
-        intent: "CAPTURE",
-        purchase_units: [
-          {
-            reference_id: orderNum,
-            description: `Domestic Order ${orderNum}`,
-            amount: {
-              currency_code: currency.toUpperCase(),
-              value: parsedAmount.toFixed(2),
-            },
-          },
-        ],
-        application_context: {
-          brand_name: "Domestic Direct",
-          landing_page: "NO_PREFERENCE",
-          shipping_preference: "NO_SHIPPING",
-          user_action: "PAY_NOW",
-        },
-      }),
+      body: JSON.stringify(orderPayload),
     });
 
     if (!orderRes.ok) {

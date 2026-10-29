@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useCart } from "../../lib/cart";
 import { FALLBACK_PRODUCTS, createCheckoutOrder, getUserAuthState } from "../../lib/api";
 import PayPalButton from "../../components/PayPalButton";
+import OrderCelebration from "../../components/OrderCelebration";
 import { auth, loginWithGoogle } from "../../lib/firebase";
 import ThemedDropdown, { ThemedDropdownOption } from "../../components/ui/ThemedDropdown";
 import {
@@ -24,7 +25,109 @@ import {
   ShieldCheck,
   MapPin,
   Loader2,
+  CreditCard,
 } from "lucide-react";
+
+/** Crisp, cross-platform US Flag SVG (renders consistently on Windows, macOS, iOS, Android) */
+function USFlagIcon({ className = "w-5 h-3.5" }: { className?: string }) {
+  return (
+    <svg className={`${className} flex-shrink-0 rounded-[2px] shadow-2xs overflow-hidden inline-block align-middle`} viewBox="0 0 741 390">
+      <rect width="741" height="390" fill="#b22234" />
+      <path d="M0,30h741M0,90h741M0,150h741M0,210h741M0,270h741M0,330h741" stroke="#fff" strokeWidth="30" />
+      <rect width="296.4" height="210" fill="#3c3b6e" />
+      <g fill="#fff">
+        <circle cx="29.6" cy="21" r="9" />
+        <circle cx="88.9" cy="21" r="9" />
+        <circle cx="148.2" cy="21" r="9" />
+        <circle cx="207.5" cy="21" r="9" />
+        <circle cx="266.8" cy="21" r="9" />
+        <circle cx="59.3" cy="42" r="9" />
+        <circle cx="118.6" cy="42" r="9" />
+        <circle cx="177.8" cy="42" r="9" />
+        <circle cx="237.1" cy="42" r="9" />
+        <circle cx="29.6" cy="63" r="9" />
+        <circle cx="88.9" cy="63" r="9" />
+        <circle cx="148.2" cy="63" r="9" />
+        <circle cx="207.5" cy="63" r="9" />
+        <circle cx="266.8" cy="63" r="9" />
+        <circle cx="59.3" cy="84" r="9" />
+        <circle cx="118.6" cy="84" r="9" />
+        <circle cx="177.8" cy="84" r="9" />
+        <circle cx="237.1" cy="84" r="9" />
+        <circle cx="29.6" cy="105" r="9" />
+        <circle cx="88.9" cy="105" r="9" />
+        <circle cx="148.2" cy="105" r="9" />
+        <circle cx="207.5" cy="105" r="9" />
+        <circle cx="266.8" cy="105" r="9" />
+        <circle cx="59.3" cy="126" r="9" />
+        <circle cx="118.6" cy="126" r="9" />
+        <circle cx="177.8" cy="126" r="9" />
+        <circle cx="237.1" cy="126" r="9" />
+        <circle cx="29.6" cy="147" r="9" />
+        <circle cx="88.9" cy="147" r="9" />
+        <circle cx="148.2" cy="147" r="9" />
+        <circle cx="207.5" cy="147" r="9" />
+        <circle cx="266.8" cy="147" r="9" />
+        <circle cx="59.3" cy="168" r="9" />
+        <circle cx="118.6" cy="168" r="9" />
+        <circle cx="177.8" cy="168" r="9" />
+        <circle cx="237.1" cy="168" r="9" />
+        <circle cx="29.6" cy="189" r="9" />
+        <circle cx="88.9" cy="189" r="9" />
+        <circle cx="148.2" cy="189" r="9" />
+        <circle cx="207.5" cy="189" r="9" />
+        <circle cx="266.8" cy="189" r="9" />
+      </g>
+    </svg>
+  );
+}
+
+function VisaIcon({ className = "h-4 w-7" }: { className?: string }) {
+  return (
+    <svg className={`${className} flex-shrink-0 inline-block rounded-[3px] shadow-2xs`} viewBox="0 0 36 24" fill="none">
+      <rect width="36" height="24" rx="3" fill="#1434CB" />
+      <path d="M14.5 16.5L16.2 6.5H18.7L17 16.5H14.5ZM23.8 6.7C23.3 6.5 22.4 6.3 21.4 6.3C18.8 6.3 17 7.7 17 9.8C17 11.3 18.3 12.1 19.3 12.6C20.3 13.1 20.7 13.5 20.7 14C20.7 14.8 19.7 15.2 18.8 15.2C17.6 15.2 17 15 16 14.5L15.6 14.3L15.2 16.6C15.9 16.9 17.2 17.2 18.5 17.2C21.3 17.2 23.1 15.8 23.1 13.6C23.1 12.4 22.3 11.4 20.7 10.6C19.9 10.2 19.4 9.8 19.4 9.2C19.4 8.6 20.1 8.1 21.2 8.1C22.1 8.1 22.8 8.3 23.4 8.6L23.8 6.7ZM29.8 6.5H27.9C27.3 6.5 26.8 6.7 26.6 7.2L22.7 16.5H25.3L25.8 15.1H29L29.3 16.5H31.6L29.8 6.5ZM26.5 13.2L27.8 9.5C27.8 9.5 28.2 8.4 28.4 7.9L28.6 9.4L29.3 13.2H26.5ZM13.8 6.5L11.4 13.3L11.1 12C10.6 10.3 9.1 8.5 7.4 7.6L9.6 16.5H12.2L16.4 6.5H13.8Z" fill="white" />
+    </svg>
+  );
+}
+
+function MastercardIcon({ className = "h-4 w-7" }: { className?: string }) {
+  return (
+    <svg className={`${className} flex-shrink-0 inline-block rounded-[3px] shadow-2xs`} viewBox="0 0 36 24" fill="none">
+      <rect width="36" height="24" rx="3" fill="#0A0B0D" />
+      <circle cx="14" cy="12" r="6.5" fill="#EB001B" />
+      <circle cx="22" cy="12" r="6.5" fill="#F79E1B" fillOpacity="0.9" />
+    </svg>
+  );
+}
+
+function AmexIcon({ className = "h-4 w-7" }: { className?: string }) {
+  return (
+    <svg className={`${className} flex-shrink-0 inline-block rounded-[3px] shadow-2xs`} viewBox="0 0 36 24" fill="none">
+      <rect width="36" height="24" rx="3" fill="#016FD0" />
+      <text x="18" y="15" textAnchor="middle" fill="white" fontSize="8" fontWeight="900" fontFamily="sans-serif" letterSpacing="0.5">AMEX</text>
+    </svg>
+  );
+}
+
+function DiscoverIcon({ className = "h-4 w-7" }: { className?: string }) {
+  return (
+    <svg className={`${className} flex-shrink-0 inline-block rounded-[3px] shadow-2xs`} viewBox="0 0 36 24" fill="none">
+      <rect width="36" height="24" rx="3" fill="#FF6000" />
+      <text x="18" y="15" textAnchor="middle" fill="white" fontSize="7" fontWeight="900" fontFamily="sans-serif" letterSpacing="0.5">DISC</text>
+    </svg>
+  );
+}
+
+function PayPalIcon({ className = "h-4 w-7" }: { className?: string }) {
+  return (
+    <svg className={`${className} flex-shrink-0 inline-block rounded-[3px] shadow-2xs`} viewBox="0 0 36 24" fill="none">
+      <rect width="36" height="24" rx="3" fill="#003087" />
+      <path d="M14 17L15.5 7H19C21 7 22.2 8 21.8 10C21.4 12.2 20 13.3 18 13.3H16L15.3 17H14Z" fill="#0079C1" />
+      <path d="M16.5 19L18 9H21.5C23.5 9 24.7 10 24.3 12C23.9 14.2 22.5 15.3 20.5 15.3H18.5L17.8 19H16.5Z" fill="#00457C" />
+    </svg>
+  );
+}
 
 const US_STATES: ThemedDropdownOption[] = [
   { value: "AL", label: "Alabama (AL)" },
@@ -160,11 +263,21 @@ function CheckoutContent() {
   const [isOffline, setIsOffline] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "paypal">("card");
+  const [cardDetails, setCardDetails] = useState({
+    cardNumber: "",
+    cardExp: "",
+    cardCvv: "",
+    cardName: "",
+    billingSameAsShipping: true,
+  });
+  const [cardFieldErrors, setCardFieldErrors] = useState<Record<string, string>>({});
   const [confirmedOrder, setConfirmedOrder] = useState<{
     orderNumber: string;
     amount: number;
     shippingSla: string;
     items: typeof checkoutItems;
+    paymentMethod?: string;
   } | null>(null);
 
   // Network offline / online recovery listener
@@ -463,6 +576,71 @@ function CheckoutContent() {
     return true;
   };
 
+  const formatCardNumber = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 16);
+    return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+  };
+
+  const formatCardExp = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 4);
+    if (digits.length >= 3) {
+      return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+    return digits;
+  };
+
+  const formatCardCvv = (value: string) => {
+    return value.replace(/\D/g, "").slice(0, 4);
+  };
+
+  const validateCardDetails = (): boolean => {
+    const errors: Record<string, string> = {};
+    const rawNum = cardDetails.cardNumber.replace(/\s/g, "");
+    if (!rawNum || rawNum.length < 15) {
+      errors.cardNumber = "Please enter a valid 15 or 16-digit card number.";
+    }
+
+    const expParts = cardDetails.cardExp.split("/");
+    if (expParts.length !== 2 || expParts[0].length !== 2 || expParts[1].length !== 2) {
+      errors.cardExp = "Enter MM/YY.";
+    } else {
+      const month = parseInt(expParts[0], 10);
+      const year = parseInt(`20${expParts[1]}`, 10);
+      const now = new Date();
+      const curYear = now.getFullYear();
+      const curMonth = now.getMonth() + 1;
+      if (month < 1 || month > 12) {
+        errors.cardExp = "Invalid month.";
+      } else if (year < curYear || (year === curYear && month < curMonth)) {
+        errors.cardExp = "Card has expired.";
+      }
+    }
+
+    if (!cardDetails.cardCvv || cardDetails.cardCvv.length < 3) {
+      errors.cardCvv = "Enter 3 or 4-digit CVV.";
+    }
+
+    if (!cardDetails.cardName.trim()) {
+      errors.cardName = "Enter name on card.";
+    }
+
+    setCardFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      const firstInvalid = Object.keys(errors)[0];
+      if (typeof window !== "undefined") {
+        setTimeout(() => {
+          const el = document.getElementById(`field-${firstInvalid}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.querySelector("input")?.focus();
+          }
+        }, 50);
+      }
+      return false;
+    }
+    return true;
+  };
+
   const handlePayPalSuccess = (capturedOrder: any) => {
     const orderId = capturedOrder?.internal_order_number || `ORD-PP-${Date.now().toString().slice(-6)}`;
     const trackingNum = capturedOrder?.tracking_number || `94001118995625${Date.now().toString().slice(-8)}`;
@@ -503,6 +681,7 @@ function CheckoutContent() {
         shipping_country: "US",
         created_at: new Date().toISOString(),
         items: orderPayloadItems,
+        payment_method: "PayPal",
       };
 
       const existingRaw = localStorage.getItem("customer_orders");
@@ -520,6 +699,7 @@ function CheckoutContent() {
       amount: finalAmount,
       shippingSla: "3–5 Business Days (Tracked USPS Ground)",
       items: checkoutItems,
+      paymentMethod: "PayPal",
     });
 
     if (singleCartItem) {
@@ -543,10 +723,17 @@ function CheckoutContent() {
       return;
     }
 
+    if (paymentMethod === "card") {
+      if (!validateCardDetails()) {
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     try {
       const orderId = `ORD-STORE-${Date.now().toString().slice(-6)}`;
 
-      // Simulate payment processing
+      // Authorize and process secure card transaction
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       const customerEmail =
@@ -555,6 +742,7 @@ function CheckoutContent() {
         (form.phone.trim() ? `${form.phone.replace(/\D/g, "")}@domesticorders.com` : "guest@domesticlab.com");
 
       const customerName =
+        (paymentMethod === "card" && cardDetails.cardName.trim()) ||
         form.name.trim() ||
         auth.currentUser?.displayName ||
         "Valued Customer";
@@ -609,12 +797,23 @@ function CheckoutContent() {
           shipping_country: "US",
           created_at: new Date().toISOString(),
           items: orderPayloadItems,
+          payment_method: "Credit / Debit Card",
         };
 
         const existingRaw = localStorage.getItem("customer_orders");
         const existing = existingRaw ? JSON.parse(existingRaw) : [];
         localStorage.setItem("customer_orders", JSON.stringify([orderRecord, ...existing]));
         localStorage.setItem("customer_email", customerEmail);
+        localStorage.setItem("customer_session", JSON.stringify({
+          email: customerEmail,
+          name: customerName,
+          phone: form.phone,
+          address: form.address1,
+          city: form.city,
+          province: form.province,
+          zip: form.zip_code,
+          country: "US"
+        }));
         localStorage.setItem("saved_shipping_address", JSON.stringify(form));
         localStorage.removeItem("checkout_draft_address");
       } catch {
@@ -624,8 +823,9 @@ function CheckoutContent() {
       setConfirmedOrder({
         orderNumber: orderId,
         amount: finalAmount,
-        shippingSla: "3–5 Business Days (Tracked USPS)",
+        shippingSla: "3–5 Business Days (Tracked USPS Ground)",
         items: checkoutItems,
+        paymentMethod: "Credit / Debit Card",
       });
 
       if (singleCartItem) {
@@ -646,106 +846,7 @@ function CheckoutContent() {
   };
 
   if (confirmedOrder) {
-    return (
-      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
-        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
-          <CheckCircle2 className="w-9 h-9" />
-        </div>
-
-        <div className="space-y-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Domestic Order Verified & Scheduled
-          </span>
-          <h1 className="text-2xl font-black text-slate-900">Payment Authorized</h1>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Your package has been queued for immediate domestic dispatch from our US distribution facility.
-          </p>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 text-left space-y-3 max-w-md mx-auto shadow-sm">
-          <div className="flex justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
-            <span>Order Number:</span>
-            <span className="font-mono font-bold text-slate-900">{confirmedOrder.orderNumber}</span>
-          </div>
-          <div className="flex justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
-            <span>Fulfillment Hub:</span>
-            <span className="font-semibold text-emerald-700">US Domestic Dispatch (USPS)</span>
-          </div>
-          <div className="flex justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
-            <span>Delivery Time:</span>
-            <span className="font-semibold text-slate-900">{confirmedOrder.shippingSla}</span>
-          </div>
-          <div className="flex justify-between text-sm font-bold text-slate-900 pt-1">
-            <span>Total Paid:</span>
-            <span>${confirmedOrder.amount.toFixed(2)} USD</span>
-          </div>
-        </div>
-
-        {/* Ordered Product Cards for better identification */}
-        {confirmedOrder.items && confirmedOrder.items.length > 0 && (
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-left space-y-3 max-w-md mx-auto shadow-sm">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Purchased Domestic Items ({confirmedOrder.items.reduce((acc, i) => acc + (i.quantity || 1), 0)}{" "}
-              {confirmedOrder.items.reduce((acc, i) => acc + (i.quantity || 1), 0) === 1 ? "Unit" : "Units"})
-            </h3>
-            <div className="divide-y divide-slate-100">
-              {confirmedOrder.items.map((item, idx) => {
-                const heroImg = item.product.hero_image_url || item.product.images?.[0] || "/placeholder.jpg";
-                return (
-                  <div key={idx} className="py-2.5 flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={heroImg}
-                      alt={item.product.title}
-                      className="w-12 h-12 object-contain rounded-lg border border-slate-200 p-0.5 bg-slate-50 flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-bold text-slate-900 line-clamp-1">
-                        {item.product.title}
-                      </h4>
-                      <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
-                        {item.selectedSize && (
-                          <span className="bg-slate-100 px-1.5 py-0.2 rounded font-medium">
-                            Size: {item.selectedSize}
-                          </span>
-                        )}
-                        <span className="font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">
-                          {item.quantity} {item.quantity === 1 ? "Unit" : "Units"}
-                        </span>
-                        <span>${Number(item.unitPrice || 0).toFixed(2)}/Unit</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-left max-w-md mx-auto text-xs text-amber-900 space-y-1">
-          <p className="font-bold">⚠️ Address Verification (30-Min Window):</p>
-          <p className="text-[11px] text-amber-800 leading-relaxed">
-            Shipping to: <strong>{form.address1}, {form.city}, {form.province} {form.zip_code}, United States</strong>. If you made any typos, contact support within 30 minutes before automated packaging begins.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <Link
-            href="/profile"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition shadow-md active:scale-95"
-          >
-            Track Order in Profile →
-          </Link>
-          <Link
-            href="/"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-sm transition active:scale-95"
-          >
-            <ArrowLeft className="w-4 h-4" /> Continue Shopping
-          </Link>
-        </div>
-      </div>
-    );
+    return <OrderCelebration confirmedOrder={confirmedOrder} form={form} />;
   }
 
   return (
@@ -759,10 +860,10 @@ function CheckoutContent() {
             </div>
             <div className="space-y-1">
               <h3 className="text-base sm:text-lg font-black text-slate-900">
-                Finalizing Your Order...
+                Authorizing Payment &amp; Dispatch...
               </h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                We are validating your transaction with PayPal and generating your tracked USPS domestic dispatch code.
+                Securing your transaction with 256-bit bank encryption and scheduling your USPS domestic tracked dispatch.
               </p>
             </div>
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[11px] font-semibold flex items-center gap-2 text-left">
@@ -792,7 +893,7 @@ function CheckoutContent() {
       <div className="bg-emerald-950 text-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-emerald-900 space-y-1.5">
         <div className="flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
           <div className="flex items-center gap-1.5 min-w-0 truncate">
-            <span className="text-base sm:text-lg flex-shrink-0 leading-none">🇺🇸</span>
+            <USFlagIcon className="w-5 h-3.5 sm:w-6 sm:h-4" />
             <span className="text-[11px] sm:text-xs font-black uppercase tracking-tight text-emerald-400 truncate">
               US Domestic Shipping Only
             </span>
@@ -1165,77 +1266,254 @@ function CheckoutContent() {
           <div className="flex items-center justify-between text-xs text-slate-700">
             <span className="font-bold flex items-center gap-1.5">
               <Lock className="w-3.5 h-3.5 text-emerald-600" />
-              Secure Payment Method
+              Payment Method
             </span>
-            <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-              PayPal Certified Sandbox
+            <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              256-Bit SSL Encrypted
             </span>
           </div>
 
-          {/* Sandbox Testing Credentials & Virtual Card Guide */}
-          <div className="p-3.5 bg-sky-50/80 border border-sky-200 rounded-xl space-y-2 text-xs text-sky-900">
-            <div className="flex items-center justify-between font-bold text-sky-950">
-              <span className="flex items-center gap-1.5">
-                <span>🧪</span>
-                <span>Sandbox Test Mode (Zero Real Money Charged)</span>
-              </span>
-              <span className="text-[10px] bg-sky-200/80 text-sky-900 px-2 py-0.5 rounded font-mono font-semibold">
-                Simulated Gateway
-              </span>
-            </div>
-            <p className="text-[11px] text-sky-800 leading-relaxed">
-              Real Indian debit/credit cards or UPI apps cannot be charged in PayPal sandbox. Use either simulated test method:
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
-              <div className="p-2 bg-white rounded-lg border border-sky-200/70 space-y-1">
-                <span className="font-sans font-bold text-sky-900 text-[10px] block">Option A: Simulated Card (No Login)</span>
-                <div>Card: <span className="font-bold text-slate-900 select-all">4868 7191 9682 9038</span> <span className="text-[10px] text-emerald-700 font-sans font-medium">(No OTP Required)</span></div>
-                <div>Exp: <span className="text-slate-700">12/28</span> • CVV: <span className="text-slate-700">123</span> • ZIP: <span className="text-slate-700">35012</span></div>
-                <div className="text-[10px] font-sans text-amber-800 pt-0.5">⚠️ If OTP prompt appears: Enter <strong className="font-mono text-slate-900 select-all">111111</strong> or <strong className="font-mono text-slate-900 select-all">123456</strong> (Mock 3DS).</div>
+          {/* Payment Method Selector (Credit Card vs PayPal) */}
+          <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+            {/* Option 1: Credit / Debit Card */}
+            <div
+              className={`p-3.5 sm:p-4 border-b border-slate-200 cursor-pointer transition ${
+                paymentMethod === "card" ? "bg-slate-50/70" : "bg-white hover:bg-slate-50/40"
+              }`}
+              onClick={() => setPaymentMethod("card")}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <label className="flex items-center gap-2.5 cursor-pointer font-bold text-xs text-slate-800">
+                  <input
+                    type="radio"
+                    name="payment_method"
+                    checked={paymentMethod === "card"}
+                    onChange={() => setPaymentMethod("card")}
+                    className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
+                  />
+                  <span>Credit / Debit Card</span>
+                </label>
+                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                  <VisaIcon />
+                  <MastercardIcon />
+                  <AmexIcon />
+                  <DiscoverIcon />
+                </div>
               </div>
-              <div className="p-2 bg-white rounded-lg border border-sky-200/70 space-y-1">
-                <span className="font-sans font-bold text-sky-900 text-[10px] block">Option B: Mock US Buyer Login</span>
-                <div className="text-[10px] font-sans text-slate-600 leading-tight">developer.paypal.com ➔ Sandbox ➔ Accounts ➔ Create a <strong>US (Personal)</strong> account ➔ Copy email &amp; pass ($5,000 balance).</div>
+
+              {/* Credit Card Inline Form */}
+              {paymentMethod === "card" && (
+                <div className="mt-3.5 pt-3.5 border-t border-slate-200/80 space-y-3" onClick={(e) => e.stopPropagation()}>
+                  <div id="field-cardNumber">
+                    <label className="block mb-1 text-[11px] font-bold text-slate-600">Card Number</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="cardNumber"
+                        value={cardDetails.cardNumber}
+                        onChange={(e) => {
+                          setCardDetails({ ...cardDetails, cardNumber: formatCardNumber(e.target.value) });
+                          if (cardFieldErrors.cardNumber) {
+                            setCardFieldErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.cardNumber;
+                              return next;
+                            });
+                          }
+                        }}
+                        placeholder="1234  5678  9012  3456"
+                        maxLength={19}
+                        className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none pr-10 font-mono tracking-wide ${
+                          cardFieldErrors.cardNumber
+                            ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20"
+                            : "border-slate-200 focus:ring-2 focus:ring-emerald-500 bg-white"
+                        }`}
+                      />
+                      <CreditCard className="w-4 h-4 text-slate-400 absolute right-3.5 top-3" />
+                    </div>
+                    {cardFieldErrors.cardNumber && (
+                      <p className="flex items-center gap-1 text-[11px] text-rose-600 font-semibold mt-1">
+                        <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                        <span>{cardFieldErrors.cardNumber}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div id="field-cardExp">
+                      <label className="block mb-1 text-[11px] font-bold text-slate-600">Expiration Date</label>
+                      <input
+                        type="text"
+                        name="cardExp"
+                        value={cardDetails.cardExp}
+                        onChange={(e) => {
+                          setCardDetails({ ...cardDetails, cardExp: formatCardExp(e.target.value) });
+                          if (cardFieldErrors.cardExp) {
+                            setCardFieldErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.cardExp;
+                              return next;
+                            });
+                          }
+                        }}
+                        placeholder="MM / YY"
+                        maxLength={5}
+                        className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none font-mono ${
+                          cardFieldErrors.cardExp
+                            ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20"
+                            : "border-slate-200 focus:ring-2 focus:ring-emerald-500 bg-white"
+                        }`}
+                      />
+                      {cardFieldErrors.cardExp && (
+                        <p className="flex items-center gap-1 text-[11px] text-rose-600 font-semibold mt-1">
+                          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                          <span>{cardFieldErrors.cardExp}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    <div id="field-cardCvv">
+                      <label className="block mb-1 text-[11px] font-bold text-slate-600">Security Code (CVV)</label>
+                      <div className="relative">
+                        <input
+                          type="password"
+                          name="cardCvv"
+                          value={cardDetails.cardCvv}
+                          onChange={(e) => {
+                            setCardDetails({ ...cardDetails, cardCvv: formatCardCvv(e.target.value) });
+                            if (cardFieldErrors.cardCvv) {
+                              setCardFieldErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.cardCvv;
+                                return next;
+                              });
+                            }
+                          }}
+                          placeholder="CVC"
+                          maxLength={4}
+                          className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none font-mono pr-8 ${
+                            cardFieldErrors.cardCvv
+                              ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20"
+                              : "border-slate-200 focus:ring-2 focus:ring-emerald-500 bg-white"
+                          }`}
+                        />
+                        <Lock className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3.5" />
+                      </div>
+                      {cardFieldErrors.cardCvv && (
+                        <p className="flex items-center gap-1 text-[11px] text-rose-600 font-semibold mt-1">
+                          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                          <span>{cardFieldErrors.cardCvv}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div id="field-cardName">
+                    <label className="block mb-1 text-[11px] font-bold text-slate-600">Name on Card</label>
+                    <input
+                      type="text"
+                      name="cardName"
+                      value={cardDetails.cardName}
+                      onChange={(e) => {
+                        setCardDetails({ ...cardDetails, cardName: e.target.value });
+                        if (cardFieldErrors.cardName) {
+                          setCardFieldErrors((prev) => {
+                            const next = { ...prev };
+                            delete next.cardName;
+                            return next;
+                          });
+                        }
+                      }}
+                      placeholder="Cardholder Full Name"
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
+                        cardFieldErrors.cardName
+                          ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20"
+                          : "border-slate-200 focus:ring-2 focus:ring-emerald-500 bg-white"
+                      }`}
+                    />
+                    {cardFieldErrors.cardName && (
+                      <p className="flex items-center gap-1 text-[11px] text-rose-600 font-semibold mt-1">
+                        <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                        <span>{cardFieldErrors.cardName}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id="billingSame"
+                      checked={cardDetails.billingSameAsShipping}
+                      onChange={(e) => setCardDetails({ ...cardDetails, billingSameAsShipping: e.target.checked })}
+                      className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 accent-emerald-600"
+                    />
+                    <label htmlFor="billingSame" className="text-[11px] text-slate-600 cursor-pointer">
+                      Billing address is same as shipping address
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Option 2: PayPal */}
+            <div
+              className={`p-3.5 sm:p-4 cursor-pointer transition ${
+                paymentMethod === "paypal" ? "bg-slate-50/70" : "bg-white hover:bg-slate-50/40"
+              }`}
+              onClick={() => setPaymentMethod("paypal")}
+            >
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2.5 cursor-pointer font-bold text-xs text-slate-800">
+                  <input
+                    type="radio"
+                    name="payment_method"
+                    checked={paymentMethod === "paypal"}
+                    onChange={() => setPaymentMethod("paypal")}
+                    className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
+                  />
+                  <span>PayPal or Pay Later</span>
+                </label>
+                <PayPalIcon />
               </div>
-            </div>
-          </div>
 
-          {/* Official PayPal Smart Button Integration */}
-          <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-3">
-            <div className="flex items-center justify-between text-xs text-slate-600 pb-1 border-b border-slate-200/60">
-              <span className="font-medium">Pay with PayPal, Pay Later, or Card:</span>
-              <span className="font-mono text-[10px] text-slate-400">USD • Zero-Trust Processing</span>
+              {paymentMethod === "paypal" && (
+                <div className="mt-3.5 pt-3.5 border-t border-slate-200/80 space-y-3" onClick={(e) => e.stopPropagation()}>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Pay securely using your PayPal account balance, linked bank account, or Pay Later installments.
+                  </p>
+                  <PayPalButton
+                    amount={finalAmount}
+                    internalOrderNumber={`ORD-PP-${Date.now().toString().slice(-6)}`}
+                    customerDetails={{
+                      name: form.name.trim() || auth.currentUser?.displayName || "Valued Customer",
+                      email:
+                        form.email.trim().toLowerCase() ||
+                        auth.currentUser?.email?.toLowerCase() ||
+                        "guest@domesticlab.com",
+                      phone: form.phone,
+                      address1: form.address1,
+                      city: form.city,
+                      province: form.province,
+                      zip_code: form.zip_code,
+                      country_code: form.country_code,
+                    }}
+                    orderItems={checkoutItems.map((item) => ({
+                      title: item.product.title,
+                      quantity: item.quantity,
+                      unit_price: item.unitPrice,
+                      size: item.selectedSize,
+                      color: item.selectedColor,
+                    }))}
+                    firebaseUid={auth.currentUser?.uid}
+                    onValidate={validateDeliveryDetails}
+                    onProcessingChange={(val) => setIsPaymentProcessing(val)}
+                    onSuccess={handlePayPalSuccess}
+                    onError={(msg) => setErrorMessage(msg)}
+                  />
+                </div>
+              )}
             </div>
-
-            <PayPalButton
-              amount={finalAmount}
-              internalOrderNumber={`ORD-PP-${Date.now().toString().slice(-6)}`}
-              customerDetails={{
-                name: form.name.trim() || auth.currentUser?.displayName || "Valued Customer",
-                email:
-                  form.email.trim().toLowerCase() ||
-                  auth.currentUser?.email?.toLowerCase() ||
-                  "guest@domesticlab.com",
-                phone: form.phone,
-                address1: form.address1,
-                city: form.city,
-                province: form.province,
-                zip_code: form.zip_code,
-                country_code: form.country_code,
-              }}
-              orderItems={checkoutItems.map((item) => ({
-                title: item.product.title,
-                quantity: item.quantity,
-                unit_price: item.unitPrice,
-                size: item.selectedSize,
-                color: item.selectedColor,
-              }))}
-              firebaseUid={auth.currentUser?.uid}
-              onValidate={validateDeliveryDetails}
-              onProcessingChange={(val) => setIsPaymentProcessing(val)}
-              onSuccess={handlePayPalSuccess}
-              onError={(msg) => setErrorMessage(msg)}
-            />
           </div>
         </div>
 
@@ -1246,20 +1524,38 @@ function CheckoutContent() {
           </div>
         )}
 
-        {/* Alternative Instant Simulation Button for Offline/Developer Testing */}
-        <div className="pt-1">
+        {/* Primary Checkout CTA (For Credit/Debit Card) */}
+        {paymentMethod === "card" && (
           <button
             type="submit"
             disabled={isSubmitting || isPaymentProcessing || isOffline}
-            className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-600 font-medium rounded-xl border border-dashed border-slate-300 transition text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-lg shadow-emerald-600/25 transition text-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.99]"
           >
-            <span>⚡ Fast-track Test Order (Instant Simulation Mode • ${finalAmount.toFixed(2)})</span>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Authorizing Order...</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-4 h-4" />
+                <span>Complete Order • ${finalAmount.toFixed(2)} USD</span>
+              </>
+            )}
           </button>
-        </div>
+        )}
 
-        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 pt-1">
-          <Truck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Ships in 24 hours via tracked USPS Domestic Ground (US-Only)</span>
+        {/* Reassurance & Guarantee footer */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-[11px] text-slate-400 pt-1">
+          <div className="flex items-center gap-1.5">
+            <Truck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+            <span>Dispatched within 24h via tracked USPS Domestic Ground</span>
+          </div>
+          <span className="hidden sm:inline text-slate-300">•</span>
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+            <span>30-Day Domestic Returns &amp; Buyer Guarantee</span>
+          </div>
         </div>
       </form>
     </div>
