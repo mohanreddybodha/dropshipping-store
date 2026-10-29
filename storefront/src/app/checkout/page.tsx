@@ -18,6 +18,7 @@ import {
 import {
   Lock,
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   AlertCircle,
   ShieldCheck,
@@ -464,12 +465,12 @@ function CheckoutContent() {
 
   const handlePayPalSuccess = (capturedOrder: any) => {
     const orderId = capturedOrder?.internal_order_number || `ORD-PP-${Date.now().toString().slice(-6)}`;
-    const trackingNum = capturedOrder?.tracking_number || `94001118995625${Date.now().toString().slice(-8)}`;
+    const trackingNum = capturedOrder?.tracking_number || null;
 
     const customerEmail =
       form.email.trim().toLowerCase() ||
       auth.currentUser?.email?.toLowerCase() ||
-      (form.phone.trim() ? `${form.phone.replace(/\D/g, "")}@domesticorders.com` : "guest@domesticlab.com");
+      "";
 
     const customerName = form.name.trim() || auth.currentUser?.displayName || "Valued Customer";
 
@@ -490,7 +491,7 @@ function CheckoutContent() {
         internal_order_number: orderId,
         customer_email: customerEmail,
         customer_phone: form.phone,
-        status: "PAYMENT_CAPTURED",
+        status: "ORDER_PLACED",
         total_retail: finalAmount,
         carrier_name: "USPS",
         tracking_number: trackingNum,
@@ -551,7 +552,7 @@ function CheckoutContent() {
       const customerEmail =
         form.email.trim().toLowerCase() ||
         auth.currentUser?.email?.toLowerCase() ||
-        (form.phone.trim() ? `${form.phone.replace(/\D/g, "")}@domesticorders.com` : "guest@domesticlab.com");
+        "";
 
       const customerName =
         form.name.trim() ||
@@ -569,7 +570,7 @@ function CheckoutContent() {
         color: item.selectedColor,
       }));
 
-      const trackingNumber = `94001118995625${Date.now().toString().slice(-8)}`;
+      const trackingNumber: string | undefined = undefined;
 
       // 1. Persist order to PostgreSQL / SQLite database for cross-device synchronization
       await createCheckoutOrder({
@@ -596,7 +597,7 @@ function CheckoutContent() {
           internal_order_number: orderId,
           customer_email: customerEmail,
           customer_phone: form.phone,
-          status: "PAYMENT_CAPTURED",
+          status: "ORDER_PLACED",
           total_retail: finalAmount,
           carrier_name: "USPS",
           tracking_number: trackingNumber,
@@ -646,33 +647,58 @@ function CheckoutContent() {
 
   if (confirmedOrder) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
-        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
-          <CheckCircle2 className="w-9 h-9" />
+      <div className="max-w-xl mx-auto px-4 py-12 sm:py-16 text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+        {/* ── TASTEFUL CELEBRATORY SUCCESS BADGE ── */}
+        <div className="relative mx-auto w-20 h-20">
+          <div className="absolute inset-0 bg-emerald-400/20 rounded-full animate-ping opacity-60" />
+          <div className="relative w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-600/30">
+            <CheckCircle2 className="w-10 h-10 animate-in zoom-in duration-300" />
+          </div>
         </div>
 
         <div className="space-y-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Domestic Order Verified & Scheduled
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            Payment Verified &amp; Order Placed
           </span>
-          <h1 className="text-2xl font-black text-slate-900">Payment Authorized</h1>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Your package has been queued for immediate domestic dispatch from our US distribution facility.
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            🎉 Congratulations! Your Order is Placed
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+            Thank you for ordering with Domestic Direct! Your payment was verified and domestic warehouse dispatch has been scheduled.
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 text-left space-y-3 max-w-md mx-auto shadow-sm">
+        {/* 30-Minute Grace Window Banner */}
+        <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-4 text-left max-w-md mx-auto space-y-1.5">
+          <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+            <span className="text-sm">⏱️</span>
+            <span>30-Minute Grace Window Active</span>
+          </div>
+          <p className="text-[11px] text-amber-800 leading-relaxed">
+            Shipping to: <strong>{form.address1}, {form.city}, {form.province} {form.zip_code}</strong>. You have <strong>30 minutes</strong> to edit your delivery address directly from your <strong>My Orders</strong> page before fulfillment locks.
+          </p>
+        </div>
+
+        {/* Order Details Card */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 text-left space-y-3 max-w-md mx-auto shadow-xs">
           <div className="flex justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
-            <span>Order Number:</span>
+            <span>Order Reference:</span>
             <span className="font-mono font-bold text-slate-900">{confirmedOrder.orderNumber}</span>
           </div>
           <div className="flex justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
-            <span>Fulfillment Hub:</span>
-            <span className="font-semibold text-emerald-700">US Domestic Dispatch (USPS)</span>
+            <span>Current Status:</span>
+            <span className="inline-flex items-center gap-1 font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Order Placed (Grace Period)
+            </span>
           </div>
           <div className="flex justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
-            <span>Delivery Time:</span>
+            <span>Fulfillment Hub:</span>
+            <span className="font-semibold text-emerald-700">US Domestic Distribution (USPS)</span>
+          </div>
+          <div className="flex justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
+            <span>Estimated Delivery:</span>
             <span className="font-semibold text-slate-900">{confirmedOrder.shippingSla}</span>
           </div>
           <div className="flex justify-between text-sm font-bold text-slate-900 pt-1">
@@ -681,11 +707,11 @@ function CheckoutContent() {
           </div>
         </div>
 
-        {/* Ordered Product Cards for better identification */}
+        {/* Purchased Items List */}
         {confirmedOrder.items && confirmedOrder.items.length > 0 && (
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-left space-y-3 max-w-md mx-auto shadow-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 text-left space-y-3 max-w-md mx-auto shadow-xs">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Purchased Domestic Items ({confirmedOrder.items.reduce((acc, i) => acc + (i.quantity || 1), 0)}{" "}
+              Purchased Items ({confirmedOrder.items.reduce((acc, i) => acc + (i.quantity || 1), 0)}{" "}
               {confirmedOrder.items.reduce((acc, i) => acc + (i.quantity || 1), 0) === 1 ? "Unit" : "Units"})
             </h3>
             <div className="divide-y divide-slate-100">
@@ -722,19 +748,13 @@ function CheckoutContent() {
           </div>
         )}
 
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-left max-w-md mx-auto text-xs text-amber-900 space-y-1">
-          <p className="font-bold">⚠️ Address Verification (30-Min Window):</p>
-          <p className="text-[11px] text-amber-800 leading-relaxed">
-            Shipping to: <strong>{form.address1}, {form.city}, {form.province} {form.zip_code}, United States</strong>. If you made any typos, contact support within 30 minutes before automated packaging begins.
-          </p>
-        </div>
-
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <Link
-            href="/profile"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition shadow-md active:scale-95"
+            href="/orders"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer"
           >
-            Track Order in Profile →
+            <span>📦 View in My Orders</span>
+            <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/"
@@ -749,24 +769,24 @@ function CheckoutContent() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-6 relative">
-      {/* ── FULL-SCREEN ZERO-TRUST PAYMENT PROCESSING SHIELD ── */}
+      {/* ── FULL-SCREEN SECURE PAYMENT VERIFICATION MODAL ── */}
       {(isPaymentProcessing || isSubmitting) && (
         <div className="fixed inset-0 z-[9999] bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 max-w-sm w-full text-center space-y-4 border border-slate-100 animate-in fade-in zoom-in-95 duration-200 relative z-[10000]">
             <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto ring-8 ring-emerald-50/50">
-              <Lock className="w-8 h-8 animate-pulse text-emerald-600" />
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <h3 className="text-base sm:text-lg font-black text-slate-900">
-                Finalizing Your Order...
+                Waiting for payment confirmation...
               </h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                We are validating your transaction with PayPal and generating your tracked USPS domestic dispatch code.
+                Verifying bank authentication and reserving your domestic warehouse stock. Please wait a moment.
               </p>
             </div>
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[11px] font-semibold flex items-center gap-2 text-left">
-              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-              <span>Please do not refresh, close this window, or press Back while payment is finalizing.</span>
+            <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-slate-700 text-[11px] font-medium flex items-center gap-2 text-left">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span>Zero-trust encrypted verification in progress. Please do not refresh or press back.</span>
             </div>
           </div>
         </div>
@@ -1202,7 +1222,7 @@ function CheckoutContent() {
                 email:
                   form.email.trim().toLowerCase() ||
                   auth.currentUser?.email?.toLowerCase() ||
-                  "guest@domesticlab.com",
+                  "",
                 phone: form.phone,
                 address1: form.address1,
                 city: form.city,
