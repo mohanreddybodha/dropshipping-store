@@ -95,14 +95,13 @@ class PayPalService:
         internal_order_number: Optional[str] = None,
         return_url: Optional[str] = None,
         cancel_url: Optional[str] = None,
-        customer: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Create an authorized PayPal checkout order with strict idempotency."""
         token = self.get_access_token()
         url = f"{self.base_url}/v2/checkout/orders"
 
         order_ref = internal_order_number or f"ORD-{int(time.time() * 1000)}"
-        payload: Dict[str, Any] = {
+        payload = {
             "intent": "CAPTURE",
             "purchase_units": [
                 {
@@ -121,31 +120,6 @@ class PayPalService:
                 "user_action": "PAY_NOW",
             },
         }
-
-        # Pre-populate payer billing info to minimize checkout friction
-        if customer and customer.get("email"):
-            name_str = (customer.get("name") or "").strip()
-            name_parts = name_str.split(None, 1)
-            given_name = name_parts[0] if name_parts else "Valued"
-            surname = name_parts[1] if len(name_parts) > 1 else "Customer"
-
-            payer_data: Dict[str, Any] = {
-                "email_address": customer.get("email"),
-                "name": {
-                    "given_name": given_name,
-                    "surname": surname,
-                },
-            }
-
-            if customer.get("address1") and customer.get("city") and customer.get("province") and customer.get("zip_code"):
-                payer_data["address"] = {
-                    "address_line_1": customer.get("address1"),
-                    "admin_area_2": customer.get("city"),
-                    "admin_area_1": customer.get("province"),
-                    "postal_code": customer.get("zip_code"),
-                    "country_code": customer.get("country_code", "US"),
-                }
-            payload["payer"] = payer_data
 
         if return_url and cancel_url:
             payload["application_context"]["return_url"] = return_url

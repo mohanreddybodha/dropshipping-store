@@ -112,14 +112,10 @@ export interface CustomerOrder {
   total_retail: number;
   carrier_name: string;
   tracking_number?: string | null;
-  customer_email?: string;
-  customer_phone?: string;
   shipping_name: string;
-  shipping_address?: string;
   shipping_city: string;
   shipping_province: string;
   shipping_zip: string;
-  shipping_country?: string;
   created_at: string;
   items?: CustomerOrderItem[];
 }

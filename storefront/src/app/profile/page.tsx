@@ -140,44 +140,6 @@ export default function ProfilePage() {
   // Orders State
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
-  const [guestSession, setGuestSession] = useState<{
-    email?: string;
-    name?: string;
-    phone?: string;
-  } | null>(null);
-
-  // Helper to load persistent orders and session from localStorage for guest / unauthenticated users
-  const loadLocalOrders = () => {
-    try {
-      const rawSession = localStorage.getItem("customer_session");
-      const rawEmail = localStorage.getItem("customer_email");
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          setGuestSession(parsed);
-        } catch {}
-      } else if (rawEmail) {
-        setGuestSession({ email: rawEmail, name: "Customer" });
-      }
-
-      const rawOrders = localStorage.getItem("customer_orders");
-      if (rawOrders) {
-        const parsed = JSON.parse(rawOrders);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const sorted = parsed.sort(
-            (a, b) =>
-              new Date(b.created_at || Date.now()).getTime() -
-              new Date(a.created_at || Date.now()).getTime()
-          );
-          setOrders(sorted);
-          return;
-        }
-      }
-      setOrders([]);
-    } catch {
-      setOrders([]);
-    }
-  };
 
   // Dual-Factor Lookup Modal State
   const [showLookupModal, setShowLookupModal] = useState(false);
@@ -289,8 +251,7 @@ export default function ProfilePage() {
           setOrdersLoading(false);
         }
       } else {
-        // Unauthenticated / Guest session: never wipe out orders! Load from localStorage
-        loadLocalOrders();
+        setOrders([]);
       }
     });
 
@@ -368,8 +329,7 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     try {
       await logoutUser();
-      setCurrentUser(null);
-      loadLocalOrders();
+      setOrders([]);
     } catch (err) {
       console.error("Sign-out error:", err);
     }
@@ -424,18 +384,7 @@ export default function ProfilePage() {
       }
 
       setLookupResults(res);
-      if (res.length > 0) {
-        try {
-          const existingRaw = localStorage.getItem("customer_orders");
-          const existing = existingRaw ? JSON.parse(existingRaw) : [];
-          const combined = [...res, ...existing];
-          const map = new Map<string, any>();
-          combined.forEach((o) => map.set(o.internal_order_number, o));
-          localStorage.setItem("customer_orders", JSON.stringify(Array.from(map.values())));
-          localStorage.setItem("customer_email", lookupEmail.trim());
-          loadLocalOrders();
-        } catch {}
-      } else {
+      if (res.length === 0) {
         setLookupError("No domestic orders found matching this Email and ZIP code combination.");
       }
     } catch (err: any) {
@@ -475,18 +424,6 @@ export default function ProfilePage() {
       </span>
     );
   };
-
-  const activeAccountEmail =
-    currentUser?.email ||
-    guestSession?.email ||
-    (orders.length > 0 ? orders[0].customer_email : null);
-
-  const activeAccountName =
-    currentUser?.displayName ||
-    guestSession?.name ||
-    (orders.length > 0 ? orders[0].shipping_name : null);
-
-  const hasOrders = orders.length > 0;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5">
@@ -530,186 +467,143 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ── UNIFIED ACCOUNT & ORDERS VIEW ── */}
-      {!authLoading && (
+      {/* ── STATE 1: UNAUTHENTICATED VIEW ── */}
+      {!authLoading && !currentUser && (
         <div className="space-y-6">
-          {/* Header Account View: Case 1 - Google User, Case 2 - Guest with Orders, Case 3 - First-Time Visitor */}
-          {currentUser ? (
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                {currentUser.photoURL ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={currentUser.photoURL}
-                    alt={currentUser.displayName || "User"}
-                    className="w-12 h-12 rounded-full border border-slate-200 object-cover"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-emerald-600 text-white font-black text-lg flex items-center justify-center">
-                    {(currentUser.displayName || currentUser.email || "U")[0].toUpperCase()}
-                  </div>
-                )}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-black text-slate-900">
-                      {currentUser.displayName || "Verified Customer"}
-                    </h2>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                      Verified
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 font-mono mt-0.5">{currentUser.email}</p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setShowLookupModal(true);
-                  setLookupResults(null);
-                  setLookupError(null);
-                }}
-                className="w-full sm:w-auto px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
-              >
-                <Search className="w-3.5 h-3.5 text-slate-600" />
-                <span>Track Orders Under Another Email</span>
-              </button>
+          {/* Main Sign-In Card */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-5">
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80 inline-block">
+                Secure Account Access
+              </span>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 pt-1">
+                Sign in with Google
+              </h2>
+              <p className="text-xs text-slate-500 max-w-lg leading-relaxed">
+                Sign in securely with your Google account. Automatically sync your cart, save watchlist items permanently, and review USPS delivery status across all your devices.
+              </p>
             </div>
-          ) : hasOrders ? (
-            /* Guest Customer with persistent orders in localStorage */
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-full bg-slate-900 text-white font-black text-lg flex items-center justify-center">
-                  {(activeAccountName || activeAccountEmail || "C")[0].toUpperCase()}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-black text-slate-900">
-                      {activeAccountName || "Domestic Customer"}
-                    </h2>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-                      Device Session Active
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 font-mono mt-0.5">
-                    {activeAccountEmail || "Guest Order"}
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  disabled={loginPending}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs rounded-xl border border-slate-300 shadow-2xs transition active:scale-95"
-                >
-                  <GoogleIcon />
-                  <span>Sync with Google</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowLookupModal(true);
-                    setLookupResults(null);
-                    setLookupError(null);
-                  }}
-                  className="w-full sm:w-auto px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
-                >
-                  <Search className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Find Other Orders</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* First-time visitor: Clean Google Sign-in Card */
-            <div className="space-y-6">
-              <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs space-y-5">
-                <div className="space-y-1">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80 inline-block">
-                    Secure Account Access
-                  </span>
-                  <h2 className="text-lg sm:text-xl font-black text-slate-900 pt-1">
-                    Sign in with Google
-                  </h2>
-                  <p className="text-xs text-slate-500 max-w-lg leading-relaxed">
-                    Sign in securely with your Google account. Automatically sync your cart, save watchlist items permanently, and review USPS delivery status across all your devices.
-                  </p>
-                </div>
-
-                {authError && (
-                  <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl space-y-2 text-xs text-rose-800 font-medium">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
-                      <span className="leading-relaxed flex-1">{authError}</span>
-                      <button
-                        onClick={() => setAuthError(null)}
-                        className="text-rose-400 hover:text-rose-700 text-sm font-bold ml-1 px-1"
-                        aria-label="Dismiss error"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-1">
+            {authError && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl space-y-2 text-xs text-rose-800 font-medium">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed flex-1">{authError}</span>
                   <button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    disabled={loginPending}
-                    className="w-full sm:w-auto min-w-[240px] flex items-center justify-center gap-3 px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs sm:text-sm rounded-xl border border-slate-300 shadow-2xs hover:border-slate-400 transition active:scale-98 disabled:opacity-60"
+                    onClick={() => setAuthError(null)}
+                    className="text-rose-400 hover:text-rose-700 text-sm font-bold ml-1 px-1"
+                    aria-label="Dismiss error"
                   >
-                    <GoogleIcon />
-                    <span>{loginPending ? "Connecting to Google..." : "Continue with Google"}</span>
+                    ×
                   </button>
                 </div>
-
-                <div className="pt-2 flex items-center gap-2 text-[11px] text-slate-400">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Zero-password authentication powered by Google Firebase Enterprise.</span>
-                </div>
               </div>
+            )}
 
-              <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                    <Search className="w-4 h-4 text-emerald-700" />
-                    Placed an order with a different email or as a guest?
-                  </h3>
-                  <p className="text-xs text-slate-500 max-w-md">
-                    Look up order receipts and USPS tracking using your checkout Email address and 5-digit delivery ZIP code.
-                  </p>
+            {/* Google Sign-In Button */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={loginPending}
+                className="w-full sm:w-auto min-w-[240px] flex items-center justify-center gap-3 px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs sm:text-sm rounded-xl border border-slate-300 shadow-2xs hover:border-slate-400 transition active:scale-98 disabled:opacity-60"
+              >
+                <GoogleIcon />
+                <span>{loginPending ? "Connecting to Google..." : "Continue with Google"}</span>
+              </button>
+            </div>
+
+            <div className="pt-2 flex items-center gap-2 text-[11px] text-slate-400">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Zero-password authentication powered by Google Firebase Enterprise.</span>
+            </div>
+          </div>
+
+          {/* Secondary Action: Guest Order Lookup */}
+          <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                <Search className="w-4 h-4 text-emerald-700" />
+                Placed an order with a different email or as a guest?
+              </h3>
+              <p className="text-xs text-slate-500 max-w-md">
+                Look up order receipts and USPS tracking using your checkout Email address and 5-digit delivery ZIP code.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setShowLookupModal(true);
+                setLookupResults(null);
+                setLookupError(null);
+              }}
+              className="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs rounded-xl border border-slate-300 transition shadow-2xs active:scale-95 flex-shrink-0"
+            >
+              Track Orders Under Another Email →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── STATE 2: AUTHENTICATED VIEW ── */}
+      {!authLoading && currentUser && (
+        <div className="space-y-6">
+          {/* User Profile Summary Card */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              {currentUser.photoURL ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={currentUser.photoURL}
+                  alt={currentUser.displayName || "User"}
+                  className="w-12 h-12 rounded-full border border-slate-200 object-cover"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-emerald-600 text-white font-black text-lg flex items-center justify-center">
+                  {(currentUser.displayName || currentUser.email || "U")[0].toUpperCase()}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowLookupModal(true);
-                    setLookupResults(null);
-                    setLookupError(null);
-                  }}
-                  className="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs rounded-xl border border-slate-300 transition shadow-2xs active:scale-95 flex-shrink-0"
-                >
-                  Track Orders Under Another Email →
-                </button>
+              )}
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-black text-slate-900">
+                    {currentUser.displayName || "Verified Customer"}
+                  </h2>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                    Verified
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-mono mt-0.5">{currentUser.email}</p>
               </div>
             </div>
-          )}
 
-          {/* Orders History Section: Always displayed if currentUser OR hasOrders */}
-          {(currentUser || hasOrders) && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2 gap-1.5">
-                <h2 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5 min-w-0 flex-1">
-                  <Package className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <span className="flex-shrink-0 whitespace-nowrap">Orders for</span>
-                  <span
-                    title={activeAccountEmail?.toLowerCase() || "your account"}
-                    className="lowercase truncate flex-1 min-w-0 font-bold text-slate-700 block"
-                  >
-                    {activeAccountEmail?.toLowerCase() || "your account"}
-                  </span>
+            {/* Secondary Action on Authenticated View */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowLookupModal(true);
+                setLookupResults(null);
+                setLookupError(null);
+              }}
+              className="w-full sm:w-auto px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
+            >
+              <Search className="w-3.5 h-3.5 text-slate-600" />
+              <span>Track Orders Under Another Email</span>
+            </button>
+          </div>
+
+          {/* Orders History Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2 gap-1.5">
+              <h2 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5 min-w-0 flex-1">
+                <Package className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span className="flex-shrink-0 whitespace-nowrap">Orders for</span>
+                <span
+                  title={currentUser.email?.toLowerCase()}
+                  className="lowercase truncate flex-1 min-w-0 font-bold text-slate-700 block"
+                >
+                  {currentUser.email?.toLowerCase()}
+                </span>
                 <span className="flex-shrink-0 font-bold text-emerald-700 whitespace-nowrap">
                   ({orders.length})
                 </span>
@@ -893,8 +787,7 @@ export default function ProfilePage() {
                 ))}
               </div>
             )}
-            </div>
-          )}
+          </div>
         </div>
       )}
 
