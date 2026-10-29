@@ -312,6 +312,7 @@ export default function ProfilePage() {
 
   // Google Sign-In Handler
   const handleGoogleSignIn = async () => {
+    if (loginPending) return;
     setLoginPending(true);
     setAuthError(null);
     try {

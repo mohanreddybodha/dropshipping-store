@@ -116,6 +116,7 @@ class PayPalService:
             "application_context": {
                 "brand_name": "Domestic Direct",
                 "landing_page": "NO_PREFERENCE",
+                "shipping_preference": "NO_SHIPPING",
                 "user_action": "PAY_NOW",
             },
         }
