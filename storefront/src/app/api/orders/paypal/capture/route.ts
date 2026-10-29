@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
 
     const email = (customer_email || "").trim().toLowerCase();
     const orderNumber = internal_order_number || `ORD-PP-${Date.now().toString().slice(-6)}`;
-    const tracking = `94001118995625${Date.now().toString().slice(-8)}`;
+    const tracking = null;
     const carrier = "USPS";
     const wholesale = +(totalRetail * 0.4).toFixed(2);
     const profit = +(totalRetail - wholesale).toFixed(2);
@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
           UPDATE orders SET
             customer_email = ${email},
             customer_phone = ${customer_phone || null},
-            status = 'PAYMENT_CAPTURED',
+            status = COALESCE(status, 'ORDER_PLACED'),
             stripe_payment_intent_id = ${paypal_order_id},
             shipping_name = ${customer_name || null},
             shipping_address = ${shipping_address || null},
@@ -240,7 +240,7 @@ export async function POST(req: NextRequest) {
             shipping_zip, shipping_country, carrier_name, tracking_number,
             items_json, created_at, updated_at
           ) VALUES (
-            ${orderNumber}, ${email}, ${customer_phone || null}, 'PAYMENT_CAPTURED',
+            ${orderNumber}, ${email}, ${customer_phone || null}, 'ORDER_PLACED',
             ${paypal_order_id}, ${totalRetail}, ${wholesale}, ${profit},
             ${customer_name || null}, ${shipping_address || null}, ${shipping_city || null},
             ${shipping_province || null}, ${shipping_zip || null}, ${shipping_country || "US"},
@@ -284,7 +284,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       id: orderId,
       internal_order_number: orderNumber,
-      status: "PAYMENT_CAPTURED",
+      status: "ORDER_PLACED",
       total_retail: totalRetail,
       carrier_name: carrier,
       tracking_number: tracking,

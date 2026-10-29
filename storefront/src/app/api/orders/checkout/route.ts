@@ -33,8 +33,7 @@ export async function POST(req: NextRequest) {
 
     const orderNumber =
       internal_order_number || `ORD-STORE-${Date.now().toString().slice(-6)}`;
-    const tracking =
-      tracking_number || `94001118995625${Date.now().toString().slice(-8)}`;
+    const tracking = tracking_number || null;
     const carrier = carrier_name || "USPS";
     const total = Number(total_retail) || 0;
     const wholesale = +(total * 0.4).toFixed(2);
@@ -81,7 +80,7 @@ export async function POST(req: NextRequest) {
           shipping_country, carrier_name, tracking_number, items_json,
           created_at, updated_at
         ) VALUES (
-          ${orderNumber}, ${email}, ${customer_phone || null}, 'PAYMENT_CAPTURED',
+          ${orderNumber}, ${email}, ${customer_phone || null}, 'ORDER_PLACED',
           ${total}, ${wholesale}, ${profit}, ${customer_name || null},
           ${shipping_address || null}, ${shipping_city || null}, ${shipping_province || null}, ${shipping_zip || null},
           ${shipping_country || "US"}, ${carrier}, ${tracking}, ${JSON.stringify(items || [])},

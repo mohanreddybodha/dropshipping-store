@@ -639,204 +639,52 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Orders History Section: Rendered when user is logged in OR has local guest orders */}
-          {(currentUser || orders.length > 0) && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2 gap-1.5">
-                <h2 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5 min-w-0 flex-1">
-                  <Package className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <span className="flex-shrink-0 whitespace-nowrap">Orders for</span>
-                  <span
-                    title={currentUser?.email?.toLowerCase() || orders[0]?.customer_email?.toLowerCase() || "Guest"}
-                    className="lowercase truncate flex-1 min-w-0 font-bold text-slate-700 block"
-                  >
-                    {currentUser?.email?.toLowerCase() || orders[0]?.customer_email?.toLowerCase() || "Guest"}
-                  </span>
-                  <span className="flex-shrink-0 font-bold text-emerald-700 whitespace-nowrap">
-                    ({orders.length})
-                  </span>
-                </h2>
-              </div>
-
-            {ordersLoading ? (
-              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-2">
-                <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-xs text-slate-500 font-medium">Loading your order history...</p>
-              </div>
-            ) : orders.length === 0 ? (
-              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-3">
-                <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto">
-                  <Package className="w-6 h-6" />
+          {/* ── MY ORDERS NAVIGATION CARD ─────────────────────────────────── */}
+          <Link
+            href="/orders"
+            className="group block bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs hover:border-emerald-300 hover:shadow-emerald-50 hover:shadow-md transition-all active:scale-[0.99]"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-100 transition">
+                  <Package className="w-5 h-5 text-emerald-600" />
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-slate-800">No Orders Placed Yet</h3>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                    You haven’t placed any orders with this email yet. Explore our US warehouse catalog to get started.
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-black text-slate-900 group-hover:text-emerald-700 transition">
+                      My Orders
+                    </h3>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      Item View
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {ordersLoading
+                      ? "Loading orders..."
+                      : orders.length > 0
+                      ? `${orders.length} order${orders.length === 1 ? "" : "s"} placed · Tap to track items & shipping status`
+                      : "View past purchases and real-time delivery status"}
                   </p>
                 </div>
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition shadow-xs active:scale-95"
-                >
-                  Explore Catalog →
-                </Link>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {orders.map((order) => (
-                  <div
-                    key={order.internal_order_number || order.id}
-                    className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3 hover:border-slate-300 transition"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-black text-slate-900">
-                            {order.internal_order_number}
-                          </span>
-                          {renderStatusBadge(order.status)}
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          Placed on{" "}
-                          {order.created_at
-                            ? new Date(order.created_at).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              })
-                            : "Recently"}
-                        </p>
-                      </div>
-
-                      <div className="text-left sm:text-right">
-                        <span className="text-sm font-black text-slate-900 block">
-                          ${Number(order.total_retail || 0).toFixed(2)} USD
-                        </span>
-                        <span className="text-[10px] font-semibold text-emerald-700">
-                          Free US Domestic Ground
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Delivery & USPS Tracking Information */}
-                    <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                      <div className="flex items-center gap-2">
-                        <Truck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <div>
-                          <span className="font-bold text-slate-800">
-                            Carrier: {order.carrier_name || "USPS"}
-                          </span>
-                          {order.shipping_city && order.shipping_province && (
-                            <span className="text-slate-500 text-[11px] block">
-                              Shipping to {order.shipping_city}, {order.shipping_province}{" "}
-                              {order.shipping_zip}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {order.tracking_number ? (
-                        <a
-                          href={`https://tools.usps.com/go/TrackConfirmAction?tLabels=${order.tracking_number}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-mono font-bold text-emerald-700 hover:text-emerald-800 text-[11px] hover:underline"
-                        >
-                          <span>{order.tracking_number}</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      ) : (
-                        <span className="text-slate-400 text-[11px] font-medium">
-                          Tracking generates within 24h
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Order Product Items (Full Flipkart/Amazon Product Card Presentation) */}
-                    {order.items && order.items.length > 0 && (
-                      <div className="space-y-2 pt-2 border-t border-slate-100">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                          Ordered Items ({order.items.reduce((acc, i) => acc + (i.quantity || 1), 0)} Units)
-                        </span>
-                        <div className="space-y-2.5">
-                          {order.items.map((item, idx) => {
-                            const info = resolveOrderItemInfo(item);
-                            const productLink = info.slug || "/";
-
-                            return (
-                              <div
-                                key={idx}
-                                className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition group"
-                              >
-                                {/* High-Fidelity Thumbnail */}
-                                <Link
-                                  href={productLink}
-                                  prefetch={true}
-                                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-white border border-slate-200 p-1 flex items-center justify-center flex-shrink-0 shadow-2xs group-hover:border-emerald-300 transition"
-                                >
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={info.imageUrl}
-                                    alt={info.title}
-                                    onError={(e) => {
-                                      e.currentTarget.src = FALLBACK_PRODUCTS[0]?.hero_image_url || "";
-                                    }}
-                                    className="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                                  />
-                                </Link>
-
-                                {/* Product Title & Details */}
-                                <div className="flex-1 min-w-0 space-y-0.5">
-                                  <div className="flex items-start justify-between gap-2">
-                                    <Link
-                                      href={productLink}
-                                      prefetch={true}
-                                      className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 leading-snug"
-                                    >
-                                      {info.title}
-                                    </Link>
-                                  </div>
-
-                                  {/* Badges: Size, Color, Amount before Unit (no amount/unit) */}
-                                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-500 pt-0.5">
-                                    {info.size && (
-                                      <span className="bg-white border border-slate-200 text-slate-700 px-1.5 py-0.2 rounded font-medium">
-                                        Size: {info.size}
-                                      </span>
-                                    )}
-                                    {info.color && (
-                                      <span className="bg-white border border-slate-200 text-slate-700 px-1.5 py-0.2 rounded font-medium">
-                                        Color: {info.color}
-                                      </span>
-                                    )}
-                                    {info.price > 0 && (
-                                      <span className="font-black text-slate-900 bg-slate-100 border border-slate-200/90 px-1.5 py-0.2 rounded text-[11px]">
-                                        ${(info.price * info.quantity).toFixed(2)}
-                                      </span>
-                                    )}
-                                    <span className="bg-emerald-100/70 border border-emerald-200 text-emerald-800 px-1.5 py-0.2 rounded font-bold">
-                                      {info.quantity} {info.quantity === 1 ? "Unit" : "Units"}
-                                    </span>
-                                  </div>
-
-                                  {/* Domestic Fulfillment Badge */}
-                                  <div className="flex items-center gap-1 text-[10px] text-emerald-700 font-medium pt-0.5">
-                                    <Truck className="w-3 h-3 text-emerald-600 flex-shrink-0" />
-                                    <span>USPS Domestic Tracked</span>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 group-hover:text-emerald-700 transition flex-shrink-0">
+                <span>View Orders</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </div>
-            )}
-          </div>
-          )}
+            </div>
+
+            {!ordersLoading && orders.length > 0 && (() => {
+              const latest = orders[0];
+              return (
+                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-mono text-slate-500 truncate">
+                    Recent: {latest.internal_order_number}
+                  </span>
+                  {renderStatusBadge(latest.status)}
+                </div>
+              );
+            })()}
+          </Link>
         </div>
       )}
 

@@ -377,3 +377,27 @@ export async function toggleUserWatchlist(
     return null;
   }
 }
+
+
+export async function updateOrderAddress(payload: {
+  orderNumber: string;
+  shipping_name: string;
+  shipping_address: string;
+  shipping_city: string;
+  shipping_province: string;
+  shipping_zip: string;
+  shipping_phone?: string;
+  customer_email?: string;
+}): Promise<any> {
+  const res = await fetch(`${getApiBaseUrl()}/orders/address`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to update delivery address.");
+  }
+  return await res.json();
+}
