@@ -4,7 +4,14 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "../../lib/cart";
-import { FALLBACK_PRODUCTS, createCheckoutOrder, getUserAuthState } from "../../lib/api";
+import {
+  FALLBACK_PRODUCTS,
+  createCheckoutOrder,
+  getUserAuthState,
+  getUserSavedAddresses,
+  saveUserAddress,
+  UserSavedAddress,
+} from "../../lib/api";
 import PayPalButton from "../../components/PayPalButton";
 import { auth, loginWithGoogle } from "../../lib/firebase";
 import ThemedDropdown, { ThemedDropdownOption } from "../../components/ui/ThemedDropdown";
@@ -24,6 +31,8 @@ import {
   ShieldCheck,
   MapPin,
   Loader2,
+  Check,
+  Plus,
 } from "lucide-react";
 
 const US_STATES: ThemedDropdownOption[] = [
@@ -154,6 +163,9 @@ function CheckoutContent() {
   });
 
   const [isAuthenticatedUser, setIsAuthenticatedUser] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<UserSavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | "new">("new");
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
@@ -277,34 +289,61 @@ function CheckoutContent() {
           phone: prev.phone || user.phoneNumber || "",
         }));
 
-        // Fetch recent orders from database to pre-fill past shipping address if not already entered
-        try {
-          const userState = await getUserAuthState(user.uid, user.email, user.phoneNumber);
-          if (userState?.orders && Array.isArray(userState.orders) && userState.orders.length > 0) {
-            const latest = userState.orders[0];
-            setForm((prev) => ({
-              ...prev,
-              name: prev.name || latest.shipping_name || user.displayName || "",
-              email: prev.email || latest.customer_email || user.email || "",
-              phone: prev.phone || latest.customer_phone || user.phoneNumber || "",
-              address1: prev.address1 || latest.shipping_address || "",
-              city: prev.city || latest.shipping_city || "",
-              province: prev.province || latest.shipping_province || "",
-              zip_code: prev.zip_code || latest.shipping_zip || "",
-              country_code: "US",
-            }));
+        if (user.email) {
+          setIsLoadingAddresses(true);
+          try {
+            const addrs = await getUserSavedAddresses(user.email);
+            setSavedAddresses(addrs);
+            if (addrs.length > 0) {
+              const def = addrs.find((a) => a.is_default) || addrs[0];
+              setSelectedAddressId(def.id);
+              setForm((prev) => ({
+                ...prev,
+                name: def.recipient_name || prev.name,
+                email: user.email || prev.email,
+                phone: def.phone || prev.phone,
+                address1: def.street_address,
+                address2: "",
+                city: def.city,
+                province: def.province,
+                zip_code: def.zip_code,
+                country_code: "US",
+              }));
+            } else {
+              // Fallback to latest past order if no dedicated saved addresses
+              const userState = await getUserAuthState(user.uid, user.email, user.phoneNumber);
+              if (userState?.orders && Array.isArray(userState.orders) && userState.orders.length > 0) {
+                const latest = userState.orders[0];
+                setForm((prev) => ({
+                  ...prev,
+                  name: prev.name || latest.shipping_name || user.displayName || "",
+                  email: prev.email || latest.customer_email || user.email || "",
+                  phone: prev.phone || latest.customer_phone || user.phoneNumber || "",
+                  address1: prev.address1 || latest.shipping_address || "",
+                  city: prev.city || latest.shipping_city || "",
+                  province: prev.province || latest.shipping_province || "",
+                  zip_code: prev.zip_code || latest.shipping_zip || "",
+                  country_code: "US",
+                }));
+              }
+            }
+          } catch (err) {
+            console.error("Failed to load saved addresses:", err);
+          } finally {
+            setIsLoadingAddresses(false);
           }
-        } catch {
-          // Background fetch warning ignored
         }
       } else {
         setIsAuthenticatedUser(false);
+        setSavedAddresses([]);
+        setSelectedAddressId("new");
       }
     });
     return () => unsub();
   }, []);
 
   const handleClearAddress = () => {
+    setSelectedAddressId("new");
     setForm({
       name: auth.currentUser?.displayName || "",
       email: auth.currentUser?.email || "",
@@ -515,6 +554,19 @@ function CheckoutContent() {
       // Storage write error ignored
     }
 
+    if (customerEmail && form.address1.trim() && form.city.trim() && form.province && form.zip_code.trim()) {
+      saveUserAddress({
+        email: customerEmail,
+        label: selectedAddressId === "new" ? "Home" : undefined,
+        recipient_name: customerName,
+        street_address: form.address1.trim(),
+        city: form.city.trim(),
+        province: form.province.trim(),
+        zip_code: form.zip_code.trim(),
+        phone: form.phone.trim(),
+      }).catch(() => {});
+    }
+
     setConfirmedOrder({
       orderNumber: orderId,
       amount: finalAmount,
@@ -619,6 +671,19 @@ function CheckoutContent() {
         localStorage.removeItem("checkout_draft_address");
       } catch {
         // Storage write error ignored
+      }
+
+      if (customerEmail && form.address1.trim() && form.city.trim() && form.province && form.zip_code.trim()) {
+        saveUserAddress({
+          email: customerEmail,
+          label: selectedAddressId === "new" ? "Home" : undefined,
+          recipient_name: customerName,
+          street_address: form.address1.trim(),
+          city: form.city.trim(),
+          province: form.province.trim(),
+          zip_code: form.zip_code.trim(),
+          phone: form.phone.trim(),
+        }).catch(() => {});
       }
 
       setConfirmedOrder({
@@ -925,6 +990,102 @@ function CheckoutContent() {
         </div>
 
         <div className="space-y-3.5 text-xs font-semibold text-slate-700">
+          {/* Saved Addresses Quick-Select (Flipkart / Amazon style) */}
+          {isAuthenticatedUser && savedAddresses.length > 0 && (
+            <div className="space-y-2.5 pb-2 border-b border-slate-100">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800">
+                  Select Delivery Address:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedAddressId("new");
+                    setForm((prev) => ({
+                      ...prev,
+                      address1: "",
+                      address2: "",
+                      city: "",
+                      province: "",
+                      zip_code: "",
+                    }));
+                  }}
+                  className={`text-[11px] font-bold transition flex items-center gap-1 px-2.5 py-1 rounded-lg border ${
+                    selectedAddressId === "new"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                      : "text-slate-600 hover:text-emerald-700 bg-white border-slate-200 hover:border-emerald-300"
+                  }`}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Add New Address</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {savedAddresses.map((addr) => {
+                  const isSelected = selectedAddressId === addr.id;
+                  return (
+                    <div
+                      key={addr.id}
+                      onClick={() => {
+                        setSelectedAddressId(addr.id);
+                        setForm((prev) => ({
+                          ...prev,
+                          name: addr.recipient_name,
+                          address1: addr.street_address,
+                          address2: "",
+                          city: addr.city,
+                          province: addr.province,
+                          zip_code: addr.zip_code,
+                          phone: addr.phone || prev.phone,
+                        }));
+                        setFieldErrors({});
+                      }}
+                      className={`cursor-pointer p-3 rounded-xl border transition-all text-xs relative text-left ${
+                        isSelected
+                          ? "border-emerald-600 bg-emerald-50/60 shadow-xs ring-2 ring-emerald-500/20"
+                          : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
+                              isSelected
+                                ? "bg-emerald-600 text-white border-emerald-600"
+                                : "bg-emerald-100 text-emerald-800 border-emerald-200"
+                            }`}
+                          >
+                            {addr.label || "Home"}
+                          </span>
+                          {addr.is_default && (
+                            <span className="text-[10px] font-bold text-slate-400">Default</span>
+                          )}
+                        </div>
+                        <div
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                            isSelected
+                              ? "border-emerald-600 bg-emerald-600 text-white"
+                              : "border-slate-300 bg-white"
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                        </div>
+                      </div>
+                      <p className="font-bold text-slate-900 truncate">{addr.recipient_name}</p>
+                      <p className="text-slate-600 text-[11px] truncate mt-0.5">{addr.street_address}</p>
+                      <p className="text-slate-600 text-[11px] truncate">
+                        {addr.city}, {addr.province} {addr.zip_code}
+                      </p>
+                      {addr.phone && (
+                        <p className="text-slate-400 text-[10px] mt-1">Phone: {addr.phone}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {/* Country Field (Themed Dropdown Locked to US) */}
           <div id="field-country_code">
             <ThemedDropdown

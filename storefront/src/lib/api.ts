@@ -412,3 +412,54 @@ export async function updateOrderAddress(payload: {
   }
   return await res.json();
 }
+
+
+export interface UserSavedAddress {
+  id: number;
+  user_email: string;
+  label: string;
+  recipient_name: string;
+  street_address: string;
+  city: string;
+  province: string;
+  zip_code: string;
+  phone?: string | null;
+  is_default: boolean;
+}
+
+export async function getUserSavedAddresses(email: string): Promise<UserSavedAddress[]> {
+  try {
+    const res = await fetch(`/api/user/addresses?email=${encodeURIComponent(email)}`, {
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.addresses) ? data.addresses : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveUserAddress(payload: {
+  email: string;
+  label?: string;
+  recipient_name: string;
+  street_address: string;
+  city: string;
+  province: string;
+  zip_code: string;
+  phone?: string;
+  is_default?: boolean;
+}): Promise<any> {
+  const res = await fetch(`/api/user/addresses`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(6000),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to save address");
+  }
+  return await res.json();
+}

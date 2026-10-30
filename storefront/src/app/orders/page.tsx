@@ -108,8 +108,14 @@ interface FlatOrderItem {
 function resolveItemImage(title: string, rawImg?: string, rawSlug?: string) {
   let img = rawImg;
   let slug = rawSlug;
+  const cleanT = (title || "").toLowerCase();
+
+  // If knife, ensure valid high-carbon steel knife image
+  if (cleanT.includes("knife") && (!img || img.includes("1715848") || img === "/placeholder.jpg")) {
+    img = "https://cf.cjdropshipping.com/20180906/286623069125331.png";
+  }
+
   if (!img || img === "/placeholder.jpg" || !slug) {
-    const cleanT = (title || "").toLowerCase();
     const matched = FALLBACK_PRODUCTS.find(
       (p) =>
         p.title.toLowerCase() === cleanT ||
@@ -191,7 +197,6 @@ function OrdersContent() {
           if (Array.isArray(parsed)) {
             parsed.forEach((o: CustomerOrder) => {
               if (o.internal_order_number) {
-                // Sanitize tracking if not dispatched
                 o.tracking_number = sanitizeTrackingNumber(o.tracking_number, o.status);
                 combinedMap.set(o.internal_order_number, o);
               }
@@ -402,51 +407,6 @@ function OrdersContent() {
     }
   }
 
-  // Render Status Badge for the Order Card (includes countdown if grace active)
-  function renderCardStatusBadge(status: string, createdAt: string) {
-    const s = (status || "").toUpperCase();
-    const remaining = getGracePeriodRemaining(createdAt);
-
-    if (s.includes("DELIVERED")) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-          <CheckCircle2 className="w-3 h-3" />
-          Delivered
-        </span>
-      );
-    }
-    if (s.includes("SHIPPED") || s.includes("TRANSIT")) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <Truck className="w-3 h-3" />
-          Dispatched • In Transit
-        </span>
-      );
-    }
-    if (s.includes("SUPPLIER") || s.includes("PROCESSING")) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-200">
-          <Package className="w-3 h-3 text-sky-600" />
-          Packaging at US Hub
-        </span>
-      );
-    }
-    if (remaining) {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-          Order Placed ({remaining})
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
-        <Check className="w-3 h-3 text-blue-600" />
-        Order Confirmed
-      </span>
-    );
-  }
-
   // Render Status Badge for Modal (WITHOUT countdown timer to avoid duplication)
   function renderModalStatusBadge(status: string, createdAt: string) {
     const s = (status || "").toUpperCase();
@@ -493,7 +453,7 @@ function OrdersContent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-32 sm:pb-16 space-y-4">
       {/* ── HEADER (Back button before icon, no breadcrumbs, no description) ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <div className="flex items-center gap-2.5">
@@ -559,78 +519,52 @@ function OrdersContent() {
           </Link>
         </div>
       ) : (
-        /* ── ITEM-CENTRIC ORDERS LIST ── */
-        <div className="space-y-3">
-          {filteredItems.map((item, idx) => {
-            const formattedDate = new Date(item.orderCreatedAt).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            });
+        /* ── CLEAN ITEM CARDS: ONLY Product Image, Name, Unit & Price ── */
+        <div className="space-y-2.5">
+          {filteredItems.map((item, idx) => (
+            <div
+              key={`${item.orderNumber}-${item.itemIndex}-${idx}`}
+              onClick={() => {
+                setActiveItemModal(item);
+                setIsEditingAddress(false);
+              }}
+              className="bg-white border border-slate-200/90 hover:border-emerald-300 rounded-2xl p-3.5 sm:p-4 shadow-xs hover:shadow-xs transition-all duration-200 cursor-pointer group flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.itemImage}
+                  alt={item.itemTitle}
+                  onError={(e) => {
+                    const isKnife = (item.itemTitle || "").toLowerCase().includes("knife");
+                    e.currentTarget.src = isKnife
+                      ? "https://cf.cjdropshipping.com/20180906/286623069125331.png"
+                      : FALLBACK_PRODUCTS[0]?.hero_image_url || "/placeholder.jpg";
+                  }}
+                  className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-xl border border-slate-200 p-1 bg-slate-50 flex-shrink-0 group-hover:scale-105 transition-transform"
+                />
+                <div className="flex-1 min-w-0 space-y-1">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-1 leading-snug">
+                    {item.itemTitle}
+                  </h3>
 
-            return (
-              <div
-                key={`${item.orderNumber}-${item.itemIndex}-${idx}`}
-                onClick={() => {
-                  setActiveItemModal(item);
-                  setIsEditingAddress(false);
-                }}
-                className="bg-white border border-slate-200/90 hover:border-emerald-300 rounded-2xl p-3.5 sm:p-4 shadow-xs hover:shadow-xs transition-all duration-200 cursor-pointer group space-y-2.5"
-              >
-                {/* ── TOP HEADER ROW: Order Number & Date in ONE single line + Status Badge ── */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-mono text-slate-500 min-w-0 truncate">
-                    <span className="font-bold text-slate-800 truncate">{item.orderNumber}</span>
-                    <span className="text-slate-300">•</span>
-                    <span className="whitespace-nowrap text-slate-600">Placed on {formattedDate}</span>
-                  </div>
-                  <div className="flex-shrink-0">
-                    {renderCardStatusBadge(item.orderStatus, item.orderCreatedAt)}
-                  </div>
-                </div>
-
-                {/* ── PRODUCT CONTENT ROW ── */}
-                <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={item.itemImage}
-                      alt={item.itemTitle}
-                      className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-xl border border-slate-200 p-1 bg-slate-50 flex-shrink-0 group-hover:scale-105 transition-transform"
-                    />
-                    <div className="flex-1 min-w-0 space-y-0.5">
-                      <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-1 leading-snug">
-                        {item.itemTitle}
-                      </h3>
-
-                      <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-500">
-                        {item.itemSize && (
-                          <span className="bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded font-medium">
-                            Size: {item.itemSize}
-                          </span>
-                        )}
-                        {item.itemColor && (
-                          <span className="bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded font-medium">
-                            Color: {item.itemColor}
-                          </span>
-                        )}
-                        <span className="font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">
-                          {item.itemQuantity} {item.itemQuantity === 1 ? "Unit" : "Units"}
-                        </span>
-                        <span>•</span>
-                        <span className="font-bold text-slate-900">${item.itemPrice.toFixed(2)}/Unit</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Arrow */}
-                  <div className="w-7 h-7 rounded-full bg-slate-50 group-hover:bg-emerald-50 text-slate-400 group-hover:text-emerald-600 flex items-center justify-center transition flex-shrink-0">
-                    <ChevronRight className="w-4 h-4" />
+                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
+                    <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 text-xs">
+                      {item.itemQuantity} {item.itemQuantity === 1 ? "Unit" : "Units"}
+                    </span>
+                    <span className="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md text-xs">
+                      ${(item.itemPrice * item.itemQuantity).toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </div>
-            );
-          })}
+
+              {/* Right Arrow */}
+              <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-emerald-50 text-slate-400 group-hover:text-emerald-600 flex items-center justify-center transition flex-shrink-0">
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -664,6 +598,12 @@ function OrdersContent() {
               <img
                 src={activeItemModal.itemImage}
                 alt={activeItemModal.itemTitle}
+                onError={(e) => {
+                  const isKnife = (activeItemModal.itemTitle || "").toLowerCase().includes("knife");
+                  e.currentTarget.src = isKnife
+                    ? "https://cf.cjdropshipping.com/20180906/286623069125331.png"
+                    : FALLBACK_PRODUCTS[0]?.hero_image_url || "/placeholder.jpg";
+                }}
                 className="w-12 h-12 object-contain rounded-xl border border-slate-200 p-1 bg-slate-50 flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
