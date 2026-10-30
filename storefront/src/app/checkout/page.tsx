@@ -166,7 +166,7 @@ function CheckoutContent() {
   const [isAuthenticatedUser, setIsAuthenticatedUser] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<UserSavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | "new">("new");
-  const [saveAddressLabel, setSaveAddressLabel] = useState<"Home" | "Office" | "Other">("Home");
+  const [saveAddressLabel, setSaveAddressLabel] = useState<"Home" | "Office" | "New">("Home");
   const [customAddressLabel, setCustomAddressLabel] = useState("");
   const [makeDefaultAddress, setMakeDefaultAddress] = useState(true);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
@@ -524,7 +524,7 @@ function CheckoutContent() {
   ) => {
     const finalLabel = (
       labelToUse ||
-      (saveAddressLabel === "Other" && customAddressLabel.trim()
+      (saveAddressLabel === "New" && customAddressLabel.trim()
         ? customAddressLabel.trim()
         : saveAddressLabel) ||
       "Home"
@@ -631,7 +631,7 @@ function CheckoutContent() {
     }
 
     const finalLabel = (
-      saveAddressLabel === "Other" && customAddressLabel.trim()
+      saveAddressLabel === "New" && customAddressLabel.trim()
         ? customAddressLabel.trim()
         : saveAddressLabel || "Home"
     ).trim();
@@ -758,7 +758,7 @@ function CheckoutContent() {
       }
 
       const finalLabel = (
-        saveAddressLabel === "Other" && customAddressLabel.trim()
+        saveAddressLabel === "New" && customAddressLabel.trim()
           ? customAddressLabel.trim()
           : saveAddressLabel || "Home"
       ).trim();
@@ -1096,56 +1096,163 @@ function CheckoutContent() {
                 )}
               </div>
 
-              {/* Horizontal pills row: Home, Office, Others, Add New Address */}
+              {/* Horizontal pills row: Home, Office, Custom categories, and Other */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
-                {savedAddresses.map((addr) => {
-                  const isSelected = selectedAddressId === addr.id;
-                  const labelLower = (addr.label || "").toLowerCase();
+                {/* 1. Home pill */}
+                {(() => {
+                  const homeAddr = savedAddresses.find(
+                    (a) => (a.label || "").toLowerCase() === "home"
+                  );
+                  const isSelected =
+                    selectedAddressId !== "new" &&
+                    homeAddr &&
+                    selectedAddressId === homeAddr.id;
                   return (
                     <button
-                      key={addr.id}
                       type="button"
                       onClick={() => {
-                        setSelectedAddressId(addr.id);
-                        if (labelLower.includes("office") || labelLower.includes("work")) {
-                          setSaveAddressLabel("Office");
-                          setCustomAddressLabel("");
-                        } else if (labelLower.includes("home")) {
+                        if (homeAddr) {
+                          setSelectedAddressId(homeAddr.id);
                           setSaveAddressLabel("Home");
                           setCustomAddressLabel("");
+                          setForm((prev) => ({
+                            ...prev,
+                            name: homeAddr.recipient_name || prev.name,
+                            address1: homeAddr.street_address,
+                            address2: "",
+                            city: homeAddr.city,
+                            province: homeAddr.province,
+                            zip_code: homeAddr.zip_code,
+                            phone: homeAddr.phone || prev.phone,
+                          }));
                         } else {
-                          setSaveAddressLabel("Other");
-                          setCustomAddressLabel(addr.label || "");
+                          setSelectedAddressId("new");
+                          setSaveAddressLabel("Home");
+                          setCustomAddressLabel("");
+                          setForm((prev) => ({
+                            ...prev,
+                            address1: "",
+                            address2: "",
+                            city: "",
+                            province: "",
+                            zip_code: "",
+                          }));
                         }
-                        setForm((prev) => ({
-                          ...prev,
-                          name: addr.recipient_name || prev.name,
-                          address1: addr.street_address,
-                          address2: "",
-                          city: addr.city,
-                          province: addr.province,
-                          zip_code: addr.zip_code,
-                          phone: addr.phone || prev.phone,
-                        }));
                         setFieldErrors({});
                       }}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap border cursor-pointer active:scale-95 ${
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center whitespace-nowrap border cursor-pointer active:scale-95 ${
                         isSelected
                           ? "bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-500/20"
                           : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                       }`}
                     >
-                      <span>{addr.label || "Home"}</span>
+                      <span>Home</span>
                     </button>
                   );
-                })}
+                })()}
 
-                {/* Add New Address pill (Large plus icon, small text plus removed) */}
+                {/* 2. Office pill */}
+                {(() => {
+                  const officeAddr = savedAddresses.find(
+                    (a) =>
+                      (a.label || "").toLowerCase() === "office" ||
+                      (a.label || "").toLowerCase() === "work"
+                  );
+                  const isSelected =
+                    selectedAddressId !== "new" &&
+                    officeAddr &&
+                    selectedAddressId === officeAddr.id;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (officeAddr) {
+                          setSelectedAddressId(officeAddr.id);
+                          setSaveAddressLabel("Office");
+                          setCustomAddressLabel("");
+                          setForm((prev) => ({
+                            ...prev,
+                            name: officeAddr.recipient_name || prev.name,
+                            address1: officeAddr.street_address,
+                            address2: "",
+                            city: officeAddr.city,
+                            province: officeAddr.province,
+                            zip_code: officeAddr.zip_code,
+                            phone: officeAddr.phone || prev.phone,
+                          }));
+                        } else {
+                          setSelectedAddressId("new");
+                          setSaveAddressLabel("Office");
+                          setCustomAddressLabel("");
+                          setForm((prev) => ({
+                            ...prev,
+                            address1: "",
+                            address2: "",
+                            city: "",
+                            province: "",
+                            zip_code: "",
+                          }));
+                        }
+                        setFieldErrors({});
+                      }}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center whitespace-nowrap border cursor-pointer active:scale-95 ${
+                        isSelected
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-500/20"
+                          : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span>Office</span>
+                    </button>
+                  );
+                })()}
+
+                {/* 3. Any saved custom categories */}
+                {savedAddresses
+                  .filter(
+                    (a) =>
+                      (a.label || "").toLowerCase() !== "home" &&
+                      (a.label || "").toLowerCase() !== "office" &&
+                      (a.label || "").toLowerCase() !== "work"
+                  )
+                  .map((addr) => {
+                    const isSelected = selectedAddressId === addr.id;
+                    return (
+                      <button
+                        key={addr.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedAddressId(addr.id);
+                          setSaveAddressLabel("New");
+                          setCustomAddressLabel(addr.label || "");
+                          setForm((prev) => ({
+                            ...prev,
+                            name: addr.recipient_name || prev.name,
+                            address1: addr.street_address,
+                            address2: "",
+                            city: addr.city,
+                            province: addr.province,
+                            zip_code: addr.zip_code,
+                            phone: addr.phone || prev.phone,
+                          }));
+                          setFieldErrors({});
+                        }}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center whitespace-nowrap border cursor-pointer active:scale-95 ${
+                          isSelected
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-500/20"
+                            : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span>{addr.label}</span>
+                      </button>
+                    );
+                  })}
+
+                {/* 4. Other pill (Acts as New Address: clears all input fields) */}
                 <button
                   type="button"
                   onClick={() => {
                     setSelectedAddressId("new");
-                    setSaveAddressLabel("Home");
+                    setSaveAddressLabel("New");
                     setCustomAddressLabel("");
                     setMakeDefaultAddress(false);
                     setForm((prev) => ({
@@ -1158,14 +1265,13 @@ function CheckoutContent() {
                     }));
                     setFieldErrors({});
                   }}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap border cursor-pointer active:scale-95 ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center whitespace-nowrap border cursor-pointer active:scale-95 ${
                     selectedAddressId === "new"
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-300 ring-1 ring-emerald-400"
-                      : "bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700"
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-500/20"
+                      : "bg-white text-slate-700 border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-slate-50"
                   }`}
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add New Address</span>
+                  <span>Other</span>
                 </button>
               </div>
             </div>
@@ -1457,13 +1563,13 @@ function CheckoutContent() {
                   Save this new address as:
                 </span>
                 <div className="flex items-center gap-1.5">
-                  {(["Home", "Office", "Other"] as const).map((lbl) => (
+                  {(["Home", "Office", "New"] as const).map((lbl) => (
                     <button
                       key={lbl}
                       type="button"
                       onClick={() => {
                         setSaveAddressLabel(lbl);
-                        if (lbl !== "Other") setCustomAddressLabel("");
+                        if (lbl !== "New") setCustomAddressLabel("");
                       }}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition border cursor-pointer ${
                         saveAddressLabel === lbl
@@ -1471,29 +1577,26 @@ function CheckoutContent() {
                           : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
                       }`}
                     >
-                      {lbl === "Home" ? "🏠 Home" : lbl === "Office" ? "🏢 Office" : "📍 Others"}
+                      <span>{lbl}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Custom Label Input when "Others" is selected */}
-              {saveAddressLabel === "Other" && (
+              {/* Category Name Input when "New" is selected (No examples shown) */}
+              {saveAddressLabel === "New" && (
                 <div className="space-y-1 pt-1.5 border-t border-slate-200/60 animate-in fade-in duration-150">
-                  <label className="block text-[11px] font-bold text-slate-600">
-                    Category Name (e.g., Friend&apos;s House, Someone, Parent&apos;s Home):
+                  <label className="block text-[11px] font-bold text-slate-700">
+                    Category Name
                   </label>
                   <input
                     type="text"
                     value={customAddressLabel}
                     onChange={(e) => setCustomAddressLabel(e.target.value)}
-                    placeholder="Enter custom category name (e.g. Friend's House)"
+                    placeholder="Enter category name"
                     maxLength={30}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
-                  <p className="text-[10px] text-slate-400">
-                    This will be saved and displayed as a selectable address pill next time.
-                  </p>
                 </div>
               )}
 
@@ -1516,7 +1619,7 @@ function CheckoutContent() {
                   type="button"
                   onClick={() =>
                     handleExplicitSaveAddress(
-                      saveAddressLabel === "Other" && customAddressLabel.trim()
+                      saveAddressLabel === "New" && customAddressLabel.trim()
                         ? customAddressLabel.trim()
                         : saveAddressLabel,
                       makeDefaultAddress
@@ -1528,7 +1631,7 @@ function CheckoutContent() {
                     !form.city.trim() ||
                     !form.zip_code.trim()
                   }
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-300 shadow-2xs transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex-shrink-0"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-300 shadow-2xs transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex-shrink-0"
                 >
                   {isSavingAddress ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1540,12 +1643,12 @@ function CheckoutContent() {
                       ? "Saving..."
                       : addressSavedSuccess
                       ? `Saved as ${
-                          saveAddressLabel === "Other" && customAddressLabel.trim()
+                          saveAddressLabel === "New" && customAddressLabel.trim()
                             ? customAddressLabel.trim()
                             : saveAddressLabel
                         }!`
                       : `Save as ${
-                          saveAddressLabel === "Other" && customAddressLabel.trim()
+                          saveAddressLabel === "New" && customAddressLabel.trim()
                             ? customAddressLabel.trim()
                             : saveAddressLabel
                         }`}
