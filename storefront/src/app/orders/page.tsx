@@ -555,6 +555,15 @@ function OrdersContent() {
                     <span className="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md text-xs">
                       ${(item.itemPrice * item.itemQuantity).toFixed(2)}
                     </span>
+                    {item.orderCreatedAt && (
+                      <span className="text-[11px] font-semibold text-slate-400 pl-0.5">
+                        • {new Date(item.orderCreatedAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
