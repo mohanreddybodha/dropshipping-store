@@ -413,6 +413,24 @@ export async function updateOrderAddress(payload: {
   return await res.json();
 }
 
+export async function cancelCustomerOrder(payload: {
+  orderNumber: string;
+  customer_email?: string;
+  reason?: string;
+}): Promise<any> {
+  const res = await fetch(`${getApiBaseUrl()}/orders/cancel`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || err.detail || "Failed to cancel order.");
+  }
+  return await res.json();
+}
+
 
 export interface UserSavedAddress {
   id: number;

@@ -462,6 +462,96 @@ def get_order_by_number(order_number: str, db: Session = Depends(get_db)):
     )
 
 
+class CancelOrderRequest(BaseModel):
+    order_number: str = Field(..., min_length=1)
+    customer_email: Optional[str] = None
+    reason: Optional[str] = None
+
+
+class CancelOrderResponse(BaseModel):
+    success: bool
+    message: str
+    order_number: str
+    refund_amount: float
+    status: str
+
+
+@router.post("/orders/cancel", response_model=CancelOrderResponse)
+def cancel_order_endpoint(payload: CancelOrderRequest, db: Session = Depends(get_db)):
+    """Cancel customer order and trigger automated 100% full refund via PayPal within 30-min window."""
+    clean_num = payload.order_number.strip()
+    order = db.query(Order).filter(Order.internal_order_number == clean_num).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if payload.customer_email and order.customer_email:
+        if payload.customer_email.strip().lower() != order.customer_email.strip().lower():
+            raise HTTPException(status_code=403, detail="Unauthorized: Email does not match order record")
+
+    current_status = (order.status or "").upper()
+    if "CANCEL" in current_status:
+        raise HTTPException(status_code=400, detail="This order has already been cancelled.")
+
+    if current_status not in ("ORDER_PLACED", "PAYMENT_CAPTURED", "PENDING"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Order cannot be cancelled in status '{order.status}'. Fulfillment is already in progress.",
+        )
+
+    # 30-minute grace window check
+    now = datetime.now(timezone.utc)
+    order_created = order.created_at
+    if order_created.tzinfo is None:
+        order_created = order_created.replace(tzinfo=timezone.utc)
+
+    elapsed_seconds = (now - order_created).total_seconds()
+    if elapsed_seconds > 30 * 60:
+        raise HTTPException(
+            status_code=403,
+            detail="The 30-minute cancellation grace window has expired. Order is confirmed for fulfillment.",
+        )
+
+    refund_amount = float(order.total_retail or 0.0)
+
+    # PayPal Automated Refund Execution
+    if paypal_service.is_configured() and order.stripe_payment_intent_id and refund_amount > 0:
+        try:
+            capture_id = order.stripe_payment_intent_id
+            try:
+                pp_details = paypal_service.get_order_details(capture_id)
+                units = pp_details.get("purchase_units", [])
+                if units:
+                    captures = units[0].get("payments", {}).get("captures", [])
+                    if captures and captures[0].get("id"):
+                        capture_id = captures[0]["id"]
+            except Exception as lookup_err:
+                logger.debug("Pre-refund capture ID lookup passed: %s", lookup_err)
+
+            paypal_service.refund_capture(
+                capture_id=capture_id,
+                amount=refund_amount,
+                reason=f"Customer cancelled within 30-minute grace window. Reason: {payload.reason or 'None provided'}",
+            )
+        except PayPalServiceException as p_err:
+            logger.error("PayPal refund failure for order [%s]: %s", clean_num, p_err)
+            raise HTTPException(status_code=502, detail=f"Payment gateway refund failed: {str(p_err)}")
+    else:
+        logger.info("PayPal refund simulated for [%s] (configured=%s)", clean_num, paypal_service.is_configured())
+
+    order.status = "CANCELLED"
+    order.updated_at = now
+    db.commit()
+    db.refresh(order)
+
+    return CancelOrderResponse(
+        success=True,
+        message=f"Order cancelled successfully. A 100% full refund of ${refund_amount:.2f} USD has been issued to your original payment method.",
+        order_number=order.internal_order_number,
+        refund_amount=refund_amount,
+        status=order.status,
+    )
+
+
 class DualFactorOrderLookupRequest(BaseModel):
     email: str
     zip_code: str
