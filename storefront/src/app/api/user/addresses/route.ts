@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, label, recipient_name, street_address, city, province, zip_code, phone, is_default } = body;
+    const { id, email, label, recipient_name, street_address, city, province, zip_code, phone, is_default } = body;
 
     const cleanEmail = (email || "").trim().toLowerCase();
     if (!cleanEmail || !street_address || !city || !province || !zip_code) {
@@ -101,6 +101,29 @@ export async function POST(req: NextRequest) {
 
     const cleanLabel = (label || "Home").trim();
     const cleanRecipient = (recipient_name || "Valued Customer").trim();
+
+    // If an existing ID was passed, update that address
+    if (id) {
+      const updated = (await sql`
+        UPDATE user_saved_addresses
+        SET 
+          label = ${cleanLabel},
+          recipient_name = ${cleanRecipient},
+          street_address = ${street_address.trim()},
+          city = ${city.trim()},
+          province = ${province.trim()},
+          zip_code = ${zip_code.trim()},
+          phone = ${phone ? phone.trim() : null},
+          is_default = ${!!is_default},
+          updated_at = NOW()
+        WHERE id = ${Number(id)} AND LOWER(user_email) = ${cleanEmail}
+        RETURNING *
+      `) as SavedAddressRecord[];
+
+      if (updated.length > 0) {
+        return NextResponse.json({ address: updated[0], success: true });
+      }
+    }
 
     const inserted = await sql`
       INSERT INTO user_saved_addresses 
