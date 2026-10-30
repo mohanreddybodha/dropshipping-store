@@ -526,44 +526,6 @@ export default function ProfilePage() {
                 <span>Track Orders Under Another Email</span>
               </button>
             </div>
-          ) : orders.length > 0 ? (
-            /* Guest Session Banner with Orders Present */
-            <div className="bg-emerald-50 border border-emerald-200/80 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-white px-2.5 py-1 rounded-full border border-emerald-200 inline-block">
-                  Guest Order Session
-                </span>
-                <h2 className="text-base sm:text-lg font-black text-slate-900 pt-0.5">
-                  Orders Placed on this Device
-                </h2>
-                <p className="text-xs text-slate-600 max-w-lg leading-relaxed">
-                  You have active domestic USPS orders placed during your guest checkout session. Sign in with Google to permanently link them to your account.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  disabled={loginPending}
-                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                >
-                  <GoogleIcon />
-                  <span>{loginPending ? "Connecting..." : "Sign in with Google"}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowLookupModal(true);
-                    setLookupResults(null);
-                    setLookupError(null);
-                  }}
-                  className="px-3.5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition shadow-2xs active:scale-95 flex items-center justify-center gap-1.5"
-                >
-                  <Search className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Track Another Email</span>
-                </button>
-              </div>
-            </div>
           ) : (
             /* Empty Unauthenticated State */
             <div className="space-y-6">
@@ -639,51 +601,20 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* ── MY ORDERS NAVIGATION CARD ─────────────────────────────────── */}
+          {/* ── VIEW ORDERS NAVIGATION CARD ── */}
           <Link
             href="/orders"
-            className="group block bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs hover:border-emerald-300 hover:shadow-emerald-50 hover:shadow-md transition-all active:scale-[0.99]"
+            className="group flex items-center justify-between p-4 sm:p-5 bg-white border border-slate-200/90 rounded-2xl shadow-xs hover:border-emerald-300 transition active:scale-[0.99]"
           >
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-100 transition">
-                  <Package className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-black text-slate-900 group-hover:text-emerald-700 transition">
-                      My Orders
-                    </h3>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                      Item View
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {ordersLoading
-                      ? "Loading orders..."
-                      : orders.length > 0
-                      ? `${orders.length} order${orders.length === 1 ? "" : "s"} placed · Tap to track items & shipping status`
-                      : "View past purchases and real-time delivery status"}
-                  </p>
-                </div>
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-600 group-hover:bg-emerald-100 transition">
+                <Package className="w-5 h-5" />
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 group-hover:text-emerald-700 transition flex-shrink-0">
-                <span>View Orders</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </div>
+              <span className="text-sm font-black text-slate-900 group-hover:text-emerald-700 transition">
+                View Orders
+              </span>
             </div>
-
-            {!ordersLoading && orders.length > 0 && (() => {
-              const latest = orders[0];
-              return (
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-mono text-slate-500 truncate">
-                    Recent: {latest.internal_order_number}
-                  </span>
-                  {renderStatusBadge(latest.status)}
-                </div>
-              );
-            })()}
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition" />
           </Link>
         </div>
       )}
@@ -691,7 +622,7 @@ export default function ProfilePage() {
       {/* ── DUAL-FACTOR ORDER LOOKUP MODAL (Clean Full-Screen Dark Overlay) ── */}
       {showLookupModal && (
         <div
-          className="fixed inset-0 z-[9999] w-full h-full min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-black/60 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9999] w-full h-full min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowLookupModal(false);
           }}

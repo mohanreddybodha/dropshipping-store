@@ -158,15 +158,26 @@ export async function getPaginatedCatalog(options?: CatalogQueryOptions): Promis
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
+  const decoded = decodeURIComponent(slug || "").trim().toLowerCase();
+  const normalizedHyphenSlug = decoded.replace(/\s+/g, "-");
+
   try {
-    const res = await fetch(`${getApiBaseUrl()}/catalog/${slug}`, {
+    const res = await fetch(`${getApiBaseUrl()}/catalog/${encodeURIComponent(normalizedHyphenSlug)}`, {
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) throw new Error("Product fetch failed");
     return await res.json();
   } catch {
-    const fallback = FALLBACK_PRODUCTS.find((p) => p.slug === slug);
+    const fallback = FALLBACK_PRODUCTS.find((p) => {
+      const pSlug = (p.slug || "").toLowerCase();
+      return (
+        pSlug === decoded ||
+        pSlug === normalizedHyphenSlug ||
+        pSlug.replace(/-/g, " ") === decoded ||
+        decoded.replace(/-/g, " ") === pSlug.replace(/-/g, " ")
+      );
+    });
     return fallback || null;
   }
 }
