@@ -166,7 +166,7 @@ function CheckoutContent() {
   const [isAuthenticatedUser, setIsAuthenticatedUser] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<UserSavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | "new">("new");
-  const [saveAddressLabel, setSaveAddressLabel] = useState<"Home" | "Office" | "New">("Home");
+  const [saveAddressLabel, setSaveAddressLabel] = useState<"Home" | "Office" | "New" | null>(null);
   const [customAddressLabel, setCustomAddressLabel] = useState("");
   const [makeDefaultAddress, setMakeDefaultAddress] = useState(true);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
@@ -509,13 +509,28 @@ function CheckoutContent() {
   };
 
   const selectedSavedAddressObj = savedAddresses.find((a) => a.id === selectedAddressId);
-  const isCurrentAddressModified = Boolean(
-    selectedSavedAddressObj &&
-      (form.address1.trim() !== selectedSavedAddressObj.street_address.trim() ||
-        form.city.trim().toLowerCase() !== selectedSavedAddressObj.city.trim().toLowerCase() ||
-        form.province.trim().toUpperCase() !== selectedSavedAddressObj.province.trim().toUpperCase() ||
-        form.zip_code.trim() !== selectedSavedAddressObj.zip_code.trim())
-  );
+
+  const getNextAddressDefaultLabel = (addresses: UserSavedAddress[]): string => {
+    const existingNumbers = addresses
+      .map((a) => {
+        const match = (a.label || "").match(/^Address\s*(\d+)$/i);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter((n) => n > 0);
+    const nextNum = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+    return `Address ${nextNum}`;
+  };
+
+  const getEffectiveLabelForNew = (
+    saveLabel: "Home" | "Office" | "New" | null,
+    customLabel: string,
+    addresses: UserSavedAddress[]
+  ): string => {
+    if (saveLabel === "Home") return "Home";
+    if (saveLabel === "Office") return "Office";
+    if (saveLabel === "New" && customLabel.trim()) return customLabel.trim();
+    return getNextAddressDefaultLabel(addresses);
+  };
 
   const handleExplicitSaveAddress = async (
     labelToUse?: string,
@@ -524,10 +539,7 @@ function CheckoutContent() {
   ) => {
     const finalLabel = (
       labelToUse ||
-      (saveAddressLabel === "New" && customAddressLabel.trim()
-        ? customAddressLabel.trim()
-        : saveAddressLabel) ||
-      "Home"
+      getEffectiveLabelForNew(saveAddressLabel, customAddressLabel, savedAddresses)
     ).trim();
 
     const customerEmail =
@@ -630,25 +642,35 @@ function CheckoutContent() {
       // Storage write error ignored
     }
 
-    const finalLabel = (
-      saveAddressLabel === "New" && customAddressLabel.trim()
-        ? customAddressLabel.trim()
-        : saveAddressLabel || "Home"
-    ).trim();
-
     if (customerEmail && form.address1.trim() && form.city.trim() && form.province && form.zip_code.trim()) {
-      saveUserAddress({
-        id: selectedAddressId !== "new" ? Number(selectedAddressId) : undefined,
-        email: customerEmail,
-        label: finalLabel,
-        recipient_name: customerName,
-        street_address: form.address1.trim(),
-        city: form.city.trim(),
-        province: form.province.trim(),
-        zip_code: form.zip_code.trim(),
-        phone: form.phone.trim(),
-        is_default: makeDefaultAddress,
-      }).catch(() => {});
+      if (selectedAddressId !== "new") {
+        const existing = savedAddresses.find((a) => a.id === selectedAddressId);
+        saveUserAddress({
+          id: Number(selectedAddressId),
+          email: customerEmail,
+          label: existing?.label || "Home",
+          recipient_name: customerName,
+          street_address: form.address1.trim(),
+          city: form.city.trim(),
+          province: form.province.trim(),
+          zip_code: form.zip_code.trim(),
+          phone: form.phone.trim(),
+          is_default: existing?.is_default ?? false,
+        }).catch(() => {});
+      } else {
+        const finalLabel = getEffectiveLabelForNew(saveAddressLabel, customAddressLabel, savedAddresses);
+        saveUserAddress({
+          email: customerEmail,
+          label: finalLabel,
+          recipient_name: customerName,
+          street_address: form.address1.trim(),
+          city: form.city.trim(),
+          province: form.province.trim(),
+          zip_code: form.zip_code.trim(),
+          phone: form.phone.trim(),
+          is_default: makeDefaultAddress,
+        }).catch(() => {});
+      }
     }
 
     setConfirmedOrder({
@@ -757,25 +779,35 @@ function CheckoutContent() {
         // Storage write error ignored
       }
 
-      const finalLabel = (
-        saveAddressLabel === "New" && customAddressLabel.trim()
-          ? customAddressLabel.trim()
-          : saveAddressLabel || "Home"
-      ).trim();
-
       if (customerEmail && form.address1.trim() && form.city.trim() && form.province && form.zip_code.trim()) {
-        saveUserAddress({
-          id: selectedAddressId !== "new" ? Number(selectedAddressId) : undefined,
-          email: customerEmail,
-          label: finalLabel,
-          recipient_name: customerName,
-          street_address: form.address1.trim(),
-          city: form.city.trim(),
-          province: form.province.trim(),
-          zip_code: form.zip_code.trim(),
-          phone: form.phone.trim(),
-          is_default: makeDefaultAddress,
-        }).catch(() => {});
+        if (selectedAddressId !== "new") {
+          const existing = savedAddresses.find((a) => a.id === selectedAddressId);
+          saveUserAddress({
+            id: Number(selectedAddressId),
+            email: customerEmail,
+            label: existing?.label || "Home",
+            recipient_name: customerName,
+            street_address: form.address1.trim(),
+            city: form.city.trim(),
+            province: form.province.trim(),
+            zip_code: form.zip_code.trim(),
+            phone: form.phone.trim(),
+            is_default: existing?.is_default ?? false,
+          }).catch(() => {});
+        } else {
+          const finalLabel = getEffectiveLabelForNew(saveAddressLabel, customAddressLabel, savedAddresses);
+          saveUserAddress({
+            email: customerEmail,
+            label: finalLabel,
+            recipient_name: customerName,
+            street_address: form.address1.trim(),
+            city: form.city.trim(),
+            province: form.province.trim(),
+            zip_code: form.zip_code.trim(),
+            phone: form.phone.trim(),
+            is_default: makeDefaultAddress,
+          }).catch(() => {});
+        }
       }
 
       setConfirmedOrder({
@@ -1096,48 +1128,28 @@ function CheckoutContent() {
                 )}
               </div>
 
-              {/* Horizontal pills row: Home, Office, Custom categories, and Other */}
+              {/* Horizontal pills row: Saved addresses and + New */}
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
-                {/* 1. Home pill */}
-                {(() => {
-                  const homeAddr = savedAddresses.find(
-                    (a) => (a.label || "").toLowerCase() === "home"
-                  );
-                  const isSelected =
-                    selectedAddressId !== "new" &&
-                    homeAddr &&
-                    selectedAddressId === homeAddr.id;
+                {savedAddresses.map((addr) => {
+                  const isSelected = selectedAddressId === addr.id;
                   return (
                     <button
+                      key={addr.id}
                       type="button"
                       onClick={() => {
-                        if (homeAddr) {
-                          setSelectedAddressId(homeAddr.id);
-                          setSaveAddressLabel("Home");
-                          setCustomAddressLabel("");
-                          setForm((prev) => ({
-                            ...prev,
-                            name: homeAddr.recipient_name || prev.name,
-                            address1: homeAddr.street_address,
-                            address2: "",
-                            city: homeAddr.city,
-                            province: homeAddr.province,
-                            zip_code: homeAddr.zip_code,
-                            phone: homeAddr.phone || prev.phone,
-                          }));
-                        } else {
-                          setSelectedAddressId("new");
-                          setSaveAddressLabel("Home");
-                          setCustomAddressLabel("");
-                          setForm((prev) => ({
-                            ...prev,
-                            address1: "",
-                            address2: "",
-                            city: "",
-                            province: "",
-                            zip_code: "",
-                          }));
-                        }
+                        setSelectedAddressId(addr.id);
+                        setSaveAddressLabel(null);
+                        setCustomAddressLabel("");
+                        setForm((prev) => ({
+                          ...prev,
+                          name: addr.recipient_name || prev.name,
+                          address1: addr.street_address,
+                          address2: "",
+                          city: addr.city,
+                          province: addr.province,
+                          zip_code: addr.zip_code,
+                          phone: addr.phone || prev.phone,
+                        }));
                         setFieldErrors({});
                       }}
                       className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center whitespace-nowrap border cursor-pointer active:scale-95 ${
@@ -1146,113 +1158,17 @@ function CheckoutContent() {
                           : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                       }`}
                     >
-                      <span>Home</span>
+                      <span>{addr.label}</span>
                     </button>
                   );
-                })()}
+                })}
 
-                {/* 2. Office pill */}
-                {(() => {
-                  const officeAddr = savedAddresses.find(
-                    (a) =>
-                      (a.label || "").toLowerCase() === "office" ||
-                      (a.label || "").toLowerCase() === "work"
-                  );
-                  const isSelected =
-                    selectedAddressId !== "new" &&
-                    officeAddr &&
-                    selectedAddressId === officeAddr.id;
-                  return (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (officeAddr) {
-                          setSelectedAddressId(officeAddr.id);
-                          setSaveAddressLabel("Office");
-                          setCustomAddressLabel("");
-                          setForm((prev) => ({
-                            ...prev,
-                            name: officeAddr.recipient_name || prev.name,
-                            address1: officeAddr.street_address,
-                            address2: "",
-                            city: officeAddr.city,
-                            province: officeAddr.province,
-                            zip_code: officeAddr.zip_code,
-                            phone: officeAddr.phone || prev.phone,
-                          }));
-                        } else {
-                          setSelectedAddressId("new");
-                          setSaveAddressLabel("Office");
-                          setCustomAddressLabel("");
-                          setForm((prev) => ({
-                            ...prev,
-                            address1: "",
-                            address2: "",
-                            city: "",
-                            province: "",
-                            zip_code: "",
-                          }));
-                        }
-                        setFieldErrors({});
-                      }}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center whitespace-nowrap border cursor-pointer active:scale-95 ${
-                        isSelected
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-500/20"
-                          : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span>Office</span>
-                    </button>
-                  );
-                })()}
-
-                {/* 3. Any saved custom categories */}
-                {savedAddresses
-                  .filter(
-                    (a) =>
-                      (a.label || "").toLowerCase() !== "home" &&
-                      (a.label || "").toLowerCase() !== "office" &&
-                      (a.label || "").toLowerCase() !== "work"
-                  )
-                  .map((addr) => {
-                    const isSelected = selectedAddressId === addr.id;
-                    return (
-                      <button
-                        key={addr.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedAddressId(addr.id);
-                          setSaveAddressLabel("New");
-                          setCustomAddressLabel(addr.label || "");
-                          setForm((prev) => ({
-                            ...prev,
-                            name: addr.recipient_name || prev.name,
-                            address1: addr.street_address,
-                            address2: "",
-                            city: addr.city,
-                            province: addr.province,
-                            zip_code: addr.zip_code,
-                            phone: addr.phone || prev.phone,
-                          }));
-                          setFieldErrors({});
-                        }}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center whitespace-nowrap border cursor-pointer active:scale-95 ${
-                          isSelected
-                            ? "bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-500/20"
-                            : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-                        }`}
-                      >
-                        <span>{addr.label}</span>
-                      </button>
-                    );
-                  })}
-
-                {/* 4. Other pill (Acts as New Address: clears all input fields) */}
+                {/* + New pill (Acts as New Address: clears all input fields) */}
                 <button
                   type="button"
                   onClick={() => {
                     setSelectedAddressId("new");
-                    setSaveAddressLabel("New");
+                    setSaveAddressLabel(null);
                     setCustomAddressLabel("");
                     setMakeDefaultAddress(false);
                     setForm((prev) => ({
@@ -1271,7 +1187,7 @@ function CheckoutContent() {
                       : "bg-white text-slate-700 border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-slate-50"
                   }`}
                 >
-                  <span>Other</span>
+                  <span>+ New</span>
                 </button>
               </div>
             </div>
@@ -1556,130 +1472,100 @@ function CheckoutContent() {
 
           {/* ── ADDRESS SAVE & TAGGING PREFERENCES (Flipkart / Amazon Style) ── */}
           {/* New Address or First-Time User */}
-          {(savedAddresses.length === 0 || selectedAddressId === "new") && (
-            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 animate-in fade-in">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-xs font-bold text-slate-800">
-                  Save this new address as:
-                </span>
-                <div className="flex items-center gap-1.5">
-                  {(["Home", "Office", "New"] as const).map((lbl) => (
-                    <button
-                      key={lbl}
-                      type="button"
-                      onClick={() => {
-                        setSaveAddressLabel(lbl);
-                        if (lbl !== "New") setCustomAddressLabel("");
-                      }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition border cursor-pointer ${
-                        saveAddressLabel === lbl
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
-                      }`}
-                    >
-                      <span>{lbl}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Category Name Input when "New" is selected (No examples shown) */}
-              {saveAddressLabel === "New" && (
-                <div className="space-y-1 pt-1.5 border-t border-slate-200/60 animate-in fade-in duration-150">
-                  <label className="block text-[11px] font-bold text-slate-700">
-                    Category Name
-                  </label>
-                  <input
-                    type="text"
-                    value={customAddressLabel}
-                    onChange={(e) => setCustomAddressLabel(e.target.value)}
-                    placeholder="Enter category name"
-                    maxLength={30}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 select-none">
-                  <input
-                    type="checkbox"
-                    checked={makeDefaultAddress}
-                    onChange={(e) => setMakeDefaultAddress(e.target.checked)}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer"
-                  />
-                  <span>
-                    {savedAddresses.length === 0
-                      ? "Set as default delivery address"
-                      : "Make default delivery address"}
+          {(savedAddresses.length === 0 || selectedAddressId === "new") && (() => {
+            const effectiveLabelForNew = getEffectiveLabelForNew(saveAddressLabel, customAddressLabel, savedAddresses);
+            return (
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 animate-in fade-in">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-slate-800">
+                    Save this new address as:
                   </span>
-                </label>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleExplicitSaveAddress(
-                      saveAddressLabel === "New" && customAddressLabel.trim()
-                        ? customAddressLabel.trim()
-                        : saveAddressLabel,
-                      makeDefaultAddress
-                    )
-                  }
-                  disabled={
-                    isSavingAddress ||
-                    !form.address1.trim() ||
-                    !form.city.trim() ||
-                    !form.zip_code.trim()
-                  }
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-300 shadow-2xs transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex-shrink-0"
-                >
-                  {isSavingAddress ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : addressSavedSuccess ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                  ) : null}
-                  <span>
-                    {isSavingAddress
-                      ? "Saving..."
-                      : addressSavedSuccess
-                      ? `Saved as ${
-                          saveAddressLabel === "New" && customAddressLabel.trim()
-                            ? customAddressLabel.trim()
-                            : saveAddressLabel
-                        }!`
-                      : `Save as ${
-                          saveAddressLabel === "New" && customAddressLabel.trim()
-                            ? customAddressLabel.trim()
-                            : saveAddressLabel
+                  <div className="flex items-center gap-1.5">
+                    {(["Home", "Office", "New"] as const).map((lbl) => (
+                      <button
+                        key={lbl}
+                        type="button"
+                        onClick={() => {
+                          setSaveAddressLabel((prev) => (prev === lbl ? null : lbl));
+                          if (lbl !== "New") setCustomAddressLabel("");
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition border cursor-pointer ${
+                          saveAddressLabel === lbl
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
                         }`}
-                  </span>
-                </button>
-              </div>
-            </div>
-          )}
+                      >
+                        <span>{lbl}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-          {/* Scenario 3: User edited a selected saved address (Amazon/Flipkart smart prompt) */}
-          {savedAddresses.length > 0 && selectedAddressId !== "new" && isCurrentAddressModified && (
-            <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center justify-between gap-2.5 animate-in fade-in">
-              <div className="text-xs text-amber-800">
-                <span className="font-bold">Modified Address:</span> You edited your saved {selectedSavedAddressObj?.label || "address"}.
+                {/* Category Name Input when "New" is selected (No examples shown) */}
+                {saveAddressLabel === "New" && (
+                  <div className="space-y-1 pt-1.5 border-t border-slate-200/60 animate-in fade-in duration-150">
+                    <label className="block text-[11px] font-bold text-slate-700">
+                      Category Name
+                    </label>
+                    <input
+                      type="text"
+                      value={customAddressLabel}
+                      onChange={(e) => setCustomAddressLabel(e.target.value)}
+                      placeholder="Enter category name"
+                      maxLength={30}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 select-none">
+                    <input
+                      type="checkbox"
+                      checked={makeDefaultAddress}
+                      onChange={(e) => setMakeDefaultAddress(e.target.checked)}
+                      className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+                    />
+                    <span>
+                      {savedAddresses.length === 0
+                        ? "Set as default delivery address"
+                        : "Make default delivery address"}
+                    </span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleExplicitSaveAddress(
+                        effectiveLabelForNew,
+                        makeDefaultAddress
+                      )
+                    }
+                    disabled={
+                      isSavingAddress ||
+                      !form.address1.trim() ||
+                      !form.city.trim() ||
+                      !form.zip_code.trim()
+                    }
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-300 shadow-2xs transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex-shrink-0"
+                  >
+                    {isSavingAddress ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : addressSavedSuccess ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                    ) : null}
+                    <span>
+                      {isSavingAddress
+                        ? "Saving..."
+                        : addressSavedSuccess
+                        ? `Saved as ${effectiveLabelForNew}!`
+                        : `Save as ${effectiveLabelForNew}`}
+                    </span>
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() =>
-                  handleExplicitSaveAddress(
-                    selectedSavedAddressObj?.label || "Home",
-                    selectedSavedAddressObj?.is_default || false,
-                    Number(selectedAddressId)
-                  )
-                }
-                disabled={isSavingAddress}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-amber-900 bg-white hover:bg-amber-100 border border-amber-300 shadow-2xs transition active:scale-95 cursor-pointer flex-shrink-0"
-              >
-                {isSavingAddress ? "Updating..." : addressSavedSuccess ? "✓ Updated!" : `Update Saved ${selectedSavedAddressObj?.label || "Address"}`}
-              </button>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Payment Section */}
