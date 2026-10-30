@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import json
 import os
 from unittest.mock import MagicMock, patch
@@ -486,3 +487,97 @@ class TestPaymentWebhookEndpoint:
         assert "orders" in state
         assert len(state["orders"]) >= 1
         assert state["orders"][0]["internal_order_number"] == "ORD-SYNC-TEST-01"
+
+
+class TestCancelOrderEndpoint:
+    """Validate 30-minute grace window order cancellation & automated refund."""
+
+    def test_cancel_order_within_grace_window_success(self, client: TestClient, test_db_session: Session):
+        """POST /api/orders/cancel successfully cancels order within 30-min grace period."""
+        # Create an order
+        order = Order(
+            internal_order_number="ORD-CANCEL-TEST-01",
+            customer_email="canceltest@example.com",
+            shipping_name="John Doe",
+            shipping_address="123 Main St",
+            shipping_city="Austin",
+            shipping_province="TX",
+            shipping_zip="78701",
+            total_retail=29.99,
+            status="PAYMENT_CAPTURED",
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        test_db_session.add(order)
+        test_db_session.commit()
+
+        cancel_payload = {
+            "order_number": "ORD-CANCEL-TEST-01",
+            "customer_email": "canceltest@example.com",
+            "reason": "Ordered by mistake",
+        }
+        res = client.post("/api/orders/cancel", json=cancel_payload)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["success"] is True
+        assert data["status"] == "CANCELLED"
+        assert data["refund_amount"] == 29.99
+        assert "100% full refund" in data["message"]
+
+        # Verify DB status
+        test_db_session.refresh(order)
+        assert order.status == "CANCELLED"
+
+    def test_cancel_order_after_grace_window_rejected(self, client: TestClient, test_db_session: Session):
+        """POST /api/orders/cancel rejects cancellation after 30-minute window."""
+        from datetime import timedelta
+
+        # Order created 35 minutes ago
+        old_time = datetime.now(timezone.utc) - timedelta(minutes=35)
+        order = Order(
+            internal_order_number="ORD-EXPIRED-TEST-02",
+            customer_email="expired@example.com",
+            shipping_name="Old Order",
+            shipping_address="456 Elm St",
+            shipping_city="Dallas",
+            shipping_province="TX",
+            shipping_zip="75001",
+            total_retail=45.00,
+            status="PAYMENT_CAPTURED",
+            created_at=old_time,
+            updated_at=old_time,
+        )
+        test_db_session.add(order)
+        test_db_session.commit()
+
+        cancel_payload = {
+            "order_number": "ORD-EXPIRED-TEST-02",
+            "customer_email": "expired@example.com",
+            "reason": "Changed mind",
+        }
+        res = client.post("/api/orders/cancel", json=cancel_payload)
+        assert res.status_code == 403
+        assert "grace window has expired" in res.json()["detail"].lower()
+
+    def test_cancel_already_cancelled_order_rejected(self, client: TestClient, test_db_session: Session):
+        """POST /api/orders/cancel rejects already cancelled order."""
+        order = Order(
+            internal_order_number="ORD-ALREADY-CANCEL-03",
+            customer_email="already@example.com",
+            shipping_name="Cancelled Order",
+            shipping_address="789 Pine St",
+            shipping_city="Houston",
+            shipping_province="TX",
+            shipping_zip="77001",
+            total_retail=15.00,
+            status="CANCELLED",
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        test_db_session.add(order)
+        test_db_session.commit()
+
+        res = client.post("/api/orders/cancel", json={"order_number": "ORD-ALREADY-CANCEL-03"})
+        assert res.status_code == 400
+        assert "already been cancelled" in res.json()["detail"].lower()
+
