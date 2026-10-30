@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
         LIMIT 5
       `) as any[];
 
-      const labels = ["Home", "Office", "Other"];
+      const labels = ["Address 1", "Address 2", "Address 3"];
       for (let i = 0; i < pastOrders.length; i++) {
         const o = pastOrders[i];
         const label = labels[i] || `Address ${i + 1}`;
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
       `;
     }
 
-    const cleanLabel = (label || "Home").trim();
+    const cleanLabel = (label || "Address 1").trim();
     const cleanRecipient = (recipient_name || "Valued Customer").trim();
 
     // If an existing ID was passed, update that address
