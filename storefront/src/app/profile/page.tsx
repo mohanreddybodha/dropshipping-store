@@ -32,6 +32,8 @@ import {
   syncUserAuth,
   lookupOrdersDualFactor,
   getCustomerOrders,
+  getUserSavedAddresses,
+  UserSavedAddress,
   createCheckoutOrder,
   FALLBACK_PRODUCTS,
 } from "../../lib/api";
@@ -143,6 +145,21 @@ export default function ProfilePage() {
 
   // Dual-Factor Lookup Modal State
   const [showLookupModal, setShowLookupModal] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<UserSavedAddress[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+
+  useEffect(() => {
+    if (currentUser?.email) {
+      setLoadingAddresses(true);
+      getUserSavedAddresses(currentUser.email)
+        .then((addrs) => setSavedAddresses(addrs || []))
+        .catch(() => setSavedAddresses([]))
+        .finally(() => setLoadingAddresses(false));
+    } else {
+      setSavedAddresses([]);
+    }
+  }, [currentUser]);
+
   const [lookupEmail, setLookupEmail] = useState("");
   const [lookupZip, setLookupZip] = useState("");
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -616,6 +633,56 @@ export default function ProfilePage() {
             </div>
             <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition" />
           </Link>
+
+          {/* ── SAVED DELIVERY ADDRESSES SECTION (Authenticated Users) ── */}
+          {currentUser && (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-emerald-600" />
+                  <h3 className="text-sm font-black text-slate-900">Saved Delivery Addresses</h3>
+                </div>
+                <span className="text-[11px] font-bold text-slate-500">
+                  {savedAddresses.length} {savedAddresses.length === 1 ? "Address" : "Addresses"}
+                </span>
+              </div>
+
+              {loadingAddresses ? (
+                <div className="py-4 text-center text-xs text-slate-400">Loading saved addresses...</div>
+              ) : savedAddresses.length === 0 ? (
+                <div className="py-4 text-center space-y-1">
+                  <p className="text-xs font-semibold text-slate-700">No Saved Addresses</p>
+                  <p className="text-[11px] text-slate-400">
+                    Addresses from your checkout orders will automatically appear here.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {savedAddresses.map((addr) => (
+                    <div
+                      key={addr.id}
+                      className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:border-slate-300 transition space-y-1.5 text-xs relative"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          {addr.label || "Home"}
+                        </span>
+                        {addr.is_default && (
+                          <span className="text-[10px] font-bold text-slate-500">Default</span>
+                        )}
+                      </div>
+                      <p className="font-bold text-slate-900 pt-1">{addr.recipient_name}</p>
+                      <p className="text-slate-600">{addr.street_address}</p>
+                      <p className="text-slate-600">
+                        {addr.city}, {addr.province} {addr.zip_code}
+                      </p>
+                      {addr.phone && <p className="text-slate-400 text-[11px]">Phone: {addr.phone}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
