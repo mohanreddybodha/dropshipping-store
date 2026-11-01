@@ -19,7 +19,11 @@ import {
   ChevronDown,
   ShoppingBag,
   ArrowLeft,
-  XCircle,
+  MapPin,
+  Calendar,
+  DollarSign,
+  User,
+  SlidersHorizontal,
 } from "lucide-react";
 import { auth, loginWithGoogle, logoutUser, FirebaseUser } from "@/lib/firebase";
 
@@ -43,6 +47,8 @@ interface AdminOrder {
   customer_phone: string;
   status: string;
   total_retail: number;
+  total_wholesale: number;
+  net_profit: number;
   shipping_name: string;
   shipping_address: string;
   shipping_city: string;
@@ -65,7 +71,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTab, setSelectedTab] = useState<"all" | "ready" | "grace" | "processing" | "shipped">("ready");
+  const [selectedTab, setSelectedTab] = useState<"ready" | "grace" | "processing" | "shipped" | "all">("ready");
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [syncingCj, setSyncingCj] = useState(false);
@@ -226,7 +232,6 @@ export default function AdminOrdersPage() {
 
   // Filtered orders
   const filteredOrders = orders.filter((order) => {
-    // Search match
     const q = searchTerm.toLowerCase().trim();
     const matchesSearch =
       !q ||
@@ -238,7 +243,6 @@ export default function AdminOrdersPage() {
 
     if (!matchesSearch) return false;
 
-    // Tab filter
     if (selectedTab === "ready") {
       return !order.is_grace_active && !order.cj_order_id && order.status !== "CANCELLED";
     }
@@ -246,7 +250,7 @@ export default function AdminOrdersPage() {
       return order.is_grace_active;
     }
     if (selectedTab === "processing") {
-      return order.status === "SUPPLIER_PROCESSING" || (order.cj_order_id && !order.tracking_number);
+      return (order.status === "SUPPLIER_PROCESSING" || !!order.cj_order_id) && !order.tracking_number;
     }
     if (selectedTab === "shipped") {
       return order.status === "SHIPPED" || !!order.tracking_number;
@@ -259,17 +263,17 @@ export default function AdminOrdersPage() {
   const counts = {
     ready: orders.filter((o) => !o.is_grace_active && !o.cj_order_id && o.status !== "CANCELLED").length,
     grace: orders.filter((o) => o.is_grace_active).length,
-    processing: orders.filter((o) => o.status === "SUPPLIER_PROCESSING" || (o.cj_order_id && !o.tracking_number)).length,
+    processing: orders.filter((o) => (o.status === "SUPPLIER_PROCESSING" || !!o.cj_order_id) && !o.tracking_number).length,
     shipped: orders.filter((o) => o.status === "SHIPPED" || !!o.tracking_number).length,
     all: orders.length,
   };
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
-        <div className="text-center space-y-3">
-          <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-semibold text-slate-400">Verifying administrator access...</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+        <div className="text-center space-y-3 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm max-w-sm w-full">
+          <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold text-slate-700">Verifying administrator credentials...</p>
         </div>
       </div>
     );
@@ -278,23 +282,29 @@ export default function AdminOrdersPage() {
   // Not signed in
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-5 text-center shadow-2xl">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-950/80 border border-emerald-800 flex items-center justify-center mx-auto text-emerald-400">
-            <ShieldCheck className="w-6 h-6" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+        <div className="max-w-md w-full bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 space-y-5 text-center shadow-lg">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-emerald-600">
+            <ShieldCheck className="w-7 h-7" />
           </div>
-          <div>
-            <h1 className="text-xl font-black text-white">Domestic Lab Admin</h1>
-            <p className="text-xs text-slate-400 mt-1">
-              Please sign in with your authorized administrator Google account to access fulfillment operations.
+          <div className="space-y-1.5">
+            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Fulfillment Command Center</h1>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Sign in with your authorized store administrator account to manage customer orders and supplier fulfillment.
             </p>
           </div>
           <button
             onClick={() => loginWithGoogle()}
-            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition shadow-lg flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-bold text-xs sm:text-sm rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
           >
-            Sign in with Google
+            <span>Sign in with Google</span>
           </button>
+          <Link
+            href="/"
+            className="inline-block text-xs font-semibold text-slate-400 hover:text-slate-600 transition"
+          >
+            ← Return to storefront
+          </Link>
         </div>
       </div>
     );
@@ -303,27 +313,27 @@ export default function AdminOrdersPage() {
   // Signed in but unauthorized
   if (isAuthorized === false) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-slate-900 border border-rose-900/60 rounded-2xl p-6 sm:p-8 space-y-5 text-center shadow-2xl">
-          <div className="w-12 h-12 rounded-2xl bg-rose-950/80 border border-rose-800 flex items-center justify-center mx-auto text-rose-400">
-            <ShieldAlert className="w-6 h-6" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+        <div className="max-w-md w-full bg-white border border-rose-200 rounded-3xl p-6 sm:p-8 space-y-5 text-center shadow-lg">
+          <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600">
+            <ShieldAlert className="w-7 h-7" />
           </div>
-          <div>
-            <h1 className="text-lg font-black text-white">403 Access Denied</h1>
-            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-              Your Google account (<span className="text-slate-200 font-mono">{currentUser.email}</span>) is not on the authorized administrator whitelist.
+          <div className="space-y-1.5">
+            <h1 className="text-lg font-extrabold text-slate-900">Access Restricted</h1>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Your Google account (<span className="text-slate-800 font-mono font-semibold">{currentUser.email}</span>) is not on the administrator whitelist.
             </p>
           </div>
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-2.5 pt-2">
             <button
               onClick={() => logoutUser()}
-              className="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl transition"
+              className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
             >
               Sign Out
             </button>
             <Link
               href="/"
-              className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition"
+              className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-xs"
             >
               Back to Store
             </Link>
@@ -334,27 +344,29 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-20">
-      {/* ── HEADER ── */}
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="min-h-screen bg-slate-50/70 text-slate-800 font-sans pb-24 antialiased">
+      {/* ── TOP NAV HEADER ── */}
+      <header className="border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-30 shadow-2xs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition"
+              className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition flex-shrink-0"
               title="Return to Store"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div>
-              <h1 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                <span>Fulfillment Command Center</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800">
-                  Admin
+              <div className="flex items-center gap-2">
+                <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                  Orders & Fulfillment
+                </h1>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Manual Pay Mode
                 </span>
-              </h1>
-              <p className="text-[11px] text-slate-400">
-                Connected: <span className="text-slate-300 font-mono">{currentUser.email}</span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Admin: <span className="text-slate-700 font-medium">{currentUser.email}</span>
               </p>
             </div>
           </div>
@@ -363,15 +375,15 @@ export default function AdminOrdersPage() {
             <button
               onClick={handleSyncCjTracking}
               disabled={syncingCj}
-              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50"
+              className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs hover:border-slate-300 active:scale-98 disabled:opacity-50 cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-emerald-400 ${syncingCj ? "animate-spin" : ""}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 ${syncingCj ? "animate-spin" : ""}`} />
               <span>{syncingCj ? "Syncing CJ..." : "Sync CJ Tracking"}</span>
             </button>
 
             <button
               onClick={() => logoutUser()}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-800 text-slate-400 hover:text-rose-300 transition"
+              className="p-2 rounded-xl bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-500 hover:text-rose-600 transition shadow-2xs cursor-pointer"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />
@@ -382,111 +394,185 @@ export default function AdminOrdersPage() {
 
       {/* ── SYNC NOTICE BANNER ── */}
       {syncResult && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
-          <div className="p-3 bg-emerald-950/80 border border-emerald-800 rounded-xl text-xs text-emerald-300 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-4 animate-in fade-in">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-800 flex items-center justify-between shadow-2xs">
             <span>{syncResult}</span>
-            <button onClick={() => setSyncResult(null)} className="text-emerald-400 hover:text-white">
+            <button
+              onClick={() => setSyncResult(null)}
+              className="text-emerald-600 hover:text-emerald-900 font-bold px-1.5 cursor-pointer text-sm"
+            >
               ×
             </button>
           </div>
         </div>
       )}
 
-      {/* ── METRICS & FILTER TABS ── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
-        {/* Tabs Bar */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
-          <button
+      {/* ── MAIN CONTENT ── */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 sm:pt-6 space-y-5">
+        {/* Metric Cards Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Card 1: Ready to Fulfill */}
+          <div
             onClick={() => setSelectedTab("ready")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`p-3.5 sm:p-4 rounded-2xl border transition cursor-pointer ${
               selectedTab === "ready"
-                ? "bg-emerald-600 text-white shadow"
-                : "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                ? "bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-500/20 shadow-xs"
+                : "bg-white border-slate-200 hover:border-slate-300 shadow-2xs"
             }`}
           >
-            <span>🚀 Ready to Fulfill</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-950 text-emerald-200 border border-emerald-700">
-              {counts.ready}
-            </span>
-          </button>
+            <div className="flex items-center justify-between text-xs font-bold text-emerald-700 mb-1">
+              <span>Ready to Order</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900">{counts.ready}</div>
+            <p className="text-[11px] text-slate-500 mt-0.5">Grace period expired</p>
+          </div>
 
-          <button
+          {/* Card 2: In Grace Period */}
+          <div
             onClick={() => setSelectedTab("grace")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`p-3.5 sm:p-4 rounded-2xl border transition cursor-pointer ${
               selectedTab === "grace"
-                ? "bg-amber-600 text-white shadow"
-                : "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                ? "bg-amber-50/80 border-amber-300 ring-2 ring-amber-500/20 shadow-xs"
+                : "bg-white border-slate-200 hover:border-slate-300 shadow-2xs"
             }`}
           >
-            <span>⏳ In Grace Period</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-950 text-amber-200 border border-amber-700">
-              {counts.grace}
-            </span>
-          </button>
+            <div className="flex items-center justify-between text-xs font-bold text-amber-700 mb-1">
+              <span>In Grace Period</span>
+              <Clock className="w-3.5 h-3.5 text-amber-600" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900">{counts.grace}</div>
+            <p className="text-[11px] text-slate-500 mt-0.5">Hold fulfillment</p>
+          </div>
 
-          <button
+          {/* Card 3: Awaiting Tracking */}
+          <div
             onClick={() => setSelectedTab("processing")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`p-3.5 sm:p-4 rounded-2xl border transition cursor-pointer ${
               selectedTab === "processing"
-                ? "bg-sky-600 text-white shadow"
-                : "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                ? "bg-sky-50/80 border-sky-300 ring-2 ring-sky-500/20 shadow-xs"
+                : "bg-white border-slate-200 hover:border-slate-300 shadow-2xs"
             }`}
           >
-            <span>📦 Awaiting CJ Tracking</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-sky-950 text-sky-200 border border-sky-700">
-              {counts.processing}
-            </span>
-          </button>
+            <div className="flex items-center justify-between text-xs font-bold text-sky-700 mb-1">
+              <span>Ordered on CJ</span>
+              <Package className="w-3.5 h-3.5 text-sky-600" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900">{counts.processing}</div>
+            <p className="text-[11px] text-slate-500 mt-0.5">Awaiting USPS label</p>
+          </div>
 
-          <button
+          {/* Card 4: Dispatched */}
+          <div
             onClick={() => setSelectedTab("shipped")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`p-3.5 sm:p-4 rounded-2xl border transition cursor-pointer ${
               selectedTab === "shipped"
-                ? "bg-slate-700 text-white shadow"
-                : "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                ? "bg-slate-100 border-slate-400 ring-2 ring-slate-500/20 shadow-xs"
+                : "bg-white border-slate-200 hover:border-slate-300 shadow-2xs"
             }`}
           >
-            <span>🚚 Dispatched</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-300">
-              {counts.shipped}
-            </span>
-          </button>
+            <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1">
+              <span>Dispatched</span>
+              <Truck className="w-3.5 h-3.5 text-slate-600" />
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900">{counts.shipped}</div>
+            <p className="text-[11px] text-slate-500 mt-0.5">Tracking live</p>
+          </div>
+        </div>
 
-          <button
-            onClick={() => setSelectedTab("all")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
-              selectedTab === "all"
-                ? "bg-slate-700 text-white shadow"
-                : "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-            }`}
-          >
-            <span>All Orders ({counts.all})</span>
-          </button>
+        {/* Filter Pills & Search Bar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+          {/* Horizontal Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+            <button
+              type="button"
+              onClick={() => setSelectedTab("ready")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer active:scale-95 ${
+                selectedTab === "ready"
+                  ? "bg-emerald-600 text-white shadow-2xs"
+                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              <span>Ready to Order ({counts.ready})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedTab("grace")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer active:scale-95 ${
+                selectedTab === "grace"
+                  ? "bg-amber-600 text-white shadow-2xs"
+                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              <span>In Grace ({counts.grace})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedTab("processing")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer active:scale-95 ${
+                selectedTab === "processing"
+                  ? "bg-sky-600 text-white shadow-2xs"
+                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              <span>Ordered on CJ ({counts.processing})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedTab("shipped")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer active:scale-95 ${
+                selectedTab === "shipped"
+                  ? "bg-slate-800 text-white shadow-2xs"
+                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              <span>Dispatched ({counts.shipped})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedTab("all")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer active:scale-95 ${
+                selectedTab === "all"
+                  ? "bg-slate-800 text-white shadow-2xs"
+                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              <span>All ({counts.all})</span>
+            </button>
+          </div>
 
           {/* Search Box */}
-          <div className="ml-auto w-full sm:w-64 relative">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
+          <div className="relative w-full sm:w-72 flex-shrink-0">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
             <input
               type="text"
-              placeholder="Search order, email, tracking..."
+              placeholder="Search order #, customer, zip..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-2 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
             />
           </div>
         </div>
 
         {/* ── ORDERS LIST ── */}
         {loadingOrders ? (
-          <div className="p-12 text-center space-y-3">
-            <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs text-slate-400">Loading order records from Neon DB...</p>
+          <div className="p-16 text-center space-y-3 bg-white border border-slate-200 rounded-2xl">
+            <div className="w-7 h-7 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs font-bold text-slate-600">Loading order records...</p>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="p-12 text-center bg-slate-900/50 border border-slate-800/80 rounded-2xl space-y-2">
-            <CheckCircle2 className="w-8 h-8 text-slate-600 mx-auto" />
-            <p className="text-sm font-bold text-slate-300">No orders match this filter.</p>
-            <p className="text-xs text-slate-500">All customer orders in this category are fully up to date.</p>
+          <div className="p-16 text-center bg-white border border-slate-200 rounded-2xl space-y-2.5 shadow-2xs">
+            <CheckCircle2 className="w-9 h-9 text-emerald-500 mx-auto" />
+            <p className="text-sm font-extrabold text-slate-800">No orders in this queue</p>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              {selectedTab === "ready"
+                ? "All customer orders have been processed or are still in their 30-minute grace period."
+                : "No customer orders currently match your filter criteria."}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -495,57 +581,46 @@ export default function AdminOrdersPage() {
               const secondsLeft = order.grace_period_remaining_seconds % 60;
               const isEditing = editingOrder === order.internal_order_number;
 
+              // Progress percentage (30 min = 1800 sec)
+              const graceProgressPct = Math.max(
+                0,
+                Math.min(100, Math.round(((1800 - order.grace_period_remaining_seconds) / 1800) * 100))
+              );
+
               return (
                 <div
                   key={order.internal_order_number}
-                  className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4 hover:border-slate-700 transition"
+                  className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xs hover:border-slate-300 transition"
                 >
-                  {/* Row 1: Header & Status */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-sm font-black text-white">
-                          {order.internal_order_number}
-                        </span>
-
-                        {/* Grace Status Badge */}
-                        {order.is_grace_active ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-800 animate-pulse">
-                            <Clock className="w-3 h-3 text-amber-400" />
-                            Grace Active: {minutesLeft}m {secondsLeft}s (Hold fulfillment)
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-800">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                            Grace Expired · Ready for CJ
-                          </span>
-                        )}
-
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
-                          Status: {order.status}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-slate-400">
-                        Placed:{" "}
+                  {/* Top Bar: Order ID, Date, Amount */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="font-mono text-sm font-black text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg">
+                        {order.internal_order_number}
+                      </span>
+                      <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                        ${order.total_retail.toFixed(2)}
+                      </span>
+                      <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         {new Date(order.created_at).toLocaleString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
                           hour: "2-digit",
                           minute: "2-digit",
-                        })}{" "}
-                        · Total: <span className="font-bold text-emerald-400">${order.total_retail.toFixed(2)}</span>
-                      </p>
+                        })}
+                      </span>
                     </div>
 
-                    {/* Action: Copy Address Button */}
+                    {/* Quick 1-Click Copy Shipping Address */}
                     <button
+                      type="button"
                       onClick={() => handleCopyAddress(order)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition flex-shrink-0 ${
+                      className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition flex-shrink-0 cursor-pointer shadow-2xs active:scale-95 ${
                         copiedId === order.internal_order_number
                           ? "bg-emerald-600 text-white"
-                          : "bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700"
+                          : "bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200"
                       }`}
                     >
                       {copiedId === order.internal_order_number ? (
@@ -555,84 +630,176 @@ export default function AdminOrdersPage() {
                         </>
                       ) : (
                         <>
-                          <Copy className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Copy Shipping Address</span>
+                          <Copy className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Copy Address for CJ</span>
                         </>
                       )}
                     </button>
                   </div>
 
-                  {/* Row 2: Customer Address Card & Products */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* ── THE 30-MINUTE GRACE COUNTDOWN / ACTION BANNER ── */}
+                  {order.is_grace_active ? (
+                    <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3.5 space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
+                          <span className="text-xs font-black text-amber-900">
+                            Hold Order: {minutesLeft}m {secondsLeft < 10 ? `0${secondsLeft}` : secondsLeft}s Left in Grace Period
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-bold text-amber-800 bg-white/80 px-2 py-0.5 rounded-md border border-amber-200">
+                          Do not place on CJ yet
+                        </span>
+                      </div>
+                      {/* Visual progress bar */}
+                      <div className="w-full bg-amber-200/60 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="bg-amber-500 h-1.5 rounded-full transition-all duration-1000"
+                          style={{ width: `${graceProgressPct}%` }}
+                        />
+                      </div>
+                      <p className="text-[11px] text-amber-800 font-medium">
+                        Customer has 30 minutes from purchase to update their shipping address or request an instant cancellation.
+                      </p>
+                    </div>
+                  ) : !order.cj_order_id ? (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-black text-emerald-950">
+                            Grace Period Complete — Safe to Fulfill!
+                          </p>
+                          <p className="text-[11px] text-emerald-800 font-medium">
+                            30 minutes elapsed. Address is locked. Click product link below to purchase on CJ Dropshipping.
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingOrder(order.internal_order_number);
+                          setCjOrderIdInput(order.cj_order_id || "");
+                          setTrackingInput(order.tracking_number || "");
+                          setStatusInput(order.status === "ORDER_PLACED" ? "CONFIRMED" : order.status);
+                        }}
+                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl transition shadow-xs flex-shrink-0 cursor-pointer"
+                      >
+                        Enter CJ Order ID ✍️
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="bg-sky-50 border border-sky-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2">
+                        <Package className="w-4 h-4 text-sky-600 flex-shrink-0" />
+                        <span className="text-xs font-bold text-sky-950">
+                          Placed on CJ: <span className="font-mono text-sky-800">{order.cj_order_id}</span>
+                        </span>
+                      </div>
+                      <div className="text-xs text-sky-900 font-medium">
+                        {order.tracking_number ? (
+                          <a
+                            href={`https://tools.usps.com/go/TrackConfirmAction?tLabels=${order.tracking_number}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-mono font-bold text-sky-700 hover:underline inline-flex items-center gap-1"
+                          >
+                            <span>USPS: {order.tracking_number}</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : (
+                          <span className="text-slate-500 italic">USPS Tracking pending from CJ warehouse</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Customer Info & Fulfillment Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                     {/* Customer Destination Box */}
-                    <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3.5 text-xs space-y-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                        Customer & Delivery Info:
-                      </span>
-                      <p className="font-bold text-slate-200">{order.shipping_name}</p>
-                      <p className="text-slate-400">{order.shipping_address}</p>
-                      <p className="text-slate-400">
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 text-xs space-y-1">
+                      <div className="flex items-center justify-between text-slate-500 mb-0.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-slate-400" />
+                          Shipping Destination:
+                        </span>
+                      </div>
+                      <p className="font-extrabold text-slate-900">{order.shipping_name}</p>
+                      <p className="text-slate-700">{order.shipping_address}</p>
+                      <p className="text-slate-700">
                         {order.shipping_city}, {order.shipping_province} {order.shipping_zip} ({order.shipping_country})
                       </p>
-                      <p className="text-slate-500 font-mono text-[11px] pt-1">
-                        Email: {order.customer_email} {order.customer_phone ? `· Phone: ${order.customer_phone}` : ""}
+                      <p className="text-slate-500 font-medium pt-1">
+                        Email: <span className="text-slate-800 font-mono">{order.customer_email}</span>
+                        {order.customer_phone ? ` · Phone: ${order.customer_phone}` : ""}
                       </p>
                     </div>
 
-                    {/* CJ & Logistics Info Box */}
-                    <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3.5 text-xs space-y-2">
+                    {/* Fulfillment Details / Edit Box */}
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 text-xs space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                          Supplier & Fulfillment Details:
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                          <SlidersHorizontal className="w-3 h-3 text-slate-400" />
+                          Fulfillment Record:
                         </span>
                         {!isEditing && (
                           <button
+                            type="button"
                             onClick={() => {
                               setEditingOrder(order.internal_order_number);
                               setCjOrderIdInput(order.cj_order_id || "");
                               setTrackingInput(order.tracking_number || "");
                               setStatusInput(order.status || "CONFIRMED");
                             }}
-                            className="text-[11px] font-bold text-emerald-400 hover:underline"
+                            className="text-[11px] font-extrabold text-emerald-700 hover:text-emerald-800 underline cursor-pointer"
                           >
-                            Edit Fulfillment
+                            Update Status / Tracking
                           </button>
                         )}
                       </div>
 
                       {isEditing ? (
-                        <div className="space-y-2.5 pt-1">
+                        <div className="space-y-2.5 pt-1 bg-white p-3 rounded-lg border border-slate-200 animate-in fade-in">
                           <div>
-                            <label className="block text-[10px] font-bold text-slate-400 mb-0.5">CJ Order ID</label>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                              CJ Dropshipping Order ID
+                            </label>
                             <input
                               type="text"
                               placeholder="e.g. CJ1793284029"
                               value={cjOrderIdInput}
                               onChange={(e) => setCjOrderIdInput(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Tracking Number (USPS)</label>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                              USPS Tracking Number
+                            </label>
                             <input
                               type="text"
-                              placeholder="e.g. 9400..."
+                              placeholder="e.g. 940011189956..."
                               value={trackingInput}
                               onChange={(e) => setTrackingInput(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Status</label>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                              Order Status
+                            </label>
                             <select
                               value={statusInput}
                               onChange={(e) => setStatusInput(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
                             >
                               <option value="ORDER_PLACED">ORDER_PLACED (Grace active)</option>
-                              <option value="CONFIRMED">CONFIRMED (Ready to order on CJ)</option>
+                              <option value="CONFIRMED">CONFIRMED (Grace ended · Ready to order)</option>
                               <option value="SUPPLIER_PROCESSING">SUPPLIER_PROCESSING (Paid on CJ)</option>
                               <option value="SHIPPED">SHIPPED (Tracking available)</option>
                               <option value="DELIVERED">DELIVERED</option>
@@ -642,15 +809,17 @@ export default function AdminOrdersPage() {
 
                           <div className="flex items-center gap-2 pt-1">
                             <button
+                              type="button"
                               onClick={() => handleSaveFulfillment(order.internal_order_number)}
                               disabled={isSubmitting}
-                              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold disabled:opacity-50"
+                              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition disabled:opacity-50 cursor-pointer shadow-2xs"
                             >
-                              {isSubmitting ? "Saving..." : "Save"}
+                              {isSubmitting ? "Saving..." : "Save Record"}
                             </button>
                             <button
+                              type="button"
                               onClick={() => setEditingOrder(null)}
-                              className="px-3 py-1 bg-slate-800 text-slate-400 hover:text-white rounded-lg text-xs"
+                              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold cursor-pointer"
                             >
                               Cancel
                             </button>
@@ -658,29 +827,31 @@ export default function AdminOrdersPage() {
                         </div>
                       ) : (
                         <div className="space-y-1.5">
-                          <p className="text-slate-300">
+                          <p className="text-slate-700">
                             CJ Order ID:{" "}
                             {order.cj_order_id ? (
-                              <span className="font-mono font-bold text-emerald-400">{order.cj_order_id}</span>
+                              <span className="font-mono font-bold text-slate-900 bg-slate-200/80 px-1.5 py-0.5 rounded">
+                                {order.cj_order_id}
+                              </span>
                             ) : (
-                              <span className="text-slate-500 italic">Not placed on CJ yet</span>
+                              <span className="text-slate-400 italic">Not placed on CJ yet</span>
                             )}
                           </p>
 
-                          <p className="text-slate-300">
+                          <p className="text-slate-700">
                             USPS Tracking:{" "}
                             {order.tracking_number ? (
                               <a
                                 href={`https://tools.usps.com/go/TrackConfirmAction?tLabels=${order.tracking_number}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="font-mono font-bold text-emerald-400 hover:underline inline-flex items-center gap-1"
+                                className="font-mono font-bold text-emerald-700 hover:underline inline-flex items-center gap-1"
                               >
                                 <span>{order.tracking_number}</span>
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             ) : (
-                              <span className="text-slate-500 italic">Pending warehouse dispatch</span>
+                              <span className="text-slate-400 italic">Pending warehouse dispatch</span>
                             )}
                           </p>
                         </div>
@@ -688,15 +859,14 @@ export default function AdminOrdersPage() {
                     </div>
                   </div>
 
-                  {/* Row 3: Items Ordered with direct CJ Product links */}
-                  <div className="border-t border-slate-800/80 pt-3 space-y-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                  {/* Products & Direct CJ Supplier Link */}
+                  <div className="border-t border-slate-100 pt-3 space-y-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
                       Ordered Products ({order.items?.length || 0}) — Direct Supplier Link:
                     </span>
                     <div className="space-y-2">
                       {order.items?.map((item, idx) => {
                         const title = item.product_title || item.title || "Product";
-                        // Construct direct link to CJ Dropshipping product or search
                         const cjUrl = item.pid
                           ? `https://cjdropshipping.com/product/details?id=${item.pid}`
                           : `https://cjdropshipping.com/search/${encodeURIComponent(title)}.html`;
@@ -704,7 +874,7 @@ export default function AdminOrdersPage() {
                         return (
                           <div
                             key={idx}
-                            className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/60"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/70"
                           >
                             <div className="flex items-center gap-3 min-w-0">
                               {item.image_url ? (
@@ -712,22 +882,22 @@ export default function AdminOrdersPage() {
                                 <img
                                   src={item.image_url}
                                   alt={title}
-                                  className="w-10 h-10 object-contain rounded-lg bg-slate-900 border border-slate-800 flex-shrink-0"
+                                  className="w-12 h-12 object-contain rounded-lg bg-white border border-slate-200 flex-shrink-0"
                                 />
                               ) : (
-                                <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center flex-shrink-0 text-slate-600">
-                                  <ShoppingBag className="w-4 h-4" />
+                                <div className="w-12 h-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-400">
+                                  <ShoppingBag className="w-5 h-5" />
                                 </div>
                               )}
                               <div className="min-w-0">
-                                <p className="text-xs font-bold text-white truncate max-w-sm sm:max-w-md">
+                                <p className="text-xs font-bold text-slate-900 truncate max-w-sm sm:max-w-md">
                                   {title}
                                 </p>
-                                <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
-                                  <span>Qty: {item.quantity || 1}</span>
+                                <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
+                                  <span className="font-semibold text-slate-700">Qty: {item.quantity || 1}</span>
                                   {item.size && <span>· Size: {item.size}</span>}
                                   {item.color && <span>· Color: {item.color}</span>}
-                                  {item.price ? <span>· ${Number(item.price).toFixed(2)}</span> : null}
+                                  {item.price ? <span className="font-semibold text-emerald-700">· ${Number(item.price).toFixed(2)}</span> : null}
                                 </div>
                               </div>
                             </div>
@@ -737,10 +907,10 @@ export default function AdminOrdersPage() {
                               href={cjUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 text-xs font-bold transition flex items-center gap-1.5 flex-shrink-0"
+                              className="px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold transition flex items-center justify-center gap-1.5 flex-shrink-0 shadow-2xs hover:border-emerald-400 cursor-pointer active:scale-95"
                             >
                               <span>Open on CJ Dropshipping</span>
-                              <ExternalLink className="w-3.5 h-3.5" />
+                              <ExternalLink className="w-3.5 h-3.5 text-emerald-600" />
                             </a>
                           </div>
                         );
