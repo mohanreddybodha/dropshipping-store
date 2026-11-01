@@ -24,6 +24,7 @@ import {
   DollarSign,
   User,
   SlidersHorizontal,
+  Zap,
 } from "lucide-react";
 import { auth, loginWithGoogle, logoutUser, FirebaseUser } from "@/lib/firebase";
 
@@ -76,6 +77,13 @@ export default function AdminOrdersPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [syncingCj, setSyncingCj] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  // CJ Instant Single-Order Sync State
+  const [orderSyncInputs, setOrderSyncInputs] = useState<Record<string, string>>({});
+  const [syncingOrderId, setSyncingOrderId] = useState<string | null>(null);
+  const [orderSyncNotices, setOrderSyncNotices] = useState<
+    Record<string, { type: "success" | "info" | "error"; message: string }>
+  >({});
 
   // Edit / Fulfillment state per order
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
@@ -227,6 +235,85 @@ export default function AdminOrdersPage() {
       setSyncResult("Error syncing tracking: " + err.message);
     } finally {
       setSyncingCj(false);
+    }
+  };
+
+  const handleSyncSingleOrder = async (orderNumber: string) => {
+    if (!currentUser?.email) return;
+    const existingOrder = orders.find((o) => o.internal_order_number === orderNumber);
+    const inputVal = orderSyncInputs[orderNumber]?.trim();
+    const cjIdToUse = inputVal !== undefined && inputVal !== "" ? inputVal : existingOrder?.cj_order_id || "";
+
+    if (!cjIdToUse) {
+      setOrderSyncNotices((prev) => ({
+        ...prev,
+        [orderNumber]: {
+          type: "error",
+          message: "Please enter or paste a CJ Order ID (e.g. SD261025... or 261025...) before syncing.",
+        },
+      }));
+      return;
+    }
+
+    setSyncingOrderId(orderNumber);
+    setOrderSyncNotices((prev) => {
+      const next = { ...prev };
+      delete next[orderNumber];
+      return next;
+    });
+
+    try {
+      const res = await fetch("/api/admin/sync-cj", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-email": currentUser.email,
+        },
+        body: JSON.stringify({
+          internal_order_number: orderNumber,
+          cj_order_id: cjIdToUse,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || data.error || "Failed to sync with CJ");
+      }
+
+      // Immediately update local orders state
+      setOrders((prev) =>
+        prev.map((o) => {
+          if (o.internal_order_number === orderNumber) {
+            return {
+              ...o,
+              cj_order_id: data.order?.cj_order_id || cjIdToUse,
+              status: data.order?.status || (o.status === "ORDER_PLACED" ? "SUPPLIER_PROCESSING" : o.status),
+              tracking_number: data.order?.tracking_number || o.tracking_number,
+              carrier_name: data.order?.carrier_name || o.carrier_name || "USPS",
+              is_grace_active: false,
+            };
+          }
+          return o;
+        })
+      );
+
+      setOrderSyncNotices((prev) => ({
+        ...prev,
+        [orderNumber]: {
+          type: data.has_tracking ? "success" : "info",
+          message: data.message || "Order updated and synced with CJ successfully.",
+        },
+      }));
+    } catch (err: any) {
+      setOrderSyncNotices((prev) => ({
+        ...prev,
+        [orderNumber]: {
+          type: "error",
+          message: err.message || "Failed to sync order with CJ.",
+        },
+      }));
+    } finally {
+      setSyncingOrderId(null);
     }
   };
 
@@ -638,7 +725,7 @@ export default function AdminOrdersPage() {
                   </div>
 
                   {/* ── THE 30-MINUTE GRACE COUNTDOWN / ACTION BANNER ── */}
-                  {order.is_grace_active ? (
+                  {order.is_grace_active && (
                     <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3.5 space-y-2">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
@@ -662,60 +749,150 @@ export default function AdminOrdersPage() {
                         Customer has 30 minutes from purchase to update their shipping address or request an instant cancellation.
                       </p>
                     </div>
-                  ) : !order.cj_order_id ? (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center flex-shrink-0">
-                          <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                  )}
+
+                  {/* ── CJ DROPSHIPPING FULFILLMENT & INSTANT SYNC PANEL ── */}
+                  <div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-2xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-600/10 border border-emerald-500/20 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                          <Zap className="w-3.5 h-3.5 fill-emerald-600/30 text-emerald-700" />
                         </div>
                         <div>
-                          <p className="text-xs font-black text-emerald-950">
-                            Grace Period Complete — Safe to Fulfill!
-                          </p>
-                          <p className="text-[11px] text-emerald-800 font-medium">
-                            30 minutes elapsed. Address is locked. Click product link below to purchase on CJ Dropshipping.
+                          <h4 className="text-xs font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+                            CJ Dropshipping Sync
+                            {order.cj_order_id && (
+                              <span className="font-mono text-[11px] font-bold text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                                {order.cj_order_id}
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-[11px] text-slate-500 font-medium">
+                            Paste CJ Order ID to sync live carrier tracking and delivery status.
                           </p>
                         </div>
                       </div>
 
+                      {/* Dynamic Status Badge */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {order.status === "DELIVERED" ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Delivered</span>
+                          </span>
+                        ) : order.tracking_number ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <Truck className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Shipped ({order.carrier_name || "USPS"})</span>
+                          </span>
+                        ) : order.cj_order_id ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-sky-50 text-sky-700 border border-sky-200">
+                            <Package className="w-3.5 h-3.5 text-sky-600" />
+                            <span>Processing at US Warehouse</span>
+                          </span>
+                        ) : order.is_grace_active ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            <Clock className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Grace Active</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Ready to Fulfill</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Input Field + Sync Button */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-0.5">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          placeholder="Paste CJ Order ID (e.g. SD261025... or 261025...)"
+                          value={orderSyncInputs[order.internal_order_number] ?? (order.cj_order_id || "")}
+                          onChange={(e) =>
+                            setOrderSyncInputs((prev) => ({
+                              ...prev,
+                              [order.internal_order_number]: e.target.value,
+                            }))
+                          }
+                          className="w-full bg-white border border-slate-300 hover:border-slate-400 focus:border-emerald-500 rounded-xl px-3 py-2 text-xs font-mono font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-sans focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition shadow-2xs"
+                        />
+                      </div>
+
                       <button
                         type="button"
-                        onClick={() => {
-                          setEditingOrder(order.internal_order_number);
-                          setCjOrderIdInput(order.cj_order_id || "");
-                          setTrackingInput(order.tracking_number || "");
-                          setStatusInput(order.status === "ORDER_PLACED" ? "CONFIRMED" : order.status);
-                        }}
-                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl transition shadow-xs flex-shrink-0 cursor-pointer"
+                        onClick={() => handleSyncSingleOrder(order.internal_order_number)}
+                        disabled={syncingOrderId === order.internal_order_number}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer flex-shrink-0"
                       >
-                        Enter CJ Order ID ✍️
+                        {syncingOrderId === order.internal_order_number ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Syncing with CJ...</span>
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>{order.cj_order_id ? "Sync Tracking" : "Save & Sync with CJ"}</span>
+                          </>
+                        )}
                       </button>
                     </div>
-                  ) : (
-                    <div className="bg-sky-50 border border-sky-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                      <div className="flex items-center gap-2">
-                        <Package className="w-4 h-4 text-sky-600 flex-shrink-0" />
-                        <span className="text-xs font-bold text-sky-950">
-                          Placed on CJ: <span className="font-mono text-sky-800">{order.cj_order_id}</span>
-                        </span>
+
+                    {/* Notice Message if returned */}
+                    {orderSyncNotices[order.internal_order_number] && (
+                      <div
+                        className={`p-2.5 rounded-xl text-xs font-semibold flex items-start justify-between gap-2 border animate-in fade-in ${
+                          orderSyncNotices[order.internal_order_number].type === "success"
+                            ? "bg-emerald-50 text-emerald-900 border-emerald-200"
+                            : orderSyncNotices[order.internal_order_number].type === "error"
+                            ? "bg-rose-50 text-rose-900 border-rose-200"
+                            : "bg-sky-50 text-sky-900 border-sky-200"
+                        }`}
+                      >
+                        <span>{orderSyncNotices[order.internal_order_number].message}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOrderSyncNotices((prev) => {
+                              const next = { ...prev };
+                              delete next[order.internal_order_number];
+                              return next;
+                            })
+                          }
+                          className="text-slate-400 hover:text-slate-600 font-bold px-1 text-sm leading-none cursor-pointer"
+                        >
+                          ×
+                        </button>
                       </div>
-                      <div className="text-xs text-sky-900 font-medium">
-                        {order.tracking_number ? (
+                    )}
+
+                    {/* Live Tracking link if available */}
+                    {order.tracking_number && (
+                      <div className="bg-white border border-emerald-200/90 rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <Truck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                          <span className="text-xs font-bold text-slate-700">
+                            Carrier Tracking:
+                          </span>
                           <a
                             href={`https://tools.usps.com/go/TrackConfirmAction?tLabels=${order.tracking_number}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="font-mono font-bold text-sky-700 hover:underline inline-flex items-center gap-1"
+                            className="font-mono font-black text-emerald-700 hover:underline inline-flex items-center gap-1 text-xs"
                           >
-                            <span>USPS: {order.tracking_number}</span>
+                            <span>{order.carrier_name || "USPS"}: {order.tracking_number}</span>
                             <ExternalLink className="w-3 h-3" />
                           </a>
-                        ) : (
-                          <span className="text-slate-500 italic">USPS Tracking pending from CJ warehouse</span>
-                        )}
+                        </div>
+                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          Live CJ Tracking Link
+                        </span>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {/* Customer Info & Fulfillment Details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
