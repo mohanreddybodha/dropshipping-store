@@ -97,6 +97,10 @@ export interface CustomerOrderItem {
   title?: string;
   product_title?: string;
   sku?: string;
+  vid?: string;
+  variant_title?: string;
+  variant_sku?: string;
+  pid?: string;
   quantity?: number;
   price?: number;
   image_url?: string;
@@ -118,6 +122,7 @@ export interface CustomerOrder {
   shipping_address?: string;
   shipping_city: string;
   shipping_province: string;
+  shipping_county?: string;
   shipping_zip: string;
   shipping_country?: string;
   created_at: string;

@@ -33,65 +33,56 @@ export async function GET(req: NextRequest) {
       user = userRows[0];
     }
 
-    // 2. Query Cart
-    let cart: any[] = [];
-    if (user?.id) {
-      const cartRows = (await sql`
-        SELECT * FROM user_carts WHERE user_id = ${user.id} ORDER BY updated_at DESC
-      `) as DbCartItem[];
-      cart = cartRows.map((c) => ({
-        product_pid: c.product_pid,
-        variant_vid: c.variant_vid,
-        title: c.title,
-        image_url: c.image_url,
-        tier: c.tier,
-        selected_size: c.selected_size,
-        quantity: c.quantity,
-        unit_price: c.unit_price,
-      }));
-    }
-
-    // 3. Query Watchlist
-    let watchlist: string[] = [];
-    if (user?.id) {
-      const watchRows = (await sql`
-        SELECT product_pid FROM user_watchlists WHERE user_id = ${user.id} ORDER BY created_at DESC
-      `) as { product_pid: string }[];
-      watchlist = watchRows.map((w) => w.product_pid);
-    }
-
-    // 4. Query Orders
-    let orders: any[] = [];
+    // 2. Query Cart, Watchlist, and Orders concurrently in parallel via Promise.all
     const lookupEmail = email || user?.email || "";
     const lookupPhone = phone || user?.phone_number || "";
 
-    if (lookupEmail || lookupPhone) {
-      let orderRows: DbOrder[] = [];
-      if (lookupEmail && lookupPhone) {
-        orderRows = (await sql`
-          SELECT * FROM orders
-          WHERE LOWER(customer_email) = ${lookupEmail.toLowerCase()}
-             OR customer_phone = ${lookupPhone}
-          ORDER BY created_at DESC
-          LIMIT 100
-        `) as DbOrder[];
-      } else if (lookupEmail) {
-        orderRows = (await sql`
-          SELECT * FROM orders
-          WHERE LOWER(customer_email) = ${lookupEmail.toLowerCase()}
-          ORDER BY created_at DESC
-          LIMIT 100
-        `) as DbOrder[];
-      } else {
-        orderRows = (await sql`
-          SELECT * FROM orders
-          WHERE customer_phone = ${lookupPhone}
-          ORDER BY created_at DESC
-          LIMIT 100
-        `) as DbOrder[];
-      }
+    const [cartRows, watchRows, orderRows] = await Promise.all([
+      user?.id
+        ? (sql`SELECT * FROM user_carts WHERE user_id = ${user.id} ORDER BY updated_at DESC` as Promise<DbCartItem[]>)
+        : Promise.resolve([] as DbCartItem[]),
+      user?.id
+        ? (sql`SELECT product_pid FROM user_watchlists WHERE user_id = ${user.id} ORDER BY created_at DESC` as Promise<{ product_pid: string }[]>)
+        : Promise.resolve([] as { product_pid: string }[]),
+      lookupEmail || lookupPhone
+        ? lookupEmail && lookupPhone
+          ? (sql`
+              SELECT * FROM orders
+              WHERE LOWER(customer_email) = ${lookupEmail.toLowerCase()}
+                 OR customer_phone = ${lookupPhone}
+              ORDER BY created_at DESC
+              LIMIT 100
+            ` as Promise<DbOrder[]>)
+          : lookupEmail
+          ? (sql`
+              SELECT * FROM orders
+              WHERE LOWER(customer_email) = ${lookupEmail.toLowerCase()}
+              ORDER BY created_at DESC
+              LIMIT 100
+            ` as Promise<DbOrder[]>)
+          : (sql`
+              SELECT * FROM orders
+              WHERE customer_phone = ${lookupPhone}
+              ORDER BY created_at DESC
+              LIMIT 100
+            ` as Promise<DbOrder[]>)
+        : Promise.resolve([] as DbOrder[]),
+    ]);
 
-      orders = orderRows.map((r) => {
+    const cart = cartRows.map((c) => ({
+      product_pid: c.product_pid,
+      variant_vid: c.variant_vid,
+      title: c.title,
+      image_url: c.image_url,
+      tier: c.tier,
+      selected_size: c.selected_size,
+      quantity: c.quantity,
+      unit_price: c.unit_price,
+    }));
+
+    const watchlist = watchRows.map((w) => w.product_pid);
+
+    const orders = orderRows.map((r) => {
         let items = [];
         try {
           items = typeof r.items_json === "string" ? JSON.parse(r.items_json) : r.items_json || [];
@@ -120,7 +111,6 @@ export async function GET(req: NextRequest) {
           created_at: r.created_at,
         };
       });
-    }
 
     return NextResponse.json({
       user: user

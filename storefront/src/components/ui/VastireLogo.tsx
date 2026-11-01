@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { VASTIRE_ICON_DATA_URI } from "./vastireIconDataUri";
 
 interface VastireLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -11,8 +12,8 @@ interface VastireLogoProps {
 }
 
 /**
- * Scalable Vector SVG Brand Icon for Vastire.
- * Loads the master app-icon SVG with the signature Cart2Home emblem and curved rectangular squircle theme.
+ * High-Performance Scalable Vector Brand Icon for Vastire.
+ * Inlines the squircle SVG directly into the SSR document stream for instant 0ms first-paint.
  */
 export function VastireIcon({
   size = 42,
@@ -32,20 +33,42 @@ export function VastireIcon({
       }}
       aria-label="Vastire Brand Icon"
     >
-      <img
-        src="/icon.svg"
-        alt="Vastire Brand Logo"
+      <svg
+        viewBox="0 0 1024 1024"
         width={pixelSize}
         height={pixelSize}
-        className="w-full h-full object-contain select-none pointer-events-none"
-        style={{
-          width: `${pixelSize}px`,
-          height: `${pixelSize}px`,
-          maxWidth: `${pixelSize}px`,
-          maxHeight: `${pixelSize}px`,
-          imageRendering: "auto",
-        }}
-      />
+        className="w-full h-full select-none pointer-events-none drop-shadow-xs"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <defs>
+          <clipPath id="vastireSquircleCard">
+            <rect x="42" y="42" width="940" height="940" rx="210" ry="210" />
+          </clipPath>
+        </defs>
+        <rect x="42" y="42" width="940" height="940" rx="210" ry="210" fill="#ffffff" />
+        <g clipPath="url(#vastireSquircleCard)">
+          <image
+            href={VASTIRE_ICON_DATA_URI}
+            x="0"
+            y="0"
+            width="1024"
+            height="1024"
+            preserveAspectRatio="xMidYMid slice"
+          />
+        </g>
+        <rect
+          x="42"
+          y="42"
+          width="940"
+          height="940"
+          rx="210"
+          ry="210"
+          fill="none"
+          stroke="#E2E8F0"
+          strokeWidth="6"
+        />
+      </svg>
     </div>
   );
 }

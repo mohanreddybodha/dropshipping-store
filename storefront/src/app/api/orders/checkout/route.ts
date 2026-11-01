@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
       shipping_address,
       shipping_city,
       shipping_province,
+      shipping_county,
       shipping_zip,
       shipping_country,
       total_retail,
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
           shipping_address = ${shipping_address || null},
           shipping_city = ${shipping_city || null},
           shipping_province = ${shipping_province || null},
+          shipping_county = ${shipping_county || null},
           shipping_zip = ${shipping_zip || null},
           shipping_country = ${shipping_country || "US"},
           total_retail = ${total},
@@ -76,13 +78,13 @@ export async function POST(req: NextRequest) {
         INSERT INTO orders (
           internal_order_number, customer_email, customer_phone, status,
           total_retail, total_wholesale, net_profit, shipping_name,
-          shipping_address, shipping_city, shipping_province, shipping_zip,
+          shipping_address, shipping_city, shipping_province, shipping_county, shipping_zip,
           shipping_country, carrier_name, tracking_number, items_json,
           created_at, updated_at
         ) VALUES (
           ${orderNumber}, ${email}, ${customer_phone || null}, 'ORDER_PLACED',
           ${total}, ${wholesale}, ${profit}, ${customer_name || null},
-          ${shipping_address || null}, ${shipping_city || null}, ${shipping_province || null}, ${shipping_zip || null},
+          ${shipping_address || null}, ${shipping_city || null}, ${shipping_province || null}, ${shipping_county || null}, ${shipping_zip || null},
           ${shipping_country || "US"}, ${carrier}, ${tracking}, ${JSON.stringify(items || [])},
           NOW(), NOW()
         )

@@ -81,36 +81,59 @@ export function filterFallbackProducts(options?: CatalogQueryOptions): Product[]
   return list;
 }
 
-export async function getCatalog(options?: CatalogQueryOptions): Promise<Product[]> {
-  try {
-    const params = new URLSearchParams();
-    if (options?.category && options.category.toLowerCase() !== "all" && options.category.toLowerCase() !== "all products") {
-      params.set("category", options.category);
-    }
-    if (options?.search) params.set("search", options.search);
-    if (options?.min_price !== undefined) params.set("min_price", options.min_price.toString());
-    if (options?.max_price !== undefined) params.set("max_price", options.max_price.toString());
-    if (options?.sort) params.set("sort", options.sort);
-    if (options?.limit) params.set("limit", options.limit.toString());
-    else params.set("limit", "200");
+const catalogMemoryCache = new Map<string, { data: Product[]; ts: number }>();
+const inFlightCatalogRequests = new Map<string, Promise<Product[]>>();
 
-    const queryStr = params.toString() ? `?${params.toString()}` : "";
-    const res = await fetch(`${getApiBaseUrl()}/catalog${queryStr}`, {
-      next: { revalidate: 60 },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) throw new Error("Catalog fetch failed");
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
-      return data;
-    }
-    if (data && Array.isArray(data.items) && data.items.length > 0) {
-      return data.items;
-    }
-    return filterFallbackProducts(options);
-  } catch {
-    return filterFallbackProducts(options);
+export async function getCatalog(options?: CatalogQueryOptions): Promise<Product[]> {
+  const cacheKey = JSON.stringify(options || {});
+  const now = Date.now();
+  const cached = catalogMemoryCache.get(cacheKey);
+  if (cached && now - cached.ts < 60000) {
+    return cached.data;
   }
+  if (inFlightCatalogRequests.has(cacheKey)) {
+    return inFlightCatalogRequests.get(cacheKey)!;
+  }
+
+  const promise = (async () => {
+    try {
+      const params = new URLSearchParams();
+      if (options?.category && options.category.toLowerCase() !== "all" && options.category.toLowerCase() !== "all products") {
+        params.set("category", options.category);
+      }
+      if (options?.search) params.set("search", options.search);
+      if (options?.min_price !== undefined) params.set("min_price", options.min_price.toString());
+      if (options?.max_price !== undefined) params.set("max_price", options.max_price.toString());
+      if (options?.sort) params.set("sort", options.sort);
+      if (options?.limit) params.set("limit", options.limit.toString());
+      else params.set("limit", "200");
+
+      const queryStr = params.toString() ? `?${params.toString()}` : "";
+      const res = await fetch(`${getApiBaseUrl()}/catalog${queryStr}`, {
+        next: { revalidate: 60 },
+        signal: AbortSignal.timeout(6000),
+      });
+      if (!res.ok) throw new Error("Catalog fetch failed");
+      const data = await res.json();
+      let result: Product[] = [];
+      if (Array.isArray(data) && data.length > 0) {
+        result = data;
+      } else if (data && Array.isArray(data.items) && data.items.length > 0) {
+        result = data.items;
+      } else {
+        result = filterFallbackProducts(options);
+      }
+      catalogMemoryCache.set(cacheKey, { data: result, ts: Date.now() });
+      return result;
+    } catch {
+      return filterFallbackProducts(options);
+    } finally {
+      inFlightCatalogRequests.delete(cacheKey);
+    }
+  })();
+
+  inFlightCatalogRequests.set(cacheKey, promise);
+  return promise;
 }
 
 export async function getPaginatedCatalog(options?: CatalogQueryOptions): Promise<PaginatedCatalogResponse> {
@@ -250,25 +273,47 @@ export async function syncUserAuth(payload: {
   }
 }
 
+const authStateCache = new Map<string, { data: any; ts: number }>();
+const inFlightAuthState = new Map<string, Promise<any>>();
+
 export async function getUserAuthState(
   firebaseUid: string,
   email?: string | null,
   phone?: string | null
 ): Promise<any> {
-  try {
-    const params = new URLSearchParams({ firebase_uid: firebaseUid });
-    if (email) params.append("email", email);
-    if (phone) params.append("phone", phone);
-
-    const res = await fetch(`${getApiBaseUrl()}/auth/state?${params.toString()}`, {
-      method: "GET",
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
+  const cacheKey = `${firebaseUid || ""}_${email || ""}_${phone || ""}`;
+  const now = Date.now();
+  const cached = authStateCache.get(cacheKey);
+  if (cached && now - cached.ts < 10000) {
+    return cached.data;
   }
+  if (inFlightAuthState.has(cacheKey)) {
+    return inFlightAuthState.get(cacheKey);
+  }
+
+  const promise = (async () => {
+    try {
+      const params = new URLSearchParams({ firebase_uid: firebaseUid });
+      if (email) params.append("email", email);
+      if (phone) params.append("phone", phone);
+
+      const res = await fetch(`${getApiBaseUrl()}/auth/state?${params.toString()}`, {
+        method: "GET",
+        signal: AbortSignal.timeout(6000),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      authStateCache.set(cacheKey, { data, ts: Date.now() });
+      return data;
+    } catch {
+      return null;
+    } finally {
+      inFlightAuthState.delete(cacheKey);
+    }
+  })();
+
+  inFlightAuthState.set(cacheKey, promise);
+  return promise;
 }
 
 export async function createCheckoutOrder(payload: {
@@ -279,6 +324,7 @@ export async function createCheckoutOrder(payload: {
   shipping_address: string;
   shipping_city: string;
   shipping_province: string;
+  shipping_county?: string;
   shipping_zip: string;
   shipping_country?: string;
   total_retail: number;
@@ -336,6 +382,7 @@ export async function capturePayPalOrder(payload: {
   shipping_address: string;
   shipping_city: string;
   shipping_province: string;
+  shipping_county?: string;
   shipping_zip: string;
   shipping_country?: string;
   items: any[];
@@ -396,6 +443,7 @@ export async function updateOrderAddress(payload: {
   shipping_address: string;
   shipping_city: string;
   shipping_province: string;
+  shipping_county?: string;
   shipping_zip: string;
   shipping_phone?: string;
   customer_email?: string;
@@ -440,6 +488,7 @@ export interface UserSavedAddress {
   street_address: string;
   city: string;
   province: string;
+  county?: string | null;
   zip_code: string;
   phone?: string | null;
   is_default: boolean;

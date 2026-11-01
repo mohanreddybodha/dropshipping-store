@@ -114,19 +114,11 @@ export default function WatchlistPage() {
 
     const recentSlugs = new Set(recentList.map((p) => p.slug));
 
-    // 2. Retrieve Suggested For You (strictly excluding anything in Watchlist OR Recently Viewed)
-    getCatalog({ limit: 30 })
-      .then((res) => {
-        const catalogList = Array.isArray(res) && res.length > 0 ? res : FALLBACK_PRODUCTS;
-        setSuggestedItems(
-          catalogList.filter((p) => !savedSlugs.has(p.slug) && !recentSlugs.has(p.slug)).slice(0, 10)
-        );
-      })
-      .catch(() => {
-        setSuggestedItems(
-          FALLBACK_PRODUCTS.filter((p) => !savedSlugs.has(p.slug) && !recentSlugs.has(p.slug)).slice(0, 10)
-        );
-      });
+    // 2. Instant In-Memory Suggested Items (0ms latency, zero blocking network delay)
+    const suggested = FALLBACK_PRODUCTS.filter(
+      (p) => !savedSlugs.has(p.slug) && !recentSlugs.has(p.slug)
+    ).slice(0, 10);
+    setSuggestedItems(suggested);
 
     // 3. Cross-device cloud sync: sync user watchlist on auth
     const unsubscribe = onAuthStateChanged(auth, async (user) => {

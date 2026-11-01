@@ -156,100 +156,80 @@ export default function ProfilePage() {
       setAuthLoading(false);
 
       if (user) {
-        setOrdersLoading(true);
         const userEmail = user.email || (user.phoneNumber ? `${user.phoneNumber.replace(/\D/g, "")}@phone.vastire.com` : `uid_${user.uid.slice(0, 16)}@user.vastire.com`);
 
+        // 1. Instant local render: display locally cached orders immediately with 0ms delay
         try {
-          // Push any locally cached orders from previous device activity into the database for immediate cross-device sync
+          const rawOrders = localStorage.getItem("customer_orders");
+          if (rawOrders) {
+            const parsedOrders = JSON.parse(rawOrders);
+            if (Array.isArray(parsedOrders) && parsedOrders.length > 0) {
+              setOrders(parsedOrders);
+              setOrdersLoading(false);
+            }
+          }
+        } catch {
+          // Ignore parse errors
+        }
+
+        // 2. Non-blocking background sync with database (runs asynchronously without freezing UI)
+        (async () => {
           try {
-            const rawOrders = localStorage.getItem("customer_orders");
-            if (rawOrders) {
-              const parsedOrders = JSON.parse(rawOrders);
-              if (Array.isArray(parsedOrders) && parsedOrders.length > 0) {
-                for (const lo of parsedOrders) {
-                  const orderEmail = (lo.customer_email || "").toLowerCase();
-                  const currentEmail = (user.email || userEmail).toLowerCase();
-                  if (!orderEmail || orderEmail === currentEmail) {
-                    await createCheckoutOrder({
-                      internal_order_number: lo.internal_order_number,
-                      customer_name: lo.shipping_name || user.displayName || "Valued Customer",
-                      customer_email: user.email || lo.customer_email || userEmail,
-                      customer_phone: lo.customer_phone,
-                      shipping_address: lo.shipping_address || "US Address",
-                      shipping_city: lo.shipping_city || "New York",
-                      shipping_province: lo.shipping_province || "NY",
-                      shipping_zip: lo.shipping_zip || "10001",
-                      shipping_country: lo.shipping_country || "US",
-                      total_retail: lo.total_retail || 0,
-                      carrier_name: lo.carrier_name || "USPS",
-                      tracking_number: lo.tracking_number,
-                      items: lo.items || [],
-                      firebase_uid: user.uid,
-                    }).catch(() => {});
-                  }
+            // Push any locally cached guest orders in the background
+            try {
+              const rawOrders = localStorage.getItem("customer_orders");
+              if (rawOrders) {
+                const parsedOrders = JSON.parse(rawOrders);
+                if (Array.isArray(parsedOrders) && parsedOrders.length > 0) {
+                  const syncTasks = parsedOrders.map((lo) => {
+                    const orderEmail = (lo.customer_email || "").toLowerCase();
+                    const currentEmail = (user.email || userEmail).toLowerCase();
+                    if (!orderEmail || orderEmail === currentEmail) {
+                      return createCheckoutOrder({
+                        internal_order_number: lo.internal_order_number,
+                        customer_name: lo.shipping_name || user.displayName || "Valued Customer",
+                        customer_email: user.email || lo.customer_email || userEmail,
+                        customer_phone: lo.customer_phone,
+                        shipping_address: lo.shipping_address || "US Address",
+                        shipping_city: lo.shipping_city || "New York",
+                        shipping_province: lo.shipping_province || "NY",
+                        shipping_zip: lo.shipping_zip || "10001",
+                        shipping_country: lo.shipping_country || "US",
+                        total_retail: lo.total_retail || 0,
+                        carrier_name: lo.carrier_name || "USPS",
+                        tracking_number: lo.tracking_number,
+                        items: lo.items || [],
+                        firebase_uid: user.uid,
+                      }).catch(() => {});
+                    }
+                    return Promise.resolve();
+                  });
+                  Promise.allSettled(syncTasks).catch(() => {});
                 }
               }
-            }
-          } catch {
-            // Ignore push sync error
-          }
+            } catch {}
 
-          // Read guest cart & watchlist from localStorage
-          let guestCart: any[] = [];
-          let guestWatchlist: string[] = [];
-          try {
-            const rawCart = localStorage.getItem("app_cart");
-            if (rawCart) {
-              const parsed = JSON.parse(rawCart);
-              if (Array.isArray(parsed)) {
-                guestCart = parsed.map((item) => ({
-                  variant_vid: item.variant?.vid || item.variant_vid,
-                  product_pid: item.product?.pid || item.product_pid,
-                  title: item.product?.title || item.title,
-                  image_url: item.product?.hero_image_url || item.image_url,
-                  tier: item.tier === "2x" ? 2 : item.tier === "3x" ? 3 : 1,
-                  selected_size: item.selectedSize || null,
-                  quantity: item.quantity || 1,
-                  unit_price: item.unitPrice || item.variant?.retail_price_1x || 0,
-                }));
-              }
-            }
-            const rawWatch = localStorage.getItem("watchlist_items");
-            if (rawWatch) {
-              const parsed = JSON.parse(rawWatch);
-              if (Array.isArray(parsed)) {
-                guestWatchlist = parsed.map((p: any) => (typeof p === "string" ? p : p.pid)).filter(Boolean);
-              }
-            }
-          } catch {
-            // Ignore parse errors
-          }
+            // Background cloud sync
+            const syncRes = await syncUserAuth({
+              firebase_uid: user.uid,
+              email: user.email || userEmail,
+              phone_number: user.phoneNumber,
+              display_name: user.displayName,
+              photo_url: user.photoURL,
+            });
 
-          // Trigger backend cloud sync
-          const syncRes = await syncUserAuth({
-            firebase_uid: user.uid,
-            email: user.email || userEmail,
-            phone_number: user.phoneNumber,
-            display_name: user.displayName,
-            photo_url: user.photoURL,
-            guest_cart: guestCart,
-            guest_watchlist: guestWatchlist,
-          });
-
-          if (syncRes?.orders) {
-            mergeAndSetOrders(userEmail, syncRes.orders);
-          } else {
-            // Fallback: query orders directly
-            const directOrders = await getCustomerOrders(userEmail);
-            mergeAndSetOrders(userEmail, directOrders);
+            if (syncRes?.orders) {
+              mergeAndSetOrders(userEmail, syncRes.orders);
+            } else {
+              const directOrders = await getCustomerOrders(userEmail);
+              mergeAndSetOrders(userEmail, directOrders);
+            }
+          } catch (err) {
+            console.warn("Background auth sync notice:", err);
+          } finally {
+            setOrdersLoading(false);
           }
-        } catch (err) {
-          console.error("Auth sync failure:", err);
-          const fallbackOrders = await getCustomerOrders(userEmail);
-          mergeAndSetOrders(userEmail, fallbackOrders);
-        } finally {
-          setOrdersLoading(false);
-        }
+        })();
       } else {
         try {
           const rawOrders = localStorage.getItem("customer_orders");

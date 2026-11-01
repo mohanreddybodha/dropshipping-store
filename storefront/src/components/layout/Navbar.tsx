@@ -60,8 +60,9 @@ export default function Navbar() {
     }
   }, []);
 
-  // Preload live product catalog for instant search matching
+  // Lazy-load live extended catalog ONLY when search overlay is opened (zero initial network overhead)
   useEffect(() => {
+    if (!isSearchExpanded) return;
     let isMounted = true;
     const fetchCatalog = async () => {
       try {
@@ -70,14 +71,14 @@ export default function Navbar() {
           setCatalog(res);
         }
       } catch {
-        // Fallback already assigned
+        // Fallback already assigned in initial state
       }
     };
     fetchCatalog();
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isSearchExpanded]);
 
   // Auto-focus search input when expanded
   useEffect(() => {

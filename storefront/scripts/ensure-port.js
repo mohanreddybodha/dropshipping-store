@@ -39,7 +39,7 @@ function freePort() {
 function cleanStaleBuild() {
   try {
     const dotNext = path.join(__dirname, '..', '.next');
-    if (process.env.CLEAN_START === 'true' || fs.existsSync(path.join(dotNext, 'BUILD_ID'))) {
+    if (process.env.CLEAN_START === 'true') {
       console.log('[ensure-port] Purging .next build cache for clean startup...');
       if (fs.existsSync(dotNext)) {
         for (const file of fs.readdirSync(dotNext)) {

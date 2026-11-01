@@ -11,6 +11,7 @@ export interface SavedAddressRecord {
   street_address: string;
   city: string;
   province: string;
+  county?: string | null;
   zip_code: string;
   phone?: string | null;
   is_default: boolean;
@@ -81,7 +82,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, email, label, recipient_name, street_address, city, province, zip_code, phone, is_default } = body;
+    const { id, email, label, recipient_name, street_address, city, province, county, zip_code, phone, is_default } = body;
 
     const cleanEmail = (email || "").trim().toLowerCase();
     if (!cleanEmail || !street_address || !city || !province || !zip_code) {
@@ -101,6 +102,7 @@ export async function POST(req: NextRequest) {
 
     const cleanLabel = (label || "Address 1").trim();
     const cleanRecipient = (recipient_name || "Valued Customer").trim();
+    const cleanCounty = county ? county.trim() : null;
 
     // If an existing ID was passed, update that address
     if (id) {
@@ -112,6 +114,7 @@ export async function POST(req: NextRequest) {
           street_address = ${street_address.trim()},
           city = ${city.trim()},
           province = ${province.trim()},
+          county = ${cleanCounty},
           zip_code = ${zip_code.trim()},
           phone = ${phone ? phone.trim() : null},
           is_default = ${!!is_default},
@@ -127,9 +130,9 @@ export async function POST(req: NextRequest) {
 
     const inserted = await sql`
       INSERT INTO user_saved_addresses 
-        (user_email, label, recipient_name, street_address, city, province, zip_code, phone, is_default)
+        (user_email, label, recipient_name, street_address, city, province, county, zip_code, phone, is_default)
       VALUES 
-        (${cleanEmail}, ${cleanLabel}, ${cleanRecipient}, ${street_address.trim()}, ${city.trim()}, ${province.trim()}, ${zip_code.trim()}, ${phone ? phone.trim() : null}, ${!!is_default})
+        (${cleanEmail}, ${cleanLabel}, ${cleanRecipient}, ${street_address.trim()}, ${city.trim()}, ${province.trim()}, ${cleanCounty}, ${zip_code.trim()}, ${phone ? phone.trim() : null}, ${!!is_default})
       RETURNING *
     `;
 

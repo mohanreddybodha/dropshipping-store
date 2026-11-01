@@ -67,24 +67,25 @@ export default function CartPage() {
 
     const recentSlugs = new Set(recentList.map((p) => p.slug));
 
-    // 3. Retrieve Suggested For You (strictly excluding items in cart, watchlist, OR recently viewed)
-    getCatalog({ limit: 30 })
-      .then((res) => {
-        const catalogList = Array.isArray(res) && res.length > 0 ? res : FALLBACK_PRODUCTS;
-        setSuggestedItems(
-          catalogList.filter(
-            (p) => !cartSlugs.has(p.slug) && !watchlistSlugs.has(p.slug) && !recentSlugs.has(p.slug)
-          ).slice(0, 10)
-        );
-      })
-      .catch(() => {
-        setSuggestedItems(
-          FALLBACK_PRODUCTS.filter(
-            (p) => !cartSlugs.has(p.slug) && !watchlistSlugs.has(p.slug) && !recentSlugs.has(p.slug)
-          ).slice(0, 10)
-        );
-      });
+    // 3. Instant In-Memory Suggested Items (0ms latency, zero redundant network calls on quantity change)
+    const suggested = FALLBACK_PRODUCTS.filter(
+      (p) => !cartSlugs.has(p.slug) && !watchlistSlugs.has(p.slug) && !recentSlugs.has(p.slug)
+    ).slice(0, 10);
+    setSuggestedItems(suggested);
   }, [items]);
+
+  // Optionally refresh suggested items from live catalog once on initial mount
+  useEffect(() => {
+    getCatalog({ limit: 30 }).then((res) => {
+      if (Array.isArray(res) && res.length > 0) {
+        const cartSlugs = new Set(items.map((i) => i.product.slug));
+        setSuggestedItems((prev) => {
+          const fresh = res.filter((p) => !cartSlugs.has(p.slug)).slice(0, 10);
+          return fresh.length > 0 ? fresh : prev;
+        });
+      }
+    }).catch(() => {});
+  }, []);
 
   // Dynamic unit text that accurately reflects exact units without double multiplication
   const getUnitText = (quantity: number, tier: string) => {
