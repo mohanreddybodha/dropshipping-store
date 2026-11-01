@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  serverExternalPackages: [
+    "firebase",
+    "@firebase/app",
+    "@firebase/auth",
+    "@firebase/component",
+    "@firebase/util",
+    "@neondatabase/serverless",
+  ],
   typescript: {
     ignoreBuildErrors: true,
   },

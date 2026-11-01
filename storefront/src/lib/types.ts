@@ -12,6 +12,8 @@ export interface Variant {
   sku: string;
   size?: string;
   variant_name?: string;
+  /** Human-readable label shown to customers. Preserves variant_name for CJ ordering. */
+  display_name?: string;
   image_url?: string;
   wholesale_cost: number;
   shipping_cost: number;
@@ -69,6 +71,8 @@ export interface Product {
   fallback_affiliate_url?: string;
   is_active: boolean;
   variants: Variant[];
+  /** Shown above the variant grid for set/pack products to prevent quantity misconceptions. */
+  variant_selection_note?: string;
 }
 
 export interface PaginatedCatalogResponse {

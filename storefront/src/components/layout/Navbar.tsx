@@ -8,7 +8,7 @@ import {
   SlidersHorizontal,
   X,
   TrendingUp,
-  Sparkles,
+  Tag,
   ArrowRight,
   Star,
   Truck,
@@ -295,7 +295,7 @@ export default function Navbar() {
             {/* 1. Automated Search Suggestions */}
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Popular & Suggested Searches:</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -349,7 +349,7 @@ export default function Navbar() {
 
                     <div className="space-y-3 pt-2">
                       <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-900">
-                        <Sparkles className="w-4 h-4 text-emerald-600" />
+                        <Tag className="w-4 h-4 text-emerald-600" />
                         <span>You May Also Like:</span>
                       </div>
                       <div className="divide-y divide-slate-100 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { ChevronDown, Check, PackageCheck, Layers, FileText } from "lucide-react";
-import { Product } from "../../lib/types";
+import React, { useState, useEffect } from "react";
+import { ChevronDown, Check, PackageCheck, Layers, FileText, CheckCircle2 } from "lucide-react";
+import { Product, Variant } from "../../lib/types";
 
 interface ProductAccordionProps {
   product: Product;
@@ -30,6 +30,18 @@ const SPEC_LABELS: Record<string, string> = {
 export default function ProductAccordion({ product }: ProductAccordionProps) {
   // Collapsed by default (user opens only when clicked)
   const [isOpen, setIsOpen] = useState(false);
+  const [activeVariant, setActiveVariant] = useState<Variant | undefined>(product.variants?.[0]);
+
+  // Reactively track selected specification from tier change events
+  useEffect(() => {
+    const handleVariantChange = (e: any) => {
+      if (e.detail?.variant) {
+        setActiveVariant(e.detail.variant);
+      }
+    };
+    window.addEventListener("product:tier_change", handleVariantChange);
+    return () => window.removeEventListener("product:tier_change", handleVariantChange);
+  }, []);
 
   // Clean description HTML to remove fabricated marketing claims
   const cleanDescriptionHtml = (product.pas_description_html || "")
@@ -133,34 +145,55 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
             )}
 
             {/* Section 3: Technical Specifications Table */}
-            {specEntries.length > 0 && (
-              <div className="space-y-1.5 pt-1">
-                <div className="flex items-center gap-1.5 text-slate-900 font-bold text-[11px] uppercase tracking-wider">
-                  <PackageCheck className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Specifications & Package Info</span>
-                </div>
-                <div className="border border-slate-200/90 rounded-xl overflow-hidden divide-y divide-slate-100">
-                  {specEntries.map(([key, val]) => {
-                    const label =
-                      SPEC_LABELS[key] ||
-                      key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-                    return (
-                      <div
-                        key={key}
-                        className="grid grid-cols-1 sm:grid-cols-3 p-2.5 text-[11px] bg-white odd:bg-slate-50/50"
-                      >
-                        <span className="font-semibold text-slate-500 sm:col-span-1">
-                          {label}
-                        </span>
-                        <span className="text-slate-800 font-medium sm:col-span-2 mt-0.5 sm:mt-0">
-                          {String(val)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center gap-1.5 text-slate-900 font-bold text-[11px] uppercase tracking-wider">
+                <PackageCheck className="w-3.5 h-3.5 text-slate-500" />
+                <span>Specifications & Verified Package Info</span>
               </div>
-            )}
+              <div className="border border-slate-200/90 rounded-xl overflow-hidden divide-y divide-slate-100">
+                {/* Dynamically Selected Model Row */}
+                {activeVariant && (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 p-2.5 text-[11px] bg-emerald-50/50">
+                      <span className="font-bold text-emerald-900 sm:col-span-1">
+                        Selected Option
+                      </span>
+                      <span className="text-emerald-950 font-bold sm:col-span-2 mt-0.5 sm:mt-0 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span>{activeVariant.display_name || activeVariant.variant_name || "Standard Model"}</span>
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 p-2.5 text-[11px] bg-white">
+                      <span className="font-semibold text-slate-500 sm:col-span-1">
+                        Active Option Price
+                      </span>
+                      <span className="text-slate-900 font-mono font-bold sm:col-span-2 mt-0.5 sm:mt-0">
+                        ${activeVariant.retail_price_1x.toFixed(2)} USD
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {specEntries.map(([key, val]) => {
+                  const label =
+                    SPEC_LABELS[key] ||
+                    key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+                  return (
+                    <div
+                      key={key}
+                      className="grid grid-cols-1 sm:grid-cols-3 p-2.5 text-[11px] bg-white odd:bg-slate-50/50"
+                    >
+                      <span className="font-semibold text-slate-500 sm:col-span-1">
+                        {label}
+                      </span>
+                      <span className="text-slate-800 font-medium sm:col-span-2 mt-0.5 sm:mt-0">
+                        {String(val)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>

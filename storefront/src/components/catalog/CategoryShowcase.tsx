@@ -2,11 +2,11 @@
 
 import React, { useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Zap, Lightbulb, Monitor, Compass, Car } from "lucide-react";
 
 const PROMO_CARDS = [
   {
-    emoji: "⚡",
+    icon: Zap,
     label: "Trending Now",
     heading: "Home & Kitchen",
     sub: "Smart upgrades for your space",
@@ -17,7 +17,7 @@ const PROMO_CARDS = [
     badge: "bg-amber-500/15 text-amber-300 border-amber-500/25",
   },
   {
-    emoji: "💡",
+    icon: Lightbulb,
     label: "Most Popular",
     heading: "Smart Lighting",
     sub: "Illuminate every corner",
@@ -28,7 +28,7 @@ const PROMO_CARDS = [
     badge: "bg-yellow-400/15 text-yellow-200 border-yellow-400/25",
   },
   {
-    emoji: "🖥️",
+    icon: Monitor,
     label: "Work Smarter",
     heading: "Workspace & Tech",
     sub: "Gear for the modern desk",
@@ -39,7 +39,7 @@ const PROMO_CARDS = [
     badge: "bg-blue-500/15 text-blue-200 border-blue-500/25",
   },
   {
-    emoji: "🌿",
+    icon: Compass,
     label: "Get Outside",
     heading: "Outdoor & Patio",
     sub: "Built for the elements",
@@ -50,7 +50,7 @@ const PROMO_CARDS = [
     badge: "bg-emerald-500/15 text-emerald-200 border-emerald-500/25",
   },
   {
-    emoji: "🚗",
+    icon: Car,
     label: "Auto Essentials",
     heading: "Everyday Carry & Auto",
     sub: "Road-ready upgrades",
@@ -128,9 +128,11 @@ export default function CategoryShowcase() {
               {card.label}
             </span>
 
-            {/* Emoji + Heading */}
+            {/* Icon + Heading */}
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-3xl leading-none">{card.emoji}</span>
+              <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0 text-white border border-white/10">
+                <card.icon className="w-5 h-5" />
+              </div>
               <div>
                 <h3 className={`text-sm font-black text-white leading-tight ${card.accent}`}>
                   {card.heading}

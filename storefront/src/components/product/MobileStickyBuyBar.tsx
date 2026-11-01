@@ -15,6 +15,7 @@ interface MobileStickyBuyBarProps {
 export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuyBarProps) {
   const router = useRouter();
   const { addItem, items } = useCart();
+  const [currentVariant, setCurrentVariant] = useState<Variant | undefined>(variant);
   const [currentTier, setCurrentTier] = useState<BundleTier>("1x");
   const [currentPrice, setCurrentPrice] = useState<number>(variant?.retail_price_1x || 24.99);
   const [currentSize, setCurrentSize] = useState<string>("");
@@ -22,8 +23,11 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
   const [isAdded, setIsAdded] = useState(false);
 
   useEffect(() => {
-    if (variant?.retail_price_1x) {
-      setCurrentPrice(variant.retail_price_1x);
+    if (variant) {
+      setCurrentVariant(variant);
+      if (variant.retail_price_1x) {
+        setCurrentPrice(variant.retail_price_1x);
+      }
     }
   }, [variant]);
 
@@ -36,6 +40,7 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
           price: number;
           size?: string;
           color?: string;
+          variant?: Variant;
         }>
       ).detail;
       if (detail) {
@@ -43,6 +48,7 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
         if (detail.price) setCurrentPrice(detail.price);
         if (detail.size !== undefined) setCurrentSize(detail.size);
         if (detail.color !== undefined) setCurrentColor(detail.color);
+        if (detail.variant) setCurrentVariant(detail.variant);
         setIsAdded(false);
       }
     };
@@ -50,12 +56,14 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
     return () => window.removeEventListener("product:tier_change", handler);
   }, []);
 
+  const activeVariant = currentVariant || variant;
+
   // Check if configuration already exists in cart
   useEffect(() => {
-    if (!variant) return;
+    if (!activeVariant) return;
     const existing = items.some(
       (item) =>
-        item.variant.vid === variant.vid &&
+        item.variant.vid === activeVariant.vid &&
         item.tier === currentTier &&
         (item.selectedSize || "") === (currentSize || "") &&
         (item.selectedColor || "") === (currentColor || "")
@@ -63,9 +71,9 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
     if (existing) {
       setIsAdded(true);
     }
-  }, [items, variant, currentTier, currentSize, currentColor]);
+  }, [items, activeVariant, currentTier, currentSize, currentColor]);
 
-  if (!variant) return null;
+  if (!activeVariant) return null;
 
   const handleButtonClick = () => {
     if (isAdded) {
@@ -74,7 +82,7 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
       return;
     }
 
-    addItem(product, variant, currentTier, currentSize || undefined, currentColor || undefined);
+    addItem(product, activeVariant, currentTier, currentSize || undefined, currentColor || undefined);
     setIsAdded(true);
     showToast("Added to Cart", "cart-add");
   };

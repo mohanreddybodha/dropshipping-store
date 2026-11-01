@@ -55,8 +55,14 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   const primaryVariant = product.variants[0];
-  const retailPrice = primaryVariant?.retail_price_1x || 24.99;
-  const comparePrice = +(retailPrice * 1.25).toFixed(2);
+  const variantPrices = (product.variants || [])
+    .map((v) => v.retail_price_1x)
+    .filter((p) => typeof p === "number" && p > 0);
+  const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : (primaryVariant?.retail_price_1x || 24.99);
+  const maxPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : minPrice;
+  const hasPriceRange = maxPrice - minPrice > 0.5;
+
+  const comparePrice = +(minPrice * 1.25).toFixed(2);
   const heroImage = product.hero_image_url || product.images?.[0] || "/placeholder.jpg";
   const rating = product.rating || 4.8;
 
@@ -115,8 +121,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Price & Discount Row (Consistent across all cards) */}
       <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between">
         <div className="flex items-baseline gap-1.5">
+          {hasPriceRange && (
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+              From
+            </span>
+          )}
           <span className="text-sm sm:text-base font-black text-slate-900">
-            ${retailPrice.toFixed(2)}
+            ${minPrice.toFixed(2)}
           </span>
           <span className="text-[11px] text-slate-400 line-through">
             ${comparePrice.toFixed(2)}

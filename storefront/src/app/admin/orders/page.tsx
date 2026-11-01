@@ -33,6 +33,10 @@ interface AdminOrderItem {
   product_title?: string;
   title?: string;
   pid?: string;
+  sku?: string;
+  vid?: string;
+  variant_title?: string;
+  variant_sku?: string;
   slug?: string;
   image_url?: string;
   size?: string;
@@ -55,6 +59,7 @@ interface AdminOrder {
   shipping_address: string;
   shipping_city: string;
   shipping_province: string;
+  shipping_county?: string;
   shipping_zip: string;
   shipping_country: string;
   carrier_name: string;
@@ -76,6 +81,7 @@ export default function AdminOrdersPage() {
   const [selectedTab, setSelectedTab] = useState<"ready" | "grace" | "processing" | "shipped" | "all">("ready");
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [syncingCj, setSyncingCj] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
 
@@ -161,16 +167,25 @@ export default function AdminOrdersPage() {
     return () => clearInterval(timer);
   }, []);
 
+  const handleCopySingle = (text: string, fieldKey: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldKey);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   const handleCopyAddress = (order: AdminOrder) => {
+    // Formatted 1:1 matching CJ Dropshipping "Add Address" modal
     const text = [
-      `Name: ${order.shipping_name}`,
-      `Address: ${order.shipping_address}`,
+      `Country/Region: ${order.shipping_country || "United States"}`,
+      `Province: ${order.shipping_province}`,
       `City: ${order.shipping_city}`,
-      `State: ${order.shipping_province}`,
-      `ZIP: ${order.shipping_zip}`,
-      `Country: ${order.shipping_country || "United States"}`,
-      `Phone: ${order.customer_phone || "N/A"}`,
+      `County: ${order.shipping_county || ""}`,
+      `Phone Number: ${order.customer_phone || ""}`,
+      `Postcode: ${order.shipping_zip}`,
       `Email: ${order.customer_email}`,
+      `Consignee ID: ${order.shipping_name}`,
+      `Street Address: ${order.shipping_address}`,
     ].join("\n");
 
     navigator.clipboard.writeText(text);
@@ -897,23 +912,200 @@ export default function AdminOrdersPage() {
 
                   {/* Customer Info & Fulfillment Details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                    {/* Customer Destination Box */}
-                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 text-xs space-y-1">
-                      <div className="flex items-center justify-between text-slate-500 mb-0.5">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-slate-400" />
-                          Shipping Destination:
+                    {/* Customer Destination Box - Aligned 1:1 with CJ Dropshipping "Add Address" Modal */}
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 text-xs space-y-2">
+                      <div className="flex items-center justify-between text-slate-500 pb-1.5 border-b border-slate-200/60">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 text-slate-700">
+                          <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                          CJ Address Modal Fields:
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyAddress(order)}
+                          className="px-2.5 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer"
+                          title="Copy formatted 1:1 address block for CJ Dropshipping modal"
+                        >
+                          {copiedId === order.internal_order_number ? (
+                            <>
+                              <Check className="w-3 h-3 text-emerald-600" />
+                              <span>Copied for CJ!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3" />
+                              <span>Copy All for CJ</span>
+                            </>
+                          )}
+                        </button>
                       </div>
-                      <p className="font-extrabold text-slate-900">{order.shipping_name}</p>
-                      <p className="text-slate-700">{order.shipping_address}</p>
-                      <p className="text-slate-700">
-                        {order.shipping_city}, {order.shipping_province} {order.shipping_zip} ({order.shipping_country})
-                      </p>
-                      <p className="text-slate-500 font-medium pt-1">
-                        Email: <span className="text-slate-800 font-mono">{order.customer_email}</span>
-                        {order.customer_phone ? ` · Phone: ${order.customer_phone}` : ""}
-                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+                        {/* Consignee / Name */}
+                        <div className="flex items-center justify-between bg-white border border-slate-200/90 rounded-lg px-2.5 py-1.5">
+                          <div className="min-w-0 pr-1">
+                            <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Consignee ID:</span>
+                            <span className="font-bold text-slate-900 truncate block">{order.shipping_name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopySingle(order.shipping_name, `name-${order.internal_order_number}`)}
+                            className="text-slate-400 hover:text-emerald-700 p-1 rounded"
+                            title="Copy Consignee Name"
+                          >
+                            {copiedField === `name-${order.internal_order_number}` ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Phone Number */}
+                        <div className="flex items-center justify-between bg-white border border-slate-200/90 rounded-lg px-2.5 py-1.5">
+                          <div className="min-w-0 pr-1">
+                            <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Phone Number:</span>
+                            <span className="font-bold text-slate-900 truncate block">{order.customer_phone || "N/A"}</span>
+                          </div>
+                          {order.customer_phone && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopySingle(order.customer_phone, `phone-${order.internal_order_number}`)}
+                              className="text-slate-400 hover:text-emerald-700 p-1 rounded"
+                              title="Copy Phone Number"
+                            >
+                              {copiedField === `phone-${order.internal_order_number}` ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Province / State */}
+                        <div className="flex items-center justify-between bg-white border border-slate-200/90 rounded-lg px-2.5 py-1.5">
+                          <div className="min-w-0 pr-1">
+                            <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Province:</span>
+                            <span className="font-bold text-slate-900 truncate block">{order.shipping_province}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopySingle(order.shipping_province, `prov-${order.internal_order_number}`)}
+                            className="text-slate-400 hover:text-emerald-700 p-1 rounded"
+                            title="Copy Province"
+                          >
+                            {copiedField === `prov-${order.internal_order_number}` ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+
+                        {/* City */}
+                        <div className="flex items-center justify-between bg-white border border-slate-200/90 rounded-lg px-2.5 py-1.5">
+                          <div className="min-w-0 pr-1">
+                            <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">City:</span>
+                            <span className="font-bold text-slate-900 truncate block">{order.shipping_city}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopySingle(order.shipping_city, `city-${order.internal_order_number}`)}
+                            className="text-slate-400 hover:text-emerald-700 p-1 rounded"
+                            title="Copy City"
+                          >
+                            {copiedField === `city-${order.internal_order_number}` ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+
+                        {/* County */}
+                        <div className="flex items-center justify-between bg-white border border-slate-200/90 rounded-lg px-2.5 py-1.5">
+                          <div className="min-w-0 pr-1">
+                            <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">County:</span>
+                            <span className={`font-bold truncate block ${order.shipping_county ? "text-slate-900" : "text-slate-400 italic"}`}>
+                              {order.shipping_county || "Optional / Auto"}
+                            </span>
+                          </div>
+                          {order.shipping_county && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopySingle(order.shipping_county!, `county-${order.internal_order_number}`)}
+                              className="text-slate-400 hover:text-emerald-700 p-1 rounded"
+                              title="Copy County"
+                            >
+                              {copiedField === `county-${order.internal_order_number}` ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Postcode / ZIP */}
+                        <div className="flex items-center justify-between bg-white border border-slate-200/90 rounded-lg px-2.5 py-1.5">
+                          <div className="min-w-0 pr-1">
+                            <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Postcode:</span>
+                            <span className="font-mono font-bold text-slate-900 truncate block">{order.shipping_zip}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopySingle(order.shipping_zip, `zip-${order.internal_order_number}`)}
+                            className="text-slate-400 hover:text-emerald-700 p-1 rounded"
+                            title="Copy Postcode"
+                          >
+                            {copiedField === `zip-${order.internal_order_number}` ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Street Address */}
+                      <div className="flex items-center justify-between bg-white border border-slate-200/90 rounded-lg px-2.5 py-1.5 text-[11px]">
+                        <div className="min-w-0 pr-2">
+                          <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Street Address:</span>
+                          <span className="font-bold text-slate-900 break-words block">{order.shipping_address}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopySingle(order.shipping_address, `addr-${order.internal_order_number}`)}
+                          className="text-slate-400 hover:text-emerald-700 p-1 rounded flex-shrink-0"
+                          title="Copy Street Address"
+                        >
+                          {copiedField === `addr-${order.internal_order_number}` ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Customer Email */}
+                      <div className="flex items-center justify-between bg-white border border-slate-200/90 rounded-lg px-2.5 py-1.5 text-[11px]">
+                        <div className="min-w-0 pr-2">
+                          <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold block">Email:</span>
+                          <span className="font-mono font-bold text-slate-800 truncate block">{order.customer_email}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopySingle(order.customer_email, `email-${order.internal_order_number}`)}
+                          className="text-slate-400 hover:text-emerald-700 p-1 rounded flex-shrink-0"
+                          title="Copy Email"
+                        >
+                          {copiedField === `email-${order.internal_order_number}` ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Fulfillment Details / Edit Box */}
@@ -1056,19 +1248,36 @@ export default function AdminOrdersPage() {
                             cleanT.includes(p.title.toLowerCase())
                         );
 
-                        const effectivePid = item.pid || matchedProduct?.pid || "";
+                        const effectivePid = matchedProduct?.pid || item.pid || "";
+                        const matchedVariant = matchedProduct?.variants?.find(
+                          (v) =>
+                            (item.vid && v.vid === item.vid) ||
+                            (item.variant_sku && v.sku === item.variant_sku) ||
+                            (item.sku && v.sku === item.sku)
+                        ) || matchedProduct?.variants?.[0];
+
+                        const effectiveVid = matchedVariant?.vid || item.vid || "";
+                        const effectiveSku = matchedVariant?.sku || item.variant_sku || item.sku || "";
+                        const effectiveVariantTitle =
+                          item.variant_title ||
+                          matchedVariant?.variant_name ||
+                          item.size ||
+                          item.color ||
+                          "Standard";
+
                         const effectiveImage =
-                          item.image_url && item.image_url !== "/placeholder.jpg"
-                            ? item.image_url
-                            : matchedProduct?.hero_image_url || matchedProduct?.images?.[0] || "";
-                        const effectiveSlug = item.slug || matchedProduct?.slug;
+                          matchedVariant?.image_url ||
+                          matchedProduct?.hero_image_url ||
+                          matchedProduct?.images?.[0] ||
+                          (item.image_url && item.image_url !== "/placeholder.jpg" ? item.image_url : "");
+                        const effectiveSlug = matchedProduct?.slug || item.slug;
 
                         const cleanSlug = (effectiveSlug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-")).replace(/^-+|-+$/g, "");
                         // Canonical CJ direct product page: https://cjdropshipping.com/product/{slug}-p-{pid}.html
                         const cjDirectUrl = effectivePid
                           ? `https://cjdropshipping.com/product/${cleanSlug}-p-${effectivePid}.html`
                           : null;
-                        const cjSearchUrl = `https://cjdropshipping.com/search/${encodeURIComponent(title)}.html`;
+                        const cjSearchUrl = `https://cjdropshipping.com/search/${encodeURIComponent(effectiveSku || title)}.html`;
 
                         return (
                           <div
@@ -1099,16 +1308,46 @@ export default function AdminOrdersPage() {
                                   <span className="font-bold text-slate-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md">
                                     Qty: {item.quantity || 1}
                                   </span>
-                                  {item.size && (
-                                    <span className="bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">
-                                      Size: {item.size}
-                                    </span>
+
+                                  {/* Genuine CJ Variant Title / Option */}
+                                  <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold px-2 py-0.5 rounded-md">
+                                    Option: {effectiveVariantTitle}
+                                  </span>
+
+                                  {/* VID Badge with quick-copy */}
+                                  {effectiveVid && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopySingle(effectiveVid, `vid-${order.internal_order_number}-${idx}`)}
+                                      className="inline-flex items-center gap-1 bg-white hover:bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md font-mono text-[10px] text-slate-700 transition"
+                                      title="Copy CJ Variant ID (VID)"
+                                    >
+                                      <span>VID: {effectiveVid.slice(-8)}</span>
+                                      {copiedField === `vid-${order.internal_order_number}-${idx}` ? (
+                                        <Check className="w-2.5 h-2.5 text-emerald-600" />
+                                      ) : (
+                                        <Copy className="w-2.5 h-2.5 text-slate-400" />
+                                      )}
+                                    </button>
                                   )}
-                                  {item.color && (
-                                    <span className="bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">
-                                      Color: {item.color}
-                                    </span>
+
+                                  {/* SKU Badge with quick-copy */}
+                                  {effectiveSku && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopySingle(effectiveSku, `sku-${order.internal_order_number}-${idx}`)}
+                                      className="inline-flex items-center gap-1 bg-white hover:bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md font-mono text-[10px] text-slate-700 transition"
+                                      title="Copy CJ SKU"
+                                    >
+                                      <span>SKU: {effectiveSku}</span>
+                                      {copiedField === `sku-${order.internal_order_number}-${idx}` ? (
+                                        <Check className="w-2.5 h-2.5 text-emerald-600" />
+                                      ) : (
+                                        <Copy className="w-2.5 h-2.5 text-slate-400" />
+                                      )}
+                                    </button>
                                   )}
+
                                   {item.price ? (
                                     <span className="font-extrabold text-emerald-700 bg-emerald-50/80 border border-emerald-200 px-2 py-0.5 rounded-md">
                                       ${Number(item.price).toFixed(2)}

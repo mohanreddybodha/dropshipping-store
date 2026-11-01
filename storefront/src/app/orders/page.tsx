@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Loader2,
   Ban,
+  Lock,
 } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import {
@@ -1108,7 +1109,7 @@ function OrdersContent() {
                       </div>
                     ) : (
                       <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-                        🔒 Address Locked
+                        <Lock className="w-2.5 h-2.5 inline mr-1" /> Address Locked
                       </span>
                     )}
                   </div>

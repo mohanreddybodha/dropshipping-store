@@ -34,6 +34,8 @@ import {
   Check,
   Plus,
   Bookmark,
+  Clock,
+  Package,
 } from "lucide-react";
 
 const US_STATES: ThemedDropdownOption[] = [
@@ -158,6 +160,7 @@ function CheckoutContent() {
     address1: "",
     address2: "",
     city: "",
+    county: "",
     province: "",
     zip_code: "",
     country_code: "US",
@@ -252,6 +255,7 @@ function CheckoutContent() {
           address1: dataToLoad.address1 || prev.address1,
           address2: dataToLoad.address2 || prev.address2,
           city: dataToLoad.city || prev.city,
+          county: dataToLoad.county || prev.county,
           province: dataToLoad.province || prev.province,
           zip_code: dataToLoad.zip_code || prev.zip_code,
           country_code: "US",
@@ -311,6 +315,7 @@ function CheckoutContent() {
                 address1: def.street_address,
                 address2: "",
                 city: def.city,
+                county: def.county || "",
                 province: def.province,
                 zip_code: def.zip_code,
                 country_code: "US",
@@ -327,6 +332,7 @@ function CheckoutContent() {
                   phone: prev.phone || latest.customer_phone || user.phoneNumber || "",
                   address1: prev.address1 || latest.shipping_address || "",
                   city: prev.city || latest.shipping_city || "",
+                  county: prev.county || (latest as any).shipping_county || "",
                   province: prev.province || latest.shipping_province || "",
                   zip_code: prev.zip_code || latest.shipping_zip || "",
                   country_code: "US",
@@ -358,6 +364,7 @@ function CheckoutContent() {
       address1: "",
       address2: "",
       city: "",
+      county: "",
       province: "",
       zip_code: "",
       country_code: "US",
@@ -568,6 +575,7 @@ function CheckoutContent() {
         street_address: form.address1.trim(),
         city: form.city.trim(),
         province: form.province.trim(),
+        county: form.county.trim() || undefined,
         zip_code: form.zip_code.trim(),
         phone: form.phone.trim(),
         is_default: asDefault,
@@ -605,8 +613,12 @@ function CheckoutContent() {
       title: item.product.title,
       product_title: item.product.title,
       pid: item.product.pid,
+      sku: item.variant?.sku,
+      vid: item.variant?.vid,
+      variant_title: item.variant?.variant_name || item.selectedSize || "Standard",
+      variant_sku: item.variant?.sku || "",
       slug: item.product.slug,
-      image_url: item.product.hero_image_url || item.product.images?.[0] || "",
+      image_url: item.variant?.image_url || item.product.hero_image_url || item.product.images?.[0] || "",
       quantity: item.quantity,
       price: item.unitPrice,
       unit_price: item.unitPrice,
@@ -628,6 +640,7 @@ function CheckoutContent() {
         shipping_address: form.address1,
         shipping_city: form.city,
         shipping_province: form.province,
+        shipping_county: form.county.trim() || undefined,
         shipping_zip: form.zip_code,
         shipping_country: "US",
         created_at: new Date().toISOString(),
@@ -655,6 +668,7 @@ function CheckoutContent() {
           street_address: form.address1.trim(),
           city: form.city.trim(),
           province: form.province.trim(),
+          county: form.county.trim() || undefined,
           zip_code: form.zip_code.trim(),
           phone: form.phone.trim(),
           is_default: existing?.is_default ?? false,
@@ -668,6 +682,7 @@ function CheckoutContent() {
           street_address: form.address1.trim(),
           city: form.city.trim(),
           province: form.province.trim(),
+          county: form.county.trim() || undefined,
           zip_code: form.zip_code.trim(),
           phone: form.phone.trim(),
           is_default: makeDefaultAddress,
@@ -722,10 +737,16 @@ function CheckoutContent() {
       const orderPayloadItems = checkoutItems.map((item) => ({
         title: item.product.title,
         product_title: item.product.title,
+        pid: item.product.pid,
+        sku: item.variant?.sku,
+        vid: item.variant?.vid,
+        variant_title: item.variant?.variant_name || item.selectedSize || "Standard",
+        variant_sku: item.variant?.sku || "",
         slug: item.product.slug,
-        image_url: item.product.hero_image_url || item.product.images?.[0] || "",
+        image_url: item.variant?.image_url || item.product.hero_image_url || item.product.images?.[0] || "",
         quantity: item.quantity,
         price: item.unitPrice,
+        unit_price: item.unitPrice,
         size: item.selectedSize,
         color: item.selectedColor,
       }));
@@ -741,6 +762,7 @@ function CheckoutContent() {
         shipping_address: form.address1,
         shipping_city: form.city,
         shipping_province: form.province,
+        shipping_county: form.county.trim() || undefined,
         shipping_zip: form.zip_code,
         shipping_country: "US",
         total_retail: finalAmount,
@@ -765,6 +787,7 @@ function CheckoutContent() {
           shipping_address: form.address1,
           shipping_city: form.city,
           shipping_province: form.province,
+          shipping_county: form.county.trim() || undefined,
           shipping_zip: form.zip_code,
           shipping_country: "US",
           created_at: new Date().toISOString(),
@@ -792,6 +815,7 @@ function CheckoutContent() {
             street_address: form.address1.trim(),
             city: form.city.trim(),
             province: form.province.trim(),
+            county: form.county.trim() || undefined,
             zip_code: form.zip_code.trim(),
             phone: form.phone.trim(),
             is_default: existing?.is_default ?? false,
@@ -805,6 +829,7 @@ function CheckoutContent() {
             street_address: form.address1.trim(),
             city: form.city.trim(),
             province: form.province.trim(),
+            county: form.county.trim() || undefined,
             zip_code: form.zip_code.trim(),
             phone: form.phone.trim(),
             is_default: makeDefaultAddress,
@@ -853,7 +878,7 @@ function CheckoutContent() {
             Payment Verified &amp; Order Placed
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            🎉 Congratulations! Your Order is Placed
+            Congratulations! Your Order is Placed
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
             Thank you for ordering with Vastire! Your payment was verified and domestic warehouse dispatch has been scheduled.
@@ -863,7 +888,7 @@ function CheckoutContent() {
         {/* 30-Minute Grace Window Banner */}
         <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-4 text-left max-w-md mx-auto space-y-1.5">
           <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
-            <span className="text-sm">⏱️</span>
+            <Clock className="w-4 h-4 text-amber-700 flex-shrink-0" />
             <span>30-Minute Grace Window Active</span>
           </div>
           <p className="text-[11px] text-amber-800 leading-relaxed">
@@ -944,7 +969,8 @@ function CheckoutContent() {
             href="/orders"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer"
           >
-            <span>📦 View in My Orders</span>
+            <Package className="w-4 h-4" />
+            <span>View in My Orders</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
@@ -1148,6 +1174,7 @@ function CheckoutContent() {
                           address1: addr.street_address,
                           address2: "",
                           city: addr.city,
+                          county: addr.county || "",
                           province: addr.province,
                           zip_code: addr.zip_code,
                           phone: addr.phone || prev.phone,
@@ -1178,6 +1205,7 @@ function CheckoutContent() {
                       address1: "",
                       address2: "",
                       city: "",
+                      county: "",
                       province: "",
                       zip_code: "",
                     }));
@@ -1396,8 +1424,8 @@ function CheckoutContent() {
             )}
           </div>
 
-          {/* City, State Dropdown, PIN */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 relative z-30">
+          {/* City & County */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-30">
             <div id="field-city">
               <label className="block mb-1">City</label>
               <input
@@ -1420,6 +1448,25 @@ function CheckoutContent() {
               )}
             </div>
 
+            <div id="field-county">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block">County</label>
+                <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+              </div>
+              <input
+                type="text"
+                name="county"
+                value={form.county}
+                onChange={handleChange}
+                placeholder="e.g. Orange County (Optional)"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 text-sm transition focus:outline-none"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">County / District name for CJ Dropshipping fulfillment</p>
+            </div>
+          </div>
+
+          {/* State Dropdown & PIN */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-20">
             {/* Custom Themed State Dropdown */}
             <div id="field-province" className="relative z-40">
               <ThemedDropdown
@@ -1447,13 +1494,13 @@ function CheckoutContent() {
             </div>
 
             <div id="field-zip_code">
-              <label className="block mb-1">PIN</label>
+              <label className="block mb-1">PIN / ZIP Code</label>
               <input
                 type="text"
                 name="zip_code"
                 value={form.zip_code}
                 onChange={handleChange}
-                placeholder="Enter PIN"
+                placeholder="Enter PIN / ZIP"
                 className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
                   fieldErrors.zip_code
                     ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"

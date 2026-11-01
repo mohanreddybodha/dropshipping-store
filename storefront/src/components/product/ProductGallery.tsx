@@ -35,6 +35,21 @@ export default function ProductGallery({ images = [], title }: ProductGalleryPro
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isLightboxOpen, handlePrev, handleNext]);
 
+  // Synchronize gallery when user switches product variants
+  useEffect(() => {
+    const handleVariantImage = (e: Event) => {
+      const detail = (e as CustomEvent<{ imageUrl?: string }>).detail;
+      if (detail?.imageUrl) {
+        const foundIdx = validImages.findIndex((img) => img === detail.imageUrl);
+        if (foundIdx >= 0) {
+          setSelectedIndex(foundIdx);
+        }
+      }
+    };
+    window.addEventListener("product:variant_image_change", handleVariantImage);
+    return () => window.removeEventListener("product:variant_image_change", handleVariantImage);
+  }, [validImages]);
+
   return (
     <div className="space-y-4">
       {/* Main Image Frame */}

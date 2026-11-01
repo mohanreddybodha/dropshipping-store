@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { getProductBySlug, getCatalog } from "../../../lib/api";
+import { getProductBySlug, getCatalog, FALLBACK_PRODUCTS } from "../../../lib/api";
 import {
   ProductGallery,
   ProductInteractivePanel,
@@ -24,7 +24,9 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  return [];
+  return FALLBACK_PRODUCTS.map((p) => ({
+    slug: p.slug,
+  }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

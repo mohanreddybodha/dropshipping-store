@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { BundleTier, Product, Variant } from "../../lib/types";
 import { useCart } from "../../lib/cart";
 import { ShoppingBag, ArrowRight, Check } from "lucide-react";
-import SizeSelector from "./SizeSelector";
+import SizeSelector, { parseApparelVariant } from "./SizeSelector";
 import { showToast } from "../ui/Toast";
 
 interface ProductInteractivePanelProps {
@@ -19,24 +19,26 @@ export default function ProductInteractivePanel({
 }: ProductInteractivePanelProps) {
   const router = useRouter();
   const { addItem, items } = useCart();
-  const [selectedVariant, setSelectedVariant] = useState<Variant>(variant);
+  const initialVariant = variant || product.variants[0];
+  const [selectedVariant, setSelectedVariant] = useState<Variant>(initialVariant);
   // Default to 1x Single Unit
   const [selectedTier, setSelectedTier] = useState<BundleTier>("1x");
   const [isAdded, setIsAdded] = useState(false);
 
-  const titleLower = product.title.toLowerCase();
-  const isApparel =
-    titleLower.includes("dress") ||
-    titleLower.includes("romper") ||
-    titleLower.includes("women") ||
-    titleLower.includes("hooded") ||
-    titleLower.includes("pocket") ||
-    titleLower.includes("shirt") ||
-    titleLower.includes("jacket") ||
-    titleLower.includes("pants");
+  // Inferred initial color and size from genuine variant
+  const [selectedSize, setSelectedSize] = useState<string>(() => {
+    const parsed = parseApparelVariant(initialVariant);
+    if (parsed) return parsed.size;
+    if (initialVariant?.size && !initialVariant.size.includes("-")) return initialVariant.size;
+    return "";
+  });
 
-  const [selectedSize, setSelectedSize] = useState<string>(isApparel ? "M" : "");
-  const [selectedColor, setSelectedColor] = useState<string>(isApparel ? "Black" : "");
+  const [selectedColor, setSelectedColor] = useState<string>(() => {
+    const parsed = parseApparelVariant(initialVariant);
+    if (parsed) return parsed.color;
+    if (initialVariant?.color && !initialVariant.color.includes("-")) return initialVariant.color;
+    return "";
+  });
 
   // Check if current configuration is already in cart
   useEffect(() => {
@@ -79,11 +81,12 @@ export default function ProductInteractivePanel({
             price: currentPrice,
             size: selectedSize,
             color: selectedColor,
+            variant: selectedVariant,
           },
         })
       );
     }
-  }, [selectedTier, currentPrice, selectedSize, selectedColor]);
+  }, [selectedTier, currentPrice, selectedSize, selectedColor, selectedVariant]);
 
   const handleSizeChange = (size: string, v: Variant) => {
     setSelectedSize(size);
@@ -108,7 +111,13 @@ export default function ProductInteractivePanel({
       return;
     }
 
-    addItem(product, selectedVariant, selectedTier, selectedSize || undefined, selectedColor || undefined);
+    addItem(
+      product,
+      selectedVariant,
+      selectedTier,
+      selectedSize || selectedVariant.variant_name || undefined,
+      selectedColor || undefined
+    );
     setIsAdded(true);
     showToast("Added to Cart", "cart-add");
   };

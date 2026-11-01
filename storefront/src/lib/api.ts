@@ -85,6 +85,13 @@ const catalogMemoryCache = new Map<string, { data: Product[]; ts: number }>();
 const inFlightCatalogRequests = new Map<string, Promise<Product[]>>();
 
 export async function getCatalog(options?: CatalogQueryOptions): Promise<Product[]> {
+  // Server-side execution (SSR): Immediately return in-memory catalog data.
+  // Avoids self-referencing HTTP loopback fetches (e.g. localhost:3000 -> localhost:3000)
+  // that stall the Node.js event loop and cause 1000ms+ popstate / handler lock violations.
+  if (typeof window === "undefined") {
+    return filterFallbackProducts(options);
+  }
+
   const cacheKey = JSON.stringify(options || {});
   const now = Date.now();
   const cached = catalogMemoryCache.get(cacheKey);
@@ -137,6 +144,29 @@ export async function getCatalog(options?: CatalogQueryOptions): Promise<Product
 }
 
 export async function getPaginatedCatalog(options?: CatalogQueryOptions): Promise<PaginatedCatalogResponse> {
+  // Server-side execution (SSR): Immediately compute pagination from in-memory catalog
+  if (typeof window === "undefined") {
+    const filtered = filterFallbackProducts(options);
+    const limit = options?.limit || 24;
+    const page = options?.page || 1;
+    const totalPages = Math.ceil(filtered.length / limit) || 1;
+    const items = filtered.slice((page - 1) * limit, page * limit);
+
+    const categories_summary: Record<string, number> = {};
+    for (const p of FALLBACK_PRODUCTS) {
+      const cat = p.category || "General";
+      categories_summary[cat] = (categories_summary[cat] || 0) + 1;
+    }
+
+    return {
+      items,
+      total_count: filtered.length,
+      total_pages: totalPages,
+      current_page: page,
+      categories_summary,
+    };
+  }
+
   try {
     const params = new URLSearchParams();
     params.set("paginate", "true");
@@ -184,6 +214,19 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   const decoded = decodeURIComponent(slug || "").trim().toLowerCase();
   const normalizedHyphenSlug = decoded.replace(/\s+/g, "-");
 
+  // In-memory catalog lookup (0ms latency, eliminates 404 console errors)
+  const localMatch = FALLBACK_PRODUCTS.find((p) => {
+    const pSlug = (p.slug || "").toLowerCase();
+    return (
+      pSlug === decoded ||
+      pSlug === normalizedHyphenSlug ||
+      pSlug.replace(/-/g, " ") === decoded ||
+      decoded.replace(/-/g, " ") === pSlug.replace(/-/g, " ") ||
+      String(p.id) === decoded
+    );
+  });
+  if (localMatch) return localMatch;
+
   try {
     const res = await fetch(`${getApiBaseUrl()}/catalog/${encodeURIComponent(normalizedHyphenSlug)}`, {
       next: { revalidate: 60 },
@@ -192,16 +235,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     if (!res.ok) throw new Error("Product fetch failed");
     return await res.json();
   } catch {
-    const fallback = FALLBACK_PRODUCTS.find((p) => {
-      const pSlug = (p.slug || "").toLowerCase();
-      return (
-        pSlug === decoded ||
-        pSlug === normalizedHyphenSlug ||
-        pSlug.replace(/-/g, " ") === decoded ||
-        decoded.replace(/-/g, " ") === pSlug.replace(/-/g, " ")
-      );
-    });
-    return fallback || null;
+    return null;
   }
 }
 
@@ -281,7 +315,16 @@ export async function getUserAuthState(
   email?: string | null,
   phone?: string | null
 ): Promise<any> {
-  const cacheKey = `${firebaseUid || ""}_${email || ""}_${phone || ""}`;
+  const cleanUid = (firebaseUid || "").trim();
+  const cleanEmail = (email || "").trim();
+  const cleanPhone = (phone || "").trim();
+
+  // Guard: Zero unnecessary 400 network calls if all credentials are empty
+  if (!cleanUid && !cleanEmail && !cleanPhone) {
+    return null;
+  }
+
+  const cacheKey = `${cleanUid}_${cleanEmail}_${cleanPhone}`;
   const now = Date.now();
   const cached = authStateCache.get(cacheKey);
   if (cached && now - cached.ts < 10000) {
@@ -515,14 +558,20 @@ export async function saveUserAddress(payload: {
   street_address: string;
   city: string;
   province: string;
+  county?: string;
   zip_code: string;
   phone?: string;
   is_default?: boolean;
 }): Promise<any> {
+  const cleanEmail = (payload.email || "").trim().toLowerCase();
+  if (!cleanEmail) {
+    return { success: false, message: "Email is required to save address" };
+  }
+
   const res = await fetch(`/api/user/addresses`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, email: cleanEmail }),
     signal: AbortSignal.timeout(6000),
   });
   if (!res.ok) {
