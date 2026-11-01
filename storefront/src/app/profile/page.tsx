@@ -38,7 +38,7 @@ import { CustomerOrder } from "../../lib/types";
 
 // Helper to resolve product image, title, and link for order items (Flipkart/Amazon style)
 function resolveOrderItemInfo(item: any) {
-  const title = item.product_title || item.title || "Domestic Lab Essential";
+  const title = item.product_title || item.title || "Vastire Essential";
   let imageUrl = item.image_url;
   let slug = item.slug;
 
@@ -157,7 +157,7 @@ export default function ProfilePage() {
 
       if (user) {
         setOrdersLoading(true);
-        const userEmail = user.email || (user.phoneNumber ? `${user.phoneNumber.replace(/\D/g, "")}@phone.domesticlab.com` : `uid_${user.uid.slice(0, 16)}@user.domesticlab.com`);
+        const userEmail = user.email || (user.phoneNumber ? `${user.phoneNumber.replace(/\D/g, "")}@phone.vastire.com` : `uid_${user.uid.slice(0, 16)}@user.vastire.com`);
 
         try {
           // Push any locally cached orders from previous device activity into the database for immediate cross-device sync
@@ -795,7 +795,7 @@ export default function ProfilePage() {
         />
         <FaqItem
           question="Why can’t I order to addresses outside the United States?"
-          answer="To guarantee rapid 3–5 business day delivery and zero unexpected import duties, Domestic Lab operates exclusively within the domestic US supply chain."
+          answer="To guarantee rapid 3–5 business day delivery and zero unexpected import duties, Vastire operates exclusively within the domestic US supply chain."
         />
       </div>
     </div>

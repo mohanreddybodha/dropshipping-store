@@ -16,7 +16,7 @@ export default function ProductShareButton({ title }: ProductShareButtonProps) {
 
     const shareData = {
       title,
-      text: `Check out ${title} on Domestic Lab with free domestic delivery!`,
+      text: `Check out ${title} on Vastire with free domestic delivery!`,
       url: window.location.href,
     };
 

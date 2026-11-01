@@ -1,13 +1,34 @@
 import type { Metadata } from "next";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "../lib/cart";
 import { AppShell } from "../components/layout";
 
+const brandPoppins = Poppins({
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+  variable: "--font-poppins",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Domestic Lab | 3–7 Day Fast US Domestic Shipping",
-  description: "Everyday problem-solving products shipped same-day from verified US domestic warehouses via USPS. Arrives in 3–5 business days with live tracked delivery.",
+  title: "Vastire | Curated Home, Workspace & Living Essentials",
+  description: "Discover modern everyday essentials for home, kitchen, and workspace on Vastire (vastire.com). Fast 3–5 day tracked domestic delivery.",
+  metadataBase: new URL("https://vastire.com"),
+  openGraph: {
+    title: "Vastire | Curated Home, Workspace & Living Essentials",
+    description: "Discover modern everyday essentials on Vastire (vastire.com). Fast 3–5 day tracked delivery.",
+    url: "https://vastire.com",
+    siteName: "Vastire",
+    type: "website",
+  },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon-64.png", sizes: "64x64", type: "image/png" },
+    ],
+    apple: "/favicon-64.png",
   },
 };
 
@@ -40,7 +61,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased font-sans">
+      <body className={`min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased font-sans ${brandPoppins.variable}`}>
         <CartProvider>
           <AppShell>{children}</AppShell>
         </CartProvider>

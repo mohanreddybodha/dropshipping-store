@@ -19,6 +19,7 @@ import {
 import { Product } from "../../lib/types";
 import { FALLBACK_PRODUCTS, getCatalog } from "../../lib/api";
 import { useCart } from "../../lib/cart";
+import VastireLogo from "../ui/VastireLogo";
 
 const SUGGESTED_SEARCHES = [
   "Turbo Fans",
@@ -42,10 +43,12 @@ export default function Navbar() {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [catalog, setCatalog] = useState<Product[]>(FALLBACK_PRODUCTS);
   const [watchlistCount, setWatchlistCount] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Read Watchlist count from localStorage for desktop badge
+  // Client hydration guard & read Watchlist count from localStorage for desktop badge
   useEffect(() => {
+    setMounted(true);
     try {
       const raw = localStorage.getItem("watchlist_items");
       if (raw) {
@@ -208,19 +211,10 @@ export default function Navbar() {
                 {/* Brand Logo & Name */}
                 <Link
                   href="/"
-                  className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0 group focus:outline-none"
+                  className="flex items-center flex-shrink-0 group focus:outline-none"
+                  aria-label="Vastire Home"
                 >
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 bg-slate-950 rounded-xl flex items-center justify-center text-white font-black text-lg sm:text-xl shadow-xs group-hover:bg-slate-800 transition-colors duration-200">
-                    D
-                  </div>
-                  <div className="block">
-                    <span className="text-xs sm:text-base font-black tracking-tight text-slate-900 uppercase block leading-none">
-                      Domestic Lab
-                    </span>
-                    <span className="text-[8px] sm:text-[10px] font-bold text-emerald-700 tracking-wider sm:tracking-widest uppercase block mt-0.5">
-                      US Warehouse Direct
-                    </span>
-                  </div>
+                  <VastireLogo size="md" />
                 </Link>
 
                 {/* Right Action Icons: Filter, Search, Watchlist, Cart, Profile */}
@@ -255,7 +249,7 @@ export default function Navbar() {
                     title="Saved Watchlist"
                   >
                     <Heart className="w-4 h-4 text-slate-700" />
-                    {watchlistCount > 0 && (
+                    {mounted && watchlistCount > 0 && (
                       <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                         {watchlistCount}
                       </span>
@@ -270,7 +264,7 @@ export default function Navbar() {
                     title="Shopping Cart"
                   >
                     <ShoppingBag className="w-4 h-4 text-slate-700" />
-                    {itemCount > 0 && (
+                    {mounted && itemCount > 0 && (
                       <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                         {itemCount}
                       </span>

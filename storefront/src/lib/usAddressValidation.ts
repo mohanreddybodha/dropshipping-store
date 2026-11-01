@@ -225,7 +225,7 @@ export function validateUsPhone(phone: string, phoneCode = "+1"): ValidationResu
   if (trimmed.includes("+91") || (rawDigits.startsWith("91") && rawDigits.length >= 11)) {
     return {
       isValid: false,
-      error: "Indian mobile numbers (+91) are not supported. Domestic Lab fulfills orders strictly within the United States.",
+      error: "Indian mobile numbers (+91) are not supported. Vastire fulfills orders strictly within the United States.",
     };
   }
 
@@ -347,7 +347,7 @@ export function validateUsStreetAddress(address: string): ValidationResult {
     if (regex.test(lower)) {
       return {
         isValid: false,
-        error: `Invalid domestic address: "${term}" is an international location. Domestic Lab fulfills orders exclusively within the United States.`,
+        error: `Invalid domestic address: "${term}" is an international location. Vastire fulfills orders exclusively within the United States.`,
       };
     }
   }

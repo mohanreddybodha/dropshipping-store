@@ -259,7 +259,7 @@ function OrdersContent() {
       const cleanTracking = sanitizeTrackingNumber(order.tracking_number, order.status);
       const orderItems = order.items && order.items.length > 0 ? order.items : [];
       if (orderItems.length === 0) {
-        const resolved = resolveItemImage("Domestic Lab Essential");
+        const resolved = resolveItemImage("Vastire Essential");
         items.push({
           orderNumber: order.internal_order_number,
           orderId: order.id,
@@ -274,7 +274,7 @@ function OrdersContent() {
           shippingPhone: order.customer_phone,
           carrierName: order.carrier_name,
           trackingNumber: cleanTracking,
-          itemTitle: "Domestic Lab Essential",
+          itemTitle: "Vastire Essential",
           itemSlug: resolved.slug,
           itemImage: resolved.image,
           itemQuantity: 1,
@@ -283,7 +283,7 @@ function OrdersContent() {
         });
       } else {
         orderItems.forEach((it: any, idx: number) => {
-          const rawTitle = it.product_title || it.title || "Domestic Lab Essential";
+          const rawTitle = it.product_title || it.title || "Vastire Essential";
           const rawImg = it.image_url || it.image || it.hero_image_url;
           const resolved = resolveItemImage(rawTitle, rawImg, it.slug);
           items.push({

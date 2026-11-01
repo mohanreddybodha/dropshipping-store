@@ -227,7 +227,7 @@ def paypal_capture_order(payload: PayPalCaptureOrderRequest, db: Session = Depen
 
     clean_email = payload.customer_email.strip().lower()
     order_num = payload.internal_order_number or f"ORD-PP-{int(time.time() * 1000)}"
-    tracking_num = f"94001118995625{int(time.time())}"
+    tracking_num = payload.tracking_number or None
     now = datetime.now(timezone.utc)
 
     new_order = Order(
@@ -330,7 +330,7 @@ def create_checkout_order(payload: CreateCheckoutOrderRequest, db: Session = Dep
             items=existing.items_json,
         )
 
-    tracking_num = payload.tracking_number or f"94001118995625{int(time.time())}"
+    tracking_num = payload.tracking_number or None
     now = datetime.now(timezone.utc)
 
     new_order = Order(

@@ -44,7 +44,7 @@ class ProductResponse(BaseModel):
     id: int
     pid: str
     title: str
-    brand_title: Optional[str] = "Domestic Lab"
+    brand_title: Optional[str] = "Vastire"
     slug: str
     category: str = "Home & Kitchen"
     rating: float = 4.8
@@ -100,7 +100,7 @@ def _build_product_response(prod: Product) -> ProductResponse:
         id=prod.id,
         pid=prod.pid,
         title=prod.title,
-        brand_title=prod.brand_title or "Domestic Lab",
+        brand_title=prod.brand_title or "Vastire",
         slug=prod.slug,
         category=category_val,
         rating=rating,

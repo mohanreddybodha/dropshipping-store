@@ -335,13 +335,13 @@ export default function AdminOrdersPage() {
       return !order.is_grace_active && !order.cj_order_id && order.status !== "CANCELLED";
     }
     if (selectedTab === "grace") {
-      return order.is_grace_active;
+      return order.is_grace_active && !order.cj_order_id && order.status !== "CANCELLED";
     }
     if (selectedTab === "processing") {
-      return (order.status === "SUPPLIER_PROCESSING" || !!order.cj_order_id) && !order.tracking_number;
+      return !!order.cj_order_id && !order.tracking_number && order.status !== "CANCELLED";
     }
     if (selectedTab === "shipped") {
-      return order.status === "SHIPPED" || !!order.tracking_number;
+      return !!order.cj_order_id && !!order.tracking_number && order.status !== "CANCELLED";
     }
 
     return true;
@@ -350,9 +350,9 @@ export default function AdminOrdersPage() {
   // Top summary counters
   const counts = {
     ready: orders.filter((o) => !o.is_grace_active && !o.cj_order_id && o.status !== "CANCELLED").length,
-    grace: orders.filter((o) => o.is_grace_active).length,
-    processing: orders.filter((o) => (o.status === "SUPPLIER_PROCESSING" || !!o.cj_order_id) && !o.tracking_number).length,
-    shipped: orders.filter((o) => o.status === "SHIPPED" || !!o.tracking_number).length,
+    grace: orders.filter((o) => o.is_grace_active && !o.cj_order_id && o.status !== "CANCELLED").length,
+    processing: orders.filter((o) => !!o.cj_order_id && !o.tracking_number && o.status !== "CANCELLED").length,
+    shipped: orders.filter((o) => !!o.cj_order_id && !!o.tracking_number && o.status !== "CANCELLED").length,
     all: orders.length,
   };
 
@@ -781,7 +781,7 @@ export default function AdminOrdersPage() {
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                             <span>Delivered</span>
                           </span>
-                        ) : order.tracking_number ? (
+                        ) : order.cj_order_id && order.tracking_number ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
                             <Truck className="w-3.5 h-3.5 text-emerald-600" />
                             <span>Shipped ({order.carrier_name || "USPS"})</span>
@@ -789,17 +789,17 @@ export default function AdminOrdersPage() {
                         ) : order.cj_order_id ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-sky-50 text-sky-700 border border-sky-200">
                             <Package className="w-3.5 h-3.5 text-sky-600" />
-                            <span>Processing at US Warehouse</span>
+                            <span>Ordered on CJ</span>
                           </span>
                         ) : order.is_grace_active ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                             <Clock className="w-3.5 h-3.5 text-amber-600" />
-                            <span>Grace Active</span>
+                            <span>In Grace Period</span>
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Ready to Fulfill</span>
+                            <span>Ready to Order</span>
                           </span>
                         )}
                       </div>
@@ -870,8 +870,8 @@ export default function AdminOrdersPage() {
                       </div>
                     )}
 
-                    {/* Live Tracking link if available */}
-                    {order.tracking_number && (
+                    {/* Live Tracking link if available and confirmed placed */}
+                    {order.cj_order_id && order.tracking_number && (
                       <div className="bg-white border border-emerald-200/90 rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
                         <div className="flex items-center gap-2">
                           <Truck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
@@ -1063,10 +1063,12 @@ export default function AdminOrdersPage() {
                             : matchedProduct?.hero_image_url || matchedProduct?.images?.[0] || "";
                         const effectiveSlug = item.slug || matchedProduct?.slug;
 
-                        // Official CJ direct product page: https://cjdropshipping.com/product/{pid}.html
-                        const cjUrl = effectivePid
-                          ? `https://cjdropshipping.com/product/${effectivePid}.html`
-                          : `https://cjdropshipping.com/search/${encodeURIComponent(title)}.html`;
+                        const cleanSlug = (effectiveSlug || title.toLowerCase().replace(/[^a-z0-9]+/g, "-")).replace(/^-+|-+$/g, "");
+                        // Canonical CJ direct product page: https://cjdropshipping.com/product/{slug}-p-{pid}.html
+                        const cjDirectUrl = effectivePid
+                          ? `https://cjdropshipping.com/product/${cleanSlug}-p-${effectivePid}.html`
+                          : null;
+                        const cjSearchUrl = `https://cjdropshipping.com/search/${encodeURIComponent(title)}.html`;
 
                         return (
                           <div
@@ -1079,6 +1081,9 @@ export default function AdminOrdersPage() {
                                 <img
                                   src={effectiveImage}
                                   alt={title}
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/placeholder.png";
+                                  }}
                                   className="w-14 h-14 object-contain rounded-xl bg-white border border-slate-200 p-1 flex-shrink-0 shadow-2xs"
                                 />
                               ) : (
@@ -1094,11 +1099,6 @@ export default function AdminOrdersPage() {
                                   <span className="font-bold text-slate-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md">
                                     Qty: {item.quantity || 1}
                                   </span>
-                                  {effectivePid && (
-                                    <span className="font-mono font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                                      <span>PID: {effectivePid}</span>
-                                    </span>
-                                  )}
                                   {item.size && (
                                     <span className="bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">
                                       Size: {item.size}
@@ -1119,27 +1119,39 @@ export default function AdminOrdersPage() {
                             </div>
 
                             {/* Direct Supplier Actions */}
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-shrink-0 flex-wrap sm:flex-nowrap">
                               {effectiveSlug && (
                                 <Link
                                   href={`/products/${effectiveSlug}`}
                                   target="_blank"
-                                  className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 text-xs font-bold transition flex items-center gap-1"
+                                  className="px-2.5 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 text-xs font-bold transition flex items-center gap-1 shadow-2xs"
                                   title="View product on storefront"
                                 >
-                                  <span>View Store</span>
+                                  <span>Store</span>
                                   <ExternalLink className="w-3 h-3 text-slate-400" />
                                 </Link>
                               )}
 
                               <a
-                                href={cjUrl}
+                                href={cjDirectUrl || cjSearchUrl}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                                title="Open direct product page on CJ Dropshipping"
                               >
                                 <span>Open on CJ Dropshipping</span>
                                 <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+
+                              <a
+                                href={cjSearchUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-2 sm:px-3 sm:py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                title="Search alternate suppliers on CJ"
+                              >
+                                <Search className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="hidden sm:inline">Alternate Suppliers</span>
                               </a>
                             </div>
                           </div>

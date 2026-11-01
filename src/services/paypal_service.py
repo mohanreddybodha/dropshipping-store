@@ -106,7 +106,7 @@ class PayPalService:
             "purchase_units": [
                 {
                     "reference_id": order_ref,
-                    "description": f"Domestic Direct Order {order_ref}",
+                    "description": f"Vastire Order {order_ref}",
                     "amount": {
                         "currency_code": currency.upper(),
                         "value": f"{amount:.2f}",
@@ -114,7 +114,7 @@ class PayPalService:
                 }
             ],
             "application_context": {
-                "brand_name": "Domestic Direct",
+                "brand_name": "Vastire",
                 "landing_page": "NO_PREFERENCE",
                 "shipping_preference": "NO_SHIPPING",
                 "user_action": "PAY_NOW",

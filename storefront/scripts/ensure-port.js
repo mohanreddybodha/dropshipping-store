@@ -39,13 +39,22 @@ function freePort() {
 function cleanStaleBuild() {
   try {
     const dotNext = path.join(__dirname, '..', '.next');
-    const buildId = path.join(dotNext, 'BUILD_ID');
-    if (fs.existsSync(buildId)) {
-      console.log('[ensure-port] Detected production build artifacts in .next. Purging for clean dev startup...');
-      fs.rmSync(dotNext, { recursive: true, force: true });
+    if (process.env.CLEAN_START === 'true' || fs.existsSync(path.join(dotNext, 'BUILD_ID'))) {
+      console.log('[ensure-port] Purging .next build cache for clean startup...');
+      if (fs.existsSync(dotNext)) {
+        for (const file of fs.readdirSync(dotNext)) {
+          fs.rmSync(path.join(dotNext, file), { recursive: true, force: true });
+        }
+      }
     }
   } catch (e) {}
 }
 
 freePort();
 cleanStaleBuild();
+try {
+  const dotNext = path.join(__dirname, '..', '.next');
+  if (process.platform === 'win32' && fs.existsSync(dotNext)) {
+    execSync(`attrib +U -P "${dotNext}"`);
+  }
+} catch (e) {}

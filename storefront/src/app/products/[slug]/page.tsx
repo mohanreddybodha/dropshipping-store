@@ -85,7 +85,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     "description": product.pas_description_html?.replace(/<[^>]*>?/gm, "").slice(0, 200),
     "brand": {
       "@type": "Brand",
-      "name": "Domestic Lab",
+      "name": product.brand_title || "Vastire",
     },
     "aggregateRating": {
       "@type": "AggregateRating",

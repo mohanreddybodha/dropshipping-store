@@ -60,6 +60,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const heroImage = product.hero_image_url || product.images?.[0] || "/placeholder.jpg";
   const rating = product.rating || 4.8;
 
+  const [imgSrc, setImgSrc] = useState(heroImage);
+
   return (
     <Link
       href={`/products/${product.slug}`}
@@ -71,8 +73,13 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="relative w-full aspect-square bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={heroImage}
+            src={imgSrc}
             alt={product.title}
+            onError={() => {
+              if (imgSrc !== "/placeholder.jpg") {
+                setImgSrc("/placeholder.jpg");
+              }
+            }}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />

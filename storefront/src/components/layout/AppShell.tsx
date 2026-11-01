@@ -8,6 +8,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import MobileBottomNav from "./MobileBottomNav";
 import { ToastContainer } from "../ui/Toast";
+import VastireLogo from "../ui/VastireLogo";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -25,13 +26,8 @@ export default function AppShell({ children }: AppShellProps) {
         {/* Distraction-Free Checkout Header */}
         <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-slate-950 text-white rounded-lg flex items-center justify-center font-black text-base shadow-sm">
-                D
-              </div>
-              <span className="font-black text-sm uppercase tracking-tight text-slate-950">
-                Domestic Lab
-              </span>
+            <Link href="/" className="flex items-center group" aria-label="Vastire Home">
+              <VastireLogo size="sm" />
             </Link>
 
             <div className="flex items-center gap-4 text-xs">
@@ -55,11 +51,11 @@ export default function AppShell({ children }: AppShellProps) {
 
         {/* Minimal Checkout Compliance Footer */}
         <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-400 bg-white">
-          <p>© {new Date().getFullYear()} Domestic Lab. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Vastire (vastire.com). All rights reserved.</p>
           <p className="mt-1">
             Need assistance with your order? Contact{" "}
-            <a href="mailto:support@domesticlab.com" className="text-slate-600 underline">
-              support@domesticlab.com
+            <a href="mailto:support@vastire.com" className="text-slate-600 underline">
+              support@vastire.com
             </a>
           </p>
         </footer>

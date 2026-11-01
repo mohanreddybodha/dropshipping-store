@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         purchase_units: [
           {
             reference_id: orderNum,
-            description: `Domestic Order ${orderNum}`,
+            description: `Vastire Order ${orderNum}`,
             amount: {
               currency_code: currency.toUpperCase(),
               value: parsedAmount.toFixed(2),
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
           },
         ],
         application_context: {
-          brand_name: "Domestic Direct",
+          brand_name: "Vastire",
           landing_page: "NO_PREFERENCE",
           shipping_preference: "NO_SHIPPING",
           user_action: "PAY_NOW",
