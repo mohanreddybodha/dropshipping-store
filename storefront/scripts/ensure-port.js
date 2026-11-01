@@ -40,19 +40,20 @@ function cleanStaleBuild() {
   try {
     const dotNext = path.join(__dirname, '..', '.next');
     const buildIdFile = path.join(dotNext, 'BUILD_ID');
-    // If .next contains production build artifacts, reset it to prevent dev/prod vendor-chunk collisions
-    if (fs.existsSync(buildIdFile) || process.env.CLEAN_START === 'true') {
+    const serverPages = path.join(dotNext, 'server', 'pages');
+    // If .next contains production build artifacts or stale pages chunks, wipe it to prevent chunk collisions
+    if (fs.existsSync(buildIdFile) || fs.existsSync(serverPages) || process.env.CLEAN_START === 'true') {
       console.log('[ensure-port] Resetting stale .next cache for clean development runtime...');
-      fs.rmSync(dotNext, { recursive: true, force: true });
+      try {
+        fs.rmSync(dotNext, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
+      } catch (err) {
+        if (process.platform === 'win32') {
+          execSync(`powershell -Command "Remove-Item -Recurse -Force '${dotNext}' -ErrorAction SilentlyContinue"`);
+        }
+      }
     }
   } catch (e) {}
 }
 
 freePort();
 cleanStaleBuild();
-try {
-  const dotNext = path.join(__dirname, '..', '.next');
-  if (process.platform === 'win32' && fs.existsSync(dotNext)) {
-    execSync(`attrib +U -P "${dotNext}"`);
-  }
-} catch (e) {}
