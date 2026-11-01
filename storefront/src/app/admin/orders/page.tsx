@@ -27,6 +27,7 @@ import {
   Zap,
 } from "lucide-react";
 import { auth, loginWithGoogle, logoutUser, FirebaseUser } from "@/lib/firebase";
+import { FALLBACK_PRODUCTS } from "@/lib/api";
 
 interface AdminOrderItem {
   product_title?: string;
@@ -1044,51 +1045,103 @@ export default function AdminOrdersPage() {
                     <div className="space-y-2">
                       {order.items?.map((item, idx) => {
                         const title = item.product_title || item.title || "Product";
-                        const cjUrl = item.pid
-                          ? `https://cjdropshipping.com/product/details?id=${item.pid}`
+                        const cleanT = title.toLowerCase().trim();
+
+                        const matchedProduct = FALLBACK_PRODUCTS.find(
+                          (p) =>
+                            (item.pid && p.pid === item.pid) ||
+                            (item.slug && p.slug === item.slug) ||
+                            p.title.toLowerCase().trim() === cleanT ||
+                            p.title.toLowerCase().includes(cleanT) ||
+                            cleanT.includes(p.title.toLowerCase())
+                        );
+
+                        const effectivePid = item.pid || matchedProduct?.pid || "";
+                        const effectiveImage =
+                          item.image_url && item.image_url !== "/placeholder.jpg"
+                            ? item.image_url
+                            : matchedProduct?.hero_image_url || matchedProduct?.images?.[0] || "";
+                        const effectiveSlug = item.slug || matchedProduct?.slug;
+
+                        // Official CJ direct product page: https://cjdropshipping.com/product/{pid}.html
+                        const cjUrl = effectivePid
+                          ? `https://cjdropshipping.com/product/${effectivePid}.html`
                           : `https://cjdropshipping.com/search/${encodeURIComponent(title)}.html`;
 
                         return (
                           <div
                             key={idx}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/70"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs hover:border-slate-300 transition"
                           >
-                            <div className="flex items-center gap-3 min-w-0">
-                              {item.image_url ? (
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              {effectiveImage ? (
                                 /* eslint-disable-next-line @next/next/no-img-element */
                                 <img
-                                  src={item.image_url}
+                                  src={effectiveImage}
                                   alt={title}
-                                  className="w-12 h-12 object-contain rounded-lg bg-white border border-slate-200 flex-shrink-0"
+                                  className="w-14 h-14 object-contain rounded-xl bg-white border border-slate-200 p-1 flex-shrink-0 shadow-2xs"
                                 />
                               ) : (
-                                <div className="w-12 h-12 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-400">
-                                  <ShoppingBag className="w-5 h-5" />
+                                <div className="w-14 h-14 rounded-xl bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-400">
+                                  <ShoppingBag className="w-6 h-6" />
                                 </div>
                               )}
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold text-slate-900 truncate max-w-sm sm:max-w-md">
+                              <div className="min-w-0 space-y-1">
+                                <p className="text-xs font-black text-slate-900 truncate max-w-sm sm:max-w-md">
                                   {title}
                                 </p>
-                                <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
-                                  <span className="font-semibold text-slate-700">Qty: {item.quantity || 1}</span>
-                                  {item.size && <span>· Size: {item.size}</span>}
-                                  {item.color && <span>· Color: {item.color}</span>}
-                                  {item.price ? <span className="font-semibold text-emerald-700">· ${Number(item.price).toFixed(2)}</span> : null}
+                                <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-600">
+                                  <span className="font-bold text-slate-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md">
+                                    Qty: {item.quantity || 1}
+                                  </span>
+                                  {effectivePid && (
+                                    <span className="font-mono font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                      <span>PID: {effectivePid}</span>
+                                    </span>
+                                  )}
+                                  {item.size && (
+                                    <span className="bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">
+                                      Size: {item.size}
+                                    </span>
+                                  )}
+                                  {item.color && (
+                                    <span className="bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">
+                                      Color: {item.color}
+                                    </span>
+                                  )}
+                                  {item.price ? (
+                                    <span className="font-extrabold text-emerald-700 bg-emerald-50/80 border border-emerald-200 px-2 py-0.5 rounded-md">
+                                      ${Number(item.price).toFixed(2)}
+                                    </span>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
 
-                            {/* Direct CJ Link Button */}
-                            <a
-                              href={cjUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="px-3.5 py-2 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold transition flex items-center justify-center gap-1.5 flex-shrink-0 shadow-2xs hover:border-emerald-400 cursor-pointer active:scale-95"
-                            >
-                              <span>Open on CJ Dropshipping</span>
-                              <ExternalLink className="w-3.5 h-3.5 text-emerald-600" />
-                            </a>
+                            {/* Direct Supplier Actions */}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {effectiveSlug && (
+                                <Link
+                                  href={`/products/${effectiveSlug}`}
+                                  target="_blank"
+                                  className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 text-xs font-bold transition flex items-center gap-1"
+                                  title="View product on storefront"
+                                >
+                                  <span>View Store</span>
+                                  <ExternalLink className="w-3 h-3 text-slate-400" />
+                                </Link>
+                              )}
+
+                              <a
+                                href={cjUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                              >
+                                <span>Open on CJ Dropshipping</span>
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
                           </div>
                         );
                       })}

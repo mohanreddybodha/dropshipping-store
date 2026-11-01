@@ -604,10 +604,12 @@ function CheckoutContent() {
     const orderPayloadItems = checkoutItems.map((item) => ({
       title: item.product.title,
       product_title: item.product.title,
+      pid: item.product.pid,
       slug: item.product.slug,
       image_url: item.product.hero_image_url || item.product.images?.[0] || "",
       quantity: item.quantity,
       price: item.unitPrice,
+      unit_price: item.unitPrice,
       size: item.selectedSize,
       color: item.selectedColor,
     }));
@@ -854,7 +856,7 @@ function CheckoutContent() {
             🎉 Congratulations! Your Order is Placed
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            Thank you for ordering with Domestic Direct! Your payment was verified and domestic warehouse dispatch has been scheduled.
+            Thank you for ordering with Vastire! Your payment was verified and domestic warehouse dispatch has been scheduled.
           </p>
         </div>
 
@@ -1596,8 +1598,13 @@ function CheckoutContent() {
               }}
               orderItems={checkoutItems.map((item) => ({
                 title: item.product.title,
+                product_title: item.product.title,
+                pid: item.product.pid,
+                slug: item.product.slug,
+                image_url: item.product.hero_image_url || item.product.images?.[0] || "",
                 quantity: item.quantity,
                 unit_price: item.unitPrice,
+                price: item.unitPrice,
                 size: item.selectedSize,
                 color: item.selectedColor,
               }))}
