@@ -91,14 +91,6 @@ const US_STATES: ThemedDropdownOption[] = [
   { value: "WY", label: "Wyoming (WY)" },
 ];
 
-const COUNTRY_OPTIONS: ThemedDropdownOption[] = [
-  { value: "US", label: "United States", badge: "Eligible" },
-  { value: "CA", label: "Canada (Unavailable)", badge: "Unavailable", disabled: true },
-  { value: "GB", label: "United Kingdom (Unavailable)", badge: "Unavailable", disabled: true },
-  { value: "AU", label: "Australia (Unavailable)", badge: "Unavailable", disabled: true },
-  { value: "INTL", label: "Other International Destinations", badge: "Unavailable", disabled: true },
-];
-
 const PHONE_CODE_OPTIONS: ThemedDropdownOption[] = [
   { value: "+1", label: "+1 US" },
 ];
@@ -188,6 +180,27 @@ function CheckoutContent() {
     shippingSla: string;
     items: typeof checkoutItems;
   } | null>(null);
+
+  const [isCelebrating, setIsCelebrating] = useState(false);
+  const [celebrationProgress, setCelebrationProgress] = useState(0);
+
+  useEffect(() => {
+    if (!confirmedOrder || !isCelebrating) return;
+
+    const startTime = Date.now();
+    const duration = 5000;
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(100, (elapsed / duration) * 100);
+      setCelebrationProgress(progress);
+      if (elapsed >= duration) {
+        clearInterval(interval);
+        setIsCelebrating(false);
+      }
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [confirmedOrder, isCelebrating]);
 
   // Network offline / online recovery listener
   useEffect(() => {
@@ -475,9 +488,9 @@ function CheckoutContent() {
       errors.city = cityVal.error || "Please enter a valid US City.";
     }
 
-    // 6. US State Selection
+    // 6. US State / Province Selection (Mandatory for USPS domestic logistics & CJ Dropshipping)
     if (!form.province) {
-      errors.province = "Please select a valid US State.";
+      errors.province = "Please select a valid US State / Province.";
     }
 
     // 7. Strict US ZIP / PIN Validation (5-digits, 6-digit Indian PIN rejection, and State Prefix Matching)
@@ -491,7 +504,7 @@ function CheckoutContent() {
       setFieldErrors(errors);
       setIsSubmitting(false);
 
-      const fieldPriority = ["country_code", "name", "email", "phone", "address1", "city", "province", "zip_code"];
+      const fieldPriority = ["name", "email", "phone", "address1", "city", "province", "zip_code"];
       const firstInvalid = fieldPriority.find((k) => errors[k]) || Object.keys(errors)[0];
 
       if (typeof window !== "undefined") {
@@ -697,6 +710,8 @@ function CheckoutContent() {
       shippingSla: "3–5 Business Days (Tracked USPS Ground)",
       items: checkoutItems,
     });
+    setCelebrationProgress(0);
+    setIsCelebrating(true);
 
     if (singleCartItem) {
       removeItem(
@@ -841,9 +856,11 @@ function CheckoutContent() {
       setConfirmedOrder({
         orderNumber: orderId,
         amount: finalAmount,
-        shippingSla: "3–5 Business Days (Tracked USPS)",
+        shippingSla: "3–5 Business Days (Tracked USPS Ground)",
         items: checkoutItems,
       });
+      setCelebrationProgress(0);
+      setIsCelebrating(true);
 
       if (singleCartItem) {
         removeItem(
@@ -862,32 +879,68 @@ function CheckoutContent() {
     }
   };
 
-  if (confirmedOrder) {
+  if (confirmedOrder && isCelebrating) {
+    const remainingSeconds = Math.max(1, Math.ceil(5 - (celebrationProgress / 100) * 5));
     return (
-      <div className="max-w-xl mx-auto px-4 py-12 sm:py-16 text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
-        {/* ── TASTEFUL CELEBRATORY SUCCESS BADGE ── */}
-        <div className="relative mx-auto w-20 h-20">
-          <div className="absolute inset-0 bg-emerald-400/20 rounded-full animate-ping opacity-60" />
-          <div className="relative w-20 h-20 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-600/30">
-            <CheckCircle2 className="w-10 h-10 animate-in zoom-in duration-300" />
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-12 text-center animate-in fade-in zoom-in-95 duration-300">
+        {/* Minimal Animated Delivery Package & Ripple Waves (Flipkart Style) */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 -m-4 bg-emerald-500/10 rounded-full animate-ping duration-1000" />
+          <div className="absolute inset-0 -m-2 bg-emerald-500/15 rounded-full animate-pulse" />
+
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-3xl flex items-center justify-center shadow-xl shadow-emerald-500/20 border-4 border-white">
+            <div className="relative flex items-center justify-center">
+              <Package className="w-12 h-12 sm:w-14 sm:h-14 text-white drop-shadow-sm animate-bounce" style={{ animationDuration: "2s" }} />
+              <div className="absolute -bottom-1 -right-1 bg-white text-emerald-600 rounded-full p-1 shadow-md border border-emerald-100">
+                <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
+              </div>
+            </div>
           </div>
+
+          {/* Minimal celebratory sparkle particles */}
+          <div className="absolute -top-1 -left-2 w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping delay-100 opacity-75" />
+          <div className="absolute -bottom-1 -left-2 w-2 h-2 bg-blue-400 rounded-full animate-ping delay-300 opacity-75" />
+          <div className="absolute top-2 -right-2 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping delay-200 opacity-75" />
         </div>
 
-        <div className="space-y-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            Payment Verified &amp; Order Placed
-          </span>
+        <div className="space-y-2 max-w-md mx-auto">
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Congratulations! Your Order is Placed
+            Congratulations! Your order is placed
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            Thank you for ordering with Vastire! Your payment was verified and domestic warehouse dispatch has been scheduled.
+          <p className="text-sm font-semibold text-emerald-700">
+            Order Reference: <span className="font-mono">{confirmedOrder.orderNumber}</span>
+          </p>
+          <p className="text-xs text-slate-400">
+            Showing order details in {remainingSeconds} {remainingSeconds === 1 ? "second" : "seconds"}...
           </p>
         </div>
 
-        {/* 30-Minute Grace Window Banner */}
-        <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-4 text-left max-w-md mx-auto space-y-1.5">
+        {/* 5-second animated progress line */}
+        <div className="w-48 sm:w-56 h-1.5 bg-slate-100 rounded-full mx-auto overflow-hidden mt-6 border border-slate-200/60 shadow-inner">
+          <div
+            className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-75 ease-linear"
+            style={{ width: `${celebrationProgress}%` }}
+          />
+        </div>
+
+        {/* Skip button to view details immediately */}
+        <button
+          type="button"
+          onClick={() => setIsCelebrating(false)}
+          className="mt-6 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-emerald-700 font-semibold px-4 py-2 rounded-full hover:bg-emerald-50 transition cursor-pointer"
+        >
+          <span>View Order Details</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  if (confirmedOrder) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-8 sm:py-12 space-y-6 animate-in fade-in duration-300">
+        {/* 30-Minute Grace Window Banner (STARTS DIRECTLY HERE - NO TICK, NO CONGRATULATIONS TEXT) */}
+        <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-4 text-left max-w-md mx-auto space-y-1.5 shadow-xs">
           <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
             <Clock className="w-4 h-4 text-amber-700 flex-shrink-0" />
             <span>30-Minute Grace Window Active</span>
@@ -1223,30 +1276,7 @@ function CheckoutContent() {
               </div>
             </div>
           )}
-          {/* Country Field (Themed Dropdown Locked to US) */}
-          <div id="field-country_code">
-            <ThemedDropdown
-              label="Country"
-              options={COUNTRY_OPTIONS}
-              value={form.country_code}
-              onChange={(val) => {
-                setForm({ ...form, country_code: val });
-                if (fieldErrors.country_code) {
-                  setFieldErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.country_code;
-                    return next;
-                  });
-                }
-              }}
-            />
-            {fieldErrors.country_code && (
-              <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
-                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>{fieldErrors.country_code}</span>
-              </p>
-            )}
-          </div>
+
 
           {/* Contact Details Section */}
           {isAuthenticatedUser ? (
@@ -1425,7 +1455,7 @@ function CheckoutContent() {
             )}
           </div>
 
-          {/* City & County */}
+          {/* City & State / Province (Mandatory for USPS & CJ Dropshipping) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-30">
             <div id="field-city">
               <label className="block mb-1">City</label>
@@ -1449,28 +1479,9 @@ function CheckoutContent() {
               )}
             </div>
 
-            <div id="field-county">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block">County</label>
-                <span className="text-[10px] text-slate-400 font-normal">Optional</span>
-              </div>
-              <input
-                type="text"
-                name="county"
-                value={form.county}
-                onChange={handleChange}
-                placeholder="e.g. Orange County (Optional)"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 text-sm transition focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* State Dropdown & PIN */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-20">
-            {/* Custom Themed State Dropdown */}
             <div id="field-province" className="relative z-40">
               <ThemedDropdown
-                label="State"
+                label="State / Province"
                 options={US_STATES}
                 value={form.province}
                 onChange={(val) => {
@@ -1483,7 +1494,7 @@ function CheckoutContent() {
                     });
                   }
                 }}
-                placeholder="Select State"
+                placeholder="Select State / Province"
               />
               {fieldErrors.province && (
                 <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
@@ -1492,31 +1503,32 @@ function CheckoutContent() {
                 </p>
               )}
             </div>
+          </div>
 
-            <div id="field-zip_code">
-              <label className="block mb-1">PIN / ZIP Code</label>
-              <input
-                type="text"
-                name="zip_code"
-                value={form.zip_code}
-                onChange={handleChange}
-                placeholder="Enter PIN / ZIP"
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
-                  fieldErrors.zip_code
-                    ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"
-                    : "border-slate-200 focus:ring-2 focus:ring-emerald-500"
-                }`}
-                maxLength={10}
-              />
-              {fieldErrors.zip_code ? (
-                <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
-                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{fieldErrors.zip_code}</span>
-                </p>
-              ) : (
-                <p className="text-[10px] text-slate-400 mt-1">5-digit US ZIP code</p>
-              )}
-            </div>
+          {/* PIN / ZIP Code */}
+          <div id="field-zip_code" className="relative z-20">
+            <label className="block mb-1">PIN / ZIP Code</label>
+            <input
+              type="text"
+              name="zip_code"
+              value={form.zip_code}
+              onChange={handleChange}
+              placeholder="Enter PIN / ZIP"
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
+                fieldErrors.zip_code
+                  ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"
+                  : "border-slate-200 focus:ring-2 focus:ring-emerald-500"
+              }`}
+              maxLength={10}
+            />
+            {fieldErrors.zip_code ? (
+              <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{fieldErrors.zip_code}</span>
+              </p>
+            ) : (
+              <p className="text-[10px] text-slate-400 mt-1">5-digit US ZIP code</p>
+            )}
           </div>
 
           {/* ── ADDRESS SAVE & TAGGING PREFERENCES (Flipkart / Amazon Style) ── */}
