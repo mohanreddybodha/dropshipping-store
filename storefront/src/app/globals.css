@@ -171,78 +171,121 @@ body {
 }
 
 /* ═════════════════════════════════════════════════════════════════════════
-   PRODUCTION-GRADE INDUSTRY LAUNCH SCREEN ANIMATIONS
-   Choreographed Cart Motion:
-   1. Cart Body drives in from left with momentum and velocity tilt
-   2. Wheels roll in from bottom-right and align directly underneath
-   3. Complete Vastire Brand Icon is formed with a micro-snap settle
-   4. Brand Wordmark & "Curated Home Essentials" rise smoothly
-   5. Horizontal progress bar fills smoothly
+   SLOW, SMOOTH, EASE-IN-OUT DRAGGING SPLASH ANIMATION
+   Choreographed Multi-Part Cart Assembly:
+   1. Cart Body: Drags in with physical inertia & subtle tilt
+   2. Two Wheels (Gray + Green with gap): Roll in directly underneath
+   3. Green Accents: Glide down and lock into the cart frame
+   4. Trailing Streaks: Drag behind on the left
+   5. Convergence: Sits in exact icon position
+   6. Horizontal loading bar & Curated Home Essentials
    ═════════════════════════════════════════════════════════════════════════ */
 
-/* 1. Cart Body: glides in smoothly from the left with momentum tilt */
-@keyframes cartBodyMove {
+/* 1. Cart Body: Drags with inertia from left */
+@keyframes dragCartBody {
   0% {
     opacity: 0;
-    transform: translate3d(-140px, -15px, 0) scale(0.88) rotate(-9deg);
+    transform: translate3d(-130px, -6px, 0) scale(0.92) rotate(-5deg);
   }
-  60% {
-    opacity: 1;
-    transform: translate3d(8px, -2px, 0) scale(1.03) rotate(2deg);
+  30% {
+    opacity: 0.8;
   }
-  80% {
+  75% {
     opacity: 1;
-    transform: translate3d(-2px, 0, 0) scale(0.99) rotate(-0.5deg);
+    transform: translate3d(4px, -1px, 0) scale(1.01) rotate(1deg);
   }
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
   }
 }
-.animate-cart-body-move {
-  animation: cartBodyMove 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+.animate-drag-cart-body {
+  animation: dragCartBody 1.75s cubic-bezier(0.42, 0, 0.58, 1) both;
 }
 
-/* 2. Wheels: roll in swiftly from the bottom-right and snap under the cart body */
-@keyframes wheelsMoveIn {
+/* 2. Wheels: Two wheels (gray & green with gap) roll in smoothly under the cart */
+@keyframes dragWheels {
   0% {
     opacity: 0;
-    transform: translate3d(140px, 35px, 0) scale(0.82) rotate(160deg);
+    transform: translate3d(90px, 20px, 0) scale(0.88) rotate(120deg);
   }
-  60% {
-    opacity: 1;
-    transform: translate3d(-6px, -2px, 0) scale(1.04) rotate(-10deg);
+  35% {
+    opacity: 0.85;
   }
-  80% {
+  75% {
     opacity: 1;
-    transform: translate3d(2px, 0, 0) scale(0.99) rotate(2deg);
+    transform: translate3d(-3px, -1px, 0) scale(1.02) rotate(-6deg);
   }
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
   }
 }
-.animate-wheels-move-in {
-  animation: wheelsMoveIn 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+.animate-drag-wheels {
+  animation: dragWheels 1.75s cubic-bezier(0.42, 0, 0.58, 1) 0.15s both;
 }
 
-/* 3. Icon Formation Snap: subtle spring pulse when body and wheels meet */
-@keyframes iconFormSnap {
+/* 3. Green Accents: Glide in smoothly from top-left to lock with the frame */
+@keyframes dragAccents {
+  0% {
+    opacity: 0;
+    transform: translate3d(-40px, -35px, 0) scale(0.94);
+  }
+  40% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 1;
+    transform: translate3d(2px, 1px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+.animate-drag-accents {
+  animation: dragAccents 1.75s cubic-bezier(0.42, 0, 0.58, 1) 0.22s both;
+}
+
+/* 4. Trailing Drag Streaks: Stretch and settle on the left */
+@keyframes dragStreaks {
+  0% {
+    opacity: 0;
+    transform: translate3d(-60px, 0, 0) scaleX(0.6);
+  }
+  50% {
+    opacity: 0.6;
+  }
+  80% {
+    opacity: 0.95;
+    transform: translate3d(3px, 0, 0) scaleX(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scaleX(1);
+  }
+}
+.animate-drag-streaks {
+  animation: dragStreaks 1.75s cubic-bezier(0.42, 0, 0.58, 1) 0.3s both;
+}
+
+/* 5. Assembled Icon Spring Settle */
+@keyframes iconAssembleSettle {
   0% {
     transform: scale(1);
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.035);
   }
   100% {
     transform: scale(1);
   }
 }
-.animate-icon-snap {
-  animation: iconFormSnap 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.68s both;
+.animate-icon-assemble-settle {
+  animation: iconAssembleSettle 0.6s cubic-bezier(0.42, 0, 0.58, 1) 1.85s both;
 }
 
-/* 4. Luxury Ambient Halo Glow behind emblem */
+/* Luxury Ambient Halo Glow behind emblem */
 @keyframes ambientHaloGlow {
   0% {
     opacity: 0;
@@ -258,39 +301,39 @@ body {
   }
 }
 .animate-ambient-halo {
-  animation: ambientHaloGlow 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
+  animation: ambientHaloGlow 1.2s cubic-bezier(0.42, 0, 0.58, 1) 0.5s both;
 }
 
-/* 5. Brand Wordmark & Tagline: Smooth decelerated slide-up */
-@keyframes brandTextRise {
+/* 6. Typography & Progress Bar slow ease-in-out rise */
+@keyframes brandRiseSmooth {
   0% {
     opacity: 0;
-    transform: translate3d(0, 12px, 0);
+    transform: translate3d(0, 16px, 0);
   }
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0);
   }
 }
-.animate-brand-text-rise {
-  animation: brandTextRise 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.68s both;
+.animate-brand-rise-smooth {
+  animation: brandRiseSmooth 0.85s cubic-bezier(0.42, 0, 0.58, 1) 1.75s both;
 }
 
-/* 6. Horizontal Progress Fill: Smooth precision progression */
-@keyframes loadingProgressFill {
+/* 7. Precision Horizontal Loading Progress (Slow & Smooth ease-in-out) */
+@keyframes loadingProgressSmooth {
   0% {
     width: 0%;
   }
-  40% {
-    width: 55%;
+  30% {
+    width: 35%;
   }
-  80% {
-    width: 90%;
+  70% {
+    width: 82%;
   }
   100% {
     width: 100%;
   }
 }
-.animate-loading-progress-fill {
-  animation: loadingProgressFill 1.05s cubic-bezier(0.22, 1, 0.36, 1) 0.72s both;
+.animate-loading-progress-smooth {
+  animation: loadingProgressSmooth 1.35s cubic-bezier(0.42, 0, 0.58, 1) 1.85s both;
 }
