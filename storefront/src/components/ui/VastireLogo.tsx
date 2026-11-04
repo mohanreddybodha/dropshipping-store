@@ -13,7 +13,7 @@ interface VastireLogoProps {
 
 /**
  * High-Performance Scalable Vector Brand Icon for Vastire.
- * Inlines the squircle SVG directly into the SSR document stream for instant 0ms first-paint.
+ * Smooth, anti-aliased rendering with zero artificial contrast sharpening or drop shadow halos.
  */
 export function VastireIcon({
   size = 42,
@@ -37,7 +37,7 @@ export function VastireIcon({
         viewBox="0 0 1024 1024"
         width={pixelSize}
         height={pixelSize}
-        className="w-full h-full select-none pointer-events-none drop-shadow-xs"
+        className="w-full h-full select-none pointer-events-none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
         shapeRendering="geometricPrecision"
@@ -57,7 +57,6 @@ export function VastireIcon({
             width="1024"
             height="1024"
             preserveAspectRatio="xMidYMid slice"
-            style={{ imageRendering: "-webkit-optimize-contrast" }}
           />
         </g>
         <rect
@@ -69,7 +68,7 @@ export function VastireIcon({
           ry="210"
           fill="none"
           stroke="#E2E8F0"
-          strokeWidth="6"
+          strokeWidth="3"
         />
       </svg>
     </div>

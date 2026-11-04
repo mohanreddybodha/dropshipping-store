@@ -175,24 +175,64 @@ html.vastire-splash-seen #vastire-splash {
   display: none !important;
 }
 
-@keyframes splashIconIn {
+/* 1. Cart moving in from left with speed momentum */
+@keyframes splashCartDrive {
   0% {
     opacity: 0;
-    transform: scale(0.85);
+    transform: translateX(-120px) translateY(6px) rotate(-4deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(8px) translateY(-2px) rotate(1.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+}
+.animate-splash-cart-drive {
+  animation: splashCartDrive 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 2. Wheels rolling in from right / opposite side */
+@keyframes splashWheelsRoll {
+  0% {
+    opacity: 0;
+    transform: translateX(110px) translateY(8px) rotate(720deg);
+  }
+  75% {
+    opacity: 1;
+    transform: translateX(-6px) translateY(-1px) rotate(-15deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+}
+.animate-splash-wheels-roll {
+  animation: splashWheelsRoll 0.62s cubic-bezier(0.34, 1.25, 0.64, 1) 0.06s both;
+}
+
+/* 3. Final Icon Formed on Screen (snap + spring bounce) */
+@keyframes splashIconFormed {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
   }
   60% {
     opacity: 1;
-    transform: scale(1.03);
+    transform: scale(1.06);
   }
   100% {
     opacity: 1;
     transform: scale(1);
   }
 }
-.animate-splash-icon {
-  animation: splashIconIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+.animate-splash-icon-formed {
+  animation: splashIconFormed 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.62s both;
 }
 
+/* 4. Brand text & subtitle fade in */
 @keyframes splashTextIn {
   from {
     opacity: 0;
@@ -204,20 +244,21 @@ html.vastire-splash-seen #vastire-splash {
   }
 }
 .animate-splash-text {
-  animation: splashTextIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  animation: splashTextIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.72s both;
 }
 
+/* 5. Horizontal loading bar sweeps from 0% to 100% */
 @keyframes splashProgressSweep {
   0% {
     width: 0%;
   }
-  50% {
-    width: 65%;
+  45% {
+    width: 60%;
   }
   100% {
     width: 100%;
   }
 }
 .animate-splash-progress {
-  animation: splashProgressSweep 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both;
+  animation: splashProgressSweep 1.15s cubic-bezier(0.2, 0.8, 0.2, 1) 0.75s both;
 }

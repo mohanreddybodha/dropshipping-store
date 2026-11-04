@@ -55,7 +55,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
+      <body
+        suppressHydrationWarning
+        className={`min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased font-sans ${brandPoppins.variable}`}
+      >
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -81,11 +84,6 @@ export default function RootLayout({
             `,
           }}
         />
-      </head>
-      <body
-        suppressHydrationWarning
-        className={`min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased font-sans ${brandPoppins.variable}`}
-      >
         <AppLaunchSplash />
         <CartProvider>
           <AppShell>{children}</AppShell>
