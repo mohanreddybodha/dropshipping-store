@@ -85,5 +85,5 @@ jobs:
             fi
             sleep 1
           done
-          npm run test:security
+          npm run test:production
           kill $SERVER_PID

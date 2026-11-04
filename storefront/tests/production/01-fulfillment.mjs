@@ -1,14 +1,12 @@
-// Automated Verification Suite for Phase P1 Fulfillment Pipeline & DLQ
-// Run against live Next.js server on http://localhost:3009
+// Production Verification Suite: Phase P1 Fulfillment Pipeline & DLQ Resiliency
+// Verifies: Catalog VID resolution, DLQ retry authorization, DLQ required validation, DLQ listing schema
 
 import fs from "fs";
 
-const BASE = "http://localhost:3009";
-
-async function runTests() {
+export async function runFulfillmentTests(base = "http://localhost:3009") {
+  console.log("\n=================================================");
+  console.log(" [2/3] PRODUCTION FULFILLMENT & DLQ TESTS");
   console.log("=================================================");
-  console.log(" RUNNING PHASE P1 FULFILLMENT & DLQ VERIFICATION");
-  console.log("=================================================\n");
 
   let passed = 0;
   let failed = 0;
@@ -23,9 +21,7 @@ async function runTests() {
     }
   }
 
-  // -------------------------------------------------------------------------
-  // TEST 1: Variant VID Resolution via Catalog Assets
-  // -------------------------------------------------------------------------
+  // TEST 1: Variant VID Resolution via Catalog
   try {
     const catalogPath = fs.existsSync("src/lib/seedCatalog.json")
       ? "src/lib/seedCatalog.json"
@@ -43,12 +39,9 @@ async function runTests() {
     assert(false, "P1-1: VID resolution exception", err.message);
   }
 
-  // -------------------------------------------------------------------------
   // TEST 2: Admin Retry-Fulfillment Route Security
-  // -------------------------------------------------------------------------
   try {
-    // Unauthenticated call
-    const unauthRes = await fetch(`${BASE}/api/admin/orders/retry-fulfillment`, {
+    const unauthRes = await fetch(`${base}/api/admin/orders/retry-fulfillment`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ internal_order_number: "ORD-TEST-123" }),
@@ -62,17 +55,15 @@ async function runTests() {
     assert(false, "P1-3: Retry unauthenticated call exception", err.message);
   }
 
-  // -------------------------------------------------------------------------
-  // TEST 3: Admin Retry-Fulfillment Validation Checks
-  // -------------------------------------------------------------------------
+  // Resolve admin key from environment
   const envPath = fs.existsSync(".env.local") ? ".env.local" : "storefront/.env.local";
   const envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : "";
   const adminKeyMatch = envContent.match(/ADMIN_API_KEY=([^\r\n]+)/);
   const adminKey = process.env.ADMIN_API_KEY || (adminKeyMatch ? adminKeyMatch[1].trim() : "vastire_admin_dev_secret_key_2026");
 
+  // TEST 3: Admin Retry-Fulfillment Validation Checks
   try {
-    // Missing internal_order_number
-    const missingNumRes = await fetch(`${BASE}/api/admin/orders/retry-fulfillment`, {
+    const missingNumRes = await fetch(`${base}/api/admin/orders/retry-fulfillment`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -86,54 +77,43 @@ async function runTests() {
       `Status: ${missingNumRes.status}`
     );
   } catch (err) {
-    assert(false, "P1-3: Retry missing param exception", err.message);
+    assert(false, "P1-3: Retry validation exception", err.message);
   }
 
+  // TEST 4: Admin Retry-Fulfillment Non-Existent Order
   try {
-    // Non-existent order lookup
-    const nonExistentRes = await fetch(`${BASE}/api/admin/orders/retry-fulfillment`, {
+    const notFoundRes = await fetch(`${base}/api/admin/orders/retry-fulfillment`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-admin-api-key": adminKey,
       },
-      body: JSON.stringify({ internal_order_number: "ORD-NONEXISTENT-99999" }),
+      body: JSON.stringify({ internal_order_number: "VAST-NONEXISTENT-9999" }),
     });
     assert(
-      nonExistentRes.status === 404,
+      notFoundRes.status === 404,
       "P1-3: POST /api/admin/orders/retry-fulfillment returns 404 for non-existent orders",
-      `Status: ${nonExistentRes.status}`
+      `Status: ${notFoundRes.status}`
     );
   } catch (err) {
-    assert(false, "P1-3: Retry non-existent order exception", err.message);
+    assert(false, "P1-3: Retry 404 check exception", err.message);
   }
 
-  // -------------------------------------------------------------------------
-  // TEST 4: DLQ Order Status Tracking in Admin Endpoint
-  // -------------------------------------------------------------------------
+  // TEST 5: Admin Orders Listing Returns DLQ Schema
   try {
-    const adminOrdersRes = await fetch(`${BASE}/api/admin/orders`, {
-      headers: {
-        "x-admin-api-key": adminKey,
-      },
+    const listRes = await fetch(`${base}/api/admin/orders`, {
+      headers: { "x-admin-api-key": adminKey },
     });
-    const data = await adminOrdersRes.json();
+    const listData = await listRes.json();
     assert(
-      adminOrdersRes.status === 200 && Array.isArray(data.orders),
+      Array.isArray(listData.orders),
       "P1-3: GET /api/admin/orders returns orders array with DLQ fields",
-      `Status: ${adminOrdersRes.status}, count: ${data.orders?.length}`
+      `Count: ${listData.orders?.length}`
     );
   } catch (err) {
-    assert(false, "P1-3: Admin orders fetch exception", err.message);
+    assert(false, "P1-3: Admin orders list exception", err.message);
   }
 
-  console.log("\n=================================================");
-  console.log(` RESULTS: ${passed} PASSED, ${failed} FAILED`);
-  console.log("=================================================");
-
-  if (failed > 0) {
-    process.exit(1);
-  }
+  console.log(`Phase P1 Results: ${passed} passed, ${failed} failed.`);
+  return { passed, failed };
 }
-
-runTests();

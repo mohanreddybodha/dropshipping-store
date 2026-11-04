@@ -19,14 +19,25 @@ __pycache__/
 .coverage
 htmlcov/
 
-# Local databases & development data
+# Local databases, scratch & development scripts
 data/
 data/*
 devdata/
 devdata/*
 scratch/
+scratch/*
+scripts/
+scripts/*
+local/
+local/*
+reports/
+reports/*
 *.db
 *.sqlite3
+*.local.js
+*.local.mjs
+*.local.py
+*.local.*
 run-server.js
 
 # Node / Next.js

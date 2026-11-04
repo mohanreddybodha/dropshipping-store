@@ -15,3 +15,12 @@ out
 build
 .turbo
 *.tsbuildinfo
+
+# Local scripts & test logs
+scripts/*.local.*
+scripts/temp*
+scripts/tmp*
+scripts/check*
+scripts/inspect*
+scripts/test*
+*.log

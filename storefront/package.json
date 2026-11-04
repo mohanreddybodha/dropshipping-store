@@ -6,7 +6,8 @@
     "dev": "node scripts/ensure-port.js && next dev",
     "build": "node -e \"const fs = require('fs'); try { fs.rmSync('.next', { recursive: true, force: true }); } catch (e) {}\" && next build",
     "start": "next start",
-    "test:security": "node scripts/verify-p0.mjs && node scripts/verify-p1.mjs && node scripts/verify-p2.mjs",
+    "test:production": "node tests/production/run-all-tests.mjs",
+    "test": "npm run test:production",
     "clean": "node -e \"const fs = require('fs'); fs.rmSync('.next', { recursive: true, force: true });\""
   },
   "dependencies": {
