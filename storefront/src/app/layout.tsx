@@ -3,7 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "../lib/cart";
 import { AppShell } from "../components/layout";
-import AppLaunchSplash from "../components/ui/AppLaunchSplash";
+import AppLaunchSplashClient from "../components/ui/AppLaunchSplashClient";
 
 const brandPoppins = Poppins({
   subsets: ["latin"],
@@ -78,7 +78,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased font-sans ${brandPoppins.variable}`}>
-        <AppLaunchSplash />
+        <AppLaunchSplashClient />
         <CartProvider>
           <AppShell>{children}</AppShell>
         </CartProvider>

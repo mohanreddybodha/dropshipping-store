@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { VASTIRE_ICON_DATA_URI } from "./vastireIconDataUri";
 
 interface VastireLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -12,8 +11,9 @@ interface VastireLogoProps {
 }
 
 /**
- * High-Performance Scalable Vector Brand Icon for Vastire.
- * Inlines the squircle SVG directly into the SSR document stream for instant 0ms first-paint.
+ * Flat pure-vector SVG brand icon for Vastire.
+ * No raster images, no WebP, no photo textures — crisp at any resolution.
+ * Squircle background (white) with emerald shopping cart icon.
  */
 export function VastireIcon({
   size = 42,
@@ -27,50 +27,55 @@ export function VastireIcon({
   return (
     <div
       className={`inline-flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${className}`}
-      style={{
-        width: `${pixelSize}px`,
-        height: `${pixelSize}px`,
-      }}
+      style={{ width: `${pixelSize}px`, height: `${pixelSize}px` }}
       aria-label="Vastire Brand Icon"
     >
       <svg
         viewBox="0 0 1024 1024"
         width={pixelSize}
         height={pixelSize}
-        className="w-full h-full select-none pointer-events-none drop-shadow-xs"
+        className="w-full h-full select-none pointer-events-none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
         shapeRendering="geometricPrecision"
-        textRendering="geometricPrecision"
       >
-        <defs>
-          <clipPath id="vastireSquircleCard">
-            <rect x="42" y="42" width="940" height="940" rx="210" ry="210" />
-          </clipPath>
-        </defs>
+        {/* Squircle background */}
         <rect x="42" y="42" width="940" height="940" rx="210" ry="210" fill="#ffffff" />
-        <g clipPath="url(#vastireSquircleCard)">
-          <image
-            href={VASTIRE_ICON_DATA_URI}
-            x="0"
-            y="0"
-            width="1024"
-            height="1024"
-            preserveAspectRatio="xMidYMid slice"
-            style={{ imageRendering: "-webkit-optimize-contrast" }}
-          />
-        </g>
-        <rect
-          x="42"
-          y="42"
-          width="940"
-          height="940"
-          rx="210"
-          ry="210"
+
+        {/* ── Flat emerald shopping cart ── */}
+
+        {/* Cart handle arc */}
+        <path
+          d="M 340 480 C 340 310 420 240 512 240 C 604 240 684 310 684 480"
+          stroke="#059669"
+          strokeWidth="72"
+          strokeLinecap="round"
           fill="none"
-          stroke="#E2E8F0"
-          strokeWidth="6"
         />
+
+        {/* Cart body */}
+        <rect x="270" y="460" width="484" height="310" rx="52" fill="#10b981" />
+
+        {/* Top lip / rim */}
+        <rect x="250" y="450" width="524" height="80" rx="40" fill="#059669" />
+
+        {/* Three item slots inside cart */}
+        <rect x="315" y="560" width="110" height="150" rx="20" fill="white" fillOpacity="0.22" />
+        <rect x="457" y="560" width="110" height="150" rx="20" fill="white" fillOpacity="0.22" />
+        <rect x="599" y="560" width="110" height="150" rx="20" fill="white" fillOpacity="0.22" />
+
+        {/* Left wheel */}
+        <circle cx="358" cy="800" r="72" fill="#064e3b" />
+        <circle cx="358" cy="800" r="36" fill="#10b981" />
+        <circle cx="358" cy="800" r="14" fill="#064e3b" />
+
+        {/* Right wheel */}
+        <circle cx="666" cy="800" r="72" fill="#064e3b" />
+        <circle cx="666" cy="800" r="36" fill="#10b981" />
+        <circle cx="666" cy="800" r="14" fill="#064e3b" />
+
+        {/* Squircle border */}
+        <rect x="42" y="42" width="940" height="940" rx="210" ry="210" fill="none" stroke="#E2E8F0" strokeWidth="6" />
       </svg>
     </div>
   );
