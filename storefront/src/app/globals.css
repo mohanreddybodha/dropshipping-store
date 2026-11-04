@@ -170,95 +170,110 @@ body {
   animation: fadeIn 0.18s ease both;
 }
 
-/* ── Splash Screen Animations ── */
-html.vastire-splash-seen #vastire-splash {
-  display: none !important;
-}
+/* ═════════════════════════════════════════════════════════════════════════
+   PRODUCTION-GRADE INDUSTRY LAUNCH SCREEN ANIMATIONS
+   ═════════════════════════════════════════════════════════════════════════ */
 
-/* 1. Cart moving in from left with speed momentum */
-@keyframes splashCartDrive {
+/* 1. Brand Emblem: Cart driving in smoothly with forward tilt, momentum & spring settle */
+@keyframes emblemDriveIn {
   0% {
     opacity: 0;
-    transform: translateX(-120px) translateY(6px) rotate(-4deg);
+    transform: translate3d(-100px, 14px, 0) scale(0.86) rotate(-6deg);
   }
-  70% {
+  55% {
     opacity: 1;
-    transform: translateX(8px) translateY(-2px) rotate(1.5deg);
+    transform: translate3d(10px, -3px, 0) scale(1.05) rotate(1.8deg);
+  }
+  78% {
+    transform: translate3d(-4px, 1px, 0) scale(0.98) rotate(-0.6deg);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) translateY(0) rotate(0deg);
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
   }
 }
-.animate-splash-cart-drive {
-  animation: splashCartDrive 0.62s cubic-bezier(0.16, 1, 0.3, 1) both;
+.animate-emblem-drive-in {
+  animation: emblemDriveIn 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* 2. Wheels rolling in from right / opposite side */
-@keyframes splashWheelsRoll {
+/* 2. Speed Motion Streaks behind the cart (pure CSS motion lines) */
+@keyframes speedStreak {
   0% {
     opacity: 0;
-    transform: translateX(110px) translateY(8px) rotate(720deg);
+    transform: translate3d(-35px, 0, 0) scaleX(0.2);
   }
-  75% {
-    opacity: 1;
-    transform: translateX(-6px) translateY(-1px) rotate(-15deg);
+  45% {
+    opacity: 0.95;
+    transform: translate3d(0, 0, 0) scaleX(1.15);
+  }
+  80% {
+    opacity: 0.35;
+    transform: translate3d(12px, 0, 0) scaleX(0.85);
   }
   100% {
-    opacity: 1;
-    transform: translateX(0) translateY(0) rotate(0deg);
+    opacity: 0;
+    transform: translate3d(24px, 0, 0) scaleX(0.2);
   }
 }
-.animate-splash-wheels-roll {
-  animation: splashWheelsRoll 0.62s cubic-bezier(0.34, 1.25, 0.64, 1) 0.06s both;
+.animate-speed-streak-1 {
+  animation: speedStreak 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s both;
+}
+.animate-speed-streak-2 {
+  animation: speedStreak 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) 0.16s both;
+}
+.animate-speed-streak-3 {
+  animation: speedStreak 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) 0.24s both;
 }
 
-/* 3. Final Icon Formed on Screen (snap + spring bounce) */
-@keyframes splashIconFormed {
+/* 3. Luxury Ambient Halo Glow behind emblem */
+@keyframes ambientHaloGlow {
   0% {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.7);
   }
   60% {
-    opacity: 1;
-    transform: scale(1.06);
+    opacity: 0.85;
+    transform: scale(1.12);
   }
   100% {
-    opacity: 1;
+    opacity: 0.65;
     transform: scale(1);
   }
 }
-.animate-splash-icon-formed {
-  animation: splashIconFormed 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.62s both;
+.animate-ambient-halo {
+  animation: ambientHaloGlow 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
 }
 
-/* 4. Brand text & subtitle fade in */
-@keyframes splashTextIn {
-  from {
+/* 4. Brand Wordmark & Tagline: Smooth decelerated slide-up */
+@keyframes brandTextRise {
+  0% {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translate3d(0, 10px, 0);
   }
-  to {
+  100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
-.animate-splash-text {
-  animation: splashTextIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.72s both;
+.animate-brand-text-rise {
+  animation: brandTextRise 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.52s both;
 }
 
-/* 5. Horizontal loading bar sweeps from 0% to 100% */
-@keyframes splashProgressSweep {
+/* 5. Horizontal Progress Fill: Smooth precision progression */
+@keyframes loadingProgressFill {
   0% {
     width: 0%;
   }
-  45% {
-    width: 60%;
+  35% {
+    width: 48%;
+  }
+  75% {
+    width: 86%;
   }
   100% {
     width: 100%;
   }
 }
-.animate-splash-progress {
-  animation: splashProgressSweep 1.15s cubic-bezier(0.2, 0.8, 0.2, 1) 0.75s both;
+.animate-loading-progress-fill {
+  animation: loadingProgressFill 1.05s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both;
 }

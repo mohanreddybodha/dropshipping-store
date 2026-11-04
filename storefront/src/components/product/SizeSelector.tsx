@@ -330,9 +330,14 @@ export default function SizeSelector({
       categoryLower.includes("apparel");
 
     const curParsed = parseApparelVariant(currentVariant);
-    const curSize =
+    const rawSize =
       curParsed?.size ||
-      (selectedSize && APPAREL_SIZE_REGEX.test(selectedSize) ? selectedSize.toUpperCase() : availableSizes[0]?.size || "M");
+      (selectedSize && APPAREL_SIZE_REGEX.test(selectedSize.trim())
+        ? selectedSize.trim().toUpperCase()
+        : availableSizes[0]?.size || "M");
+    const curSize = rawSize.includes("-")
+      ? rawSize.split("-").pop()?.trim().toUpperCase() || rawSize
+      : rawSize;
 
     return (
       <div className="space-y-3.5 pt-1 border-t border-slate-100">

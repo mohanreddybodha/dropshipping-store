@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, Lock } from "lucide-react";
@@ -19,6 +19,26 @@ export default function AppShell({ children }: AppShellProps) {
   const isCheckout = pathname === "/checkout";
   const isHome = pathname === "/";
   const isProduct = pathname.startsWith("/products/");
+
+  // Automatic stale deployment chunk reload handler (client-side only, zero SSR DOM mutation)
+  useEffect(() => {
+    const handleChunkError = (e: ErrorEvent) => {
+      const isChunkError =
+        (e && e.message && (e.message.includes("Loading chunk") || e.message.includes("ChunkLoadError"))) ||
+        ((e?.target as HTMLElement)?.tagName === "SCRIPT" &&
+          (e?.target as HTMLScriptElement)?.src?.includes("/_next/static/"));
+      if (isChunkError) {
+        const lastReload = sessionStorage.getItem("chunk_reload_ts");
+        const now = Date.now();
+        if (!lastReload || now - parseInt(lastReload, 10) > 4000) {
+          sessionStorage.setItem("chunk_reload_ts", now.toString());
+          window.location.reload();
+        }
+      }
+    };
+    window.addEventListener("error", handleChunkError, true);
+    return () => window.removeEventListener("error", handleChunkError, true);
+  }, []);
 
   if (isCheckout) {
     return (

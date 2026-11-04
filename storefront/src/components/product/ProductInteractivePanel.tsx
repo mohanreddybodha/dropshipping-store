@@ -29,7 +29,12 @@ export default function ProductInteractivePanel({
   const [selectedSize, setSelectedSize] = useState<string>(() => {
     const parsed = parseApparelVariant(initialVariant);
     if (parsed) return parsed.size;
-    if (initialVariant?.size && !initialVariant.size.includes("-")) return initialVariant.size;
+    if (initialVariant?.size) {
+      const clean = initialVariant.size.includes("-")
+        ? initialVariant.size.split("-").pop()?.trim().toUpperCase() || ""
+        : initialVariant.size.trim().toUpperCase();
+      if (clean) return clean;
+    }
     return "";
   });
 
