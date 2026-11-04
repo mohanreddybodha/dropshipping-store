@@ -6,8 +6,10 @@ export async function verifyFirebaseIdToken(
 ): Promise<{ email: string; emailVerified: boolean; uid: string } | null> {
   try {
     const apiKey =
+      process.env.FIREBASE_API_KEY ||
       process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
-      "AIzaSyAIqT64qFQ9rKSsEb0_oRO0jYWKspmS8Qo";
+      "";
+    if (!apiKey) return null;
     const res = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
       {
@@ -62,10 +64,7 @@ export async function verifyAdminAuth(
     if (token) {
       const verified = await verifyFirebaseIdToken(token);
       if (verified && verified.email) {
-        const adminEmailsRaw =
-          process.env.ADMIN_EMAILS ||
-          process.env.NEXT_PUBLIC_ADMIN_EMAILS ||
-          "";
+        const adminEmailsRaw = process.env.ADMIN_EMAILS || "";
         const allowedEmails = adminEmailsRaw
           .split(",")
           .map((e) => e.trim().toLowerCase())

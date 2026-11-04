@@ -27,7 +27,10 @@ async function runTests() {
   // TEST 1: Variant VID Resolution via Catalog Assets
   // -------------------------------------------------------------------------
   try {
-    const rawCatalog = fs.readFileSync("storefront/src/lib/seedCatalog.json", "utf8");
+    const catalogPath = fs.existsSync("src/lib/seedCatalog.json")
+      ? "src/lib/seedCatalog.json"
+      : "storefront/src/lib/seedCatalog.json";
+    const rawCatalog = fs.readFileSync(catalogPath, "utf8");
     const catalog = JSON.parse(rawCatalog);
     const fan = catalog.find((p) => p.pid === "1902560845030125569");
     const variant = fan?.variants?.find((v) => v.sku === "CJJT233239002BY");
@@ -62,9 +65,10 @@ async function runTests() {
   // -------------------------------------------------------------------------
   // TEST 3: Admin Retry-Fulfillment Validation Checks
   // -------------------------------------------------------------------------
-  const envContent = fs.readFileSync("storefront/.env.local", "utf8");
+  const envPath = fs.existsSync(".env.local") ? ".env.local" : "storefront/.env.local";
+  const envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf8") : "";
   const adminKeyMatch = envContent.match(/ADMIN_API_KEY=([^\r\n]+)/);
-  const adminKey = adminKeyMatch ? adminKeyMatch[1].trim() : "vastire_admin_dev_secret_key_2026";
+  const adminKey = process.env.ADMIN_API_KEY || (adminKeyMatch ? adminKeyMatch[1].trim() : "vastire_admin_dev_secret_key_2026");
 
   try {
     // Missing internal_order_number

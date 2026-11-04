@@ -77,7 +77,21 @@ export default function PayPalButton({
     };
   });
 
-  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "";
+  const [clientId, setClientId] = useState<string>(
+    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || ""
+  );
+
+  // Dynamically resolve authoritative client ID from server-side configuration
+  useEffect(() => {
+    fetch("/api/orders/paypal/config")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.clientId) {
+          setClientId(data.clientId);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Step 1: Load SDK script once
   useEffect(() => {

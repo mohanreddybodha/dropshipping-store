@@ -77,12 +77,22 @@ export default function Footer() {
         {/* ── Bottom Legal & Copyright ── */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 border-t border-slate-100 pt-6">
           <p>© 2026 Vastire (vastire.com). All rights reserved.</p>
-          <div className="flex items-center gap-4 text-slate-400">
-            <span className="hover:text-slate-600 cursor-pointer transition-colors">Privacy Policy</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-400">
+            <Link href="/privacy" className="hover:text-slate-600 transition-colors">
+              Privacy Policy
+            </Link>
             <span>•</span>
-            <span className="hover:text-slate-600 cursor-pointer transition-colors">Terms of Service</span>
+            <Link href="/terms" className="hover:text-slate-600 transition-colors">
+              Terms of Service
+            </Link>
             <span>•</span>
-            <span className="hover:text-slate-600 cursor-pointer transition-colors">Shipping SLA</span>
+            <Link href="/shipping-policy" className="hover:text-slate-600 transition-colors">
+              Shipping SLA
+            </Link>
+            <span>•</span>
+            <Link href="/refund-policy" className="hover:text-slate-600 transition-colors">
+              Refund Policy
+            </Link>
           </div>
         </div>
       </div>

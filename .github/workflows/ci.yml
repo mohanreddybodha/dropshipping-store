@@ -41,8 +41,8 @@ jobs:
         run: |
           pytest -v tests/
 
-  frontend-build:
-    name: Storefront Next.js Build & Lint
+  storefront-quality-gate:
+    name: Storefront Next.js Build & Production Security Verification
     runs-on: ubuntu-latest
 
     steps:
@@ -63,5 +63,27 @@ jobs:
       - name: Build Next.js 15 Storefront
         working-directory: ./storefront
         env:
-          NEXT_PUBLIC_API_URL: "http://localhost:8000/api"
+          NEXT_PUBLIC_API_URL: "/api"
+          ADMIN_API_KEY: "ci_admin_secret_key_verification_998877"
+          CRON_SECRET: "ci_cron_secret_verification_998877"
         run: npm run build
+
+      - name: Start Production Server and Execute Security Verification
+        working-directory: ./storefront
+        env:
+          PORT: 3009
+          ADMIN_API_KEY: "ci_admin_secret_key_verification_998877"
+          CRON_SECRET: "ci_cron_secret_verification_998877"
+        run: |
+          npx next start -p 3009 &
+          SERVER_PID=$!
+          echo "Waiting for Next.js production server on port 3009..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3009 > /dev/null; then
+              echo "Server is ready!"
+              break
+            fi
+            sleep 1
+          done
+          npm run test:security
+          kill $SERVER_PID

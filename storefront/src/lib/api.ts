@@ -2,9 +2,10 @@ import { CustomerOrder, PaginatedCatalogResponse, Product } from "./types";
 import seedData from "./seedCatalog.json";
 
 export function getApiBaseUrl(): string {
-  // 1. If explicit NEXT_PUBLIC_API_URL is configured
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    const raw = process.env.NEXT_PUBLIC_API_URL.trim();
+  // 1. If explicit API_URL is configured
+  const configured = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
+  if (configured) {
+    const raw = configured.trim();
     if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("/")) {
       return raw.replace(/\/$/, "");
     }
