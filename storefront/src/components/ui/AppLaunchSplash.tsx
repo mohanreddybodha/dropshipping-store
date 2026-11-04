@@ -85,6 +85,8 @@ export default function AppLaunchSplash() {
             <img
               src="/splash-cart-body.png"
               alt="Vastire Cart Body"
+              loading="eager"
+              decoding="sync"
               className="animate-cart-body-move absolute inset-0 w-full h-full object-contain"
             />
 
@@ -93,13 +95,15 @@ export default function AppLaunchSplash() {
             <img
               src="/splash-cart-wheels.png"
               alt="Vastire Cart Wheels"
+              loading="eager"
+              decoding="sync"
               className="animate-wheels-move-in absolute inset-0 w-full h-full object-contain"
             />
           </div>
         </div>
 
-        {/* ── Brand Typography: Wordmark & Tagline ── */}
-        <div className="animate-brand-text-rise text-center mt-5 space-y-1.5 pointer-events-none">
+        {/* ── Brand Typography & Horizontal Loading Indicator ── */}
+        <div className="animate-brand-text-rise text-center mt-5 flex flex-col items-center space-y-3 pointer-events-none">
           <span
             className="block text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-none"
             style={{
@@ -110,14 +114,15 @@ export default function AppLaunchSplash() {
           >
             Vastire
           </span>
-          <span className="block text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">
+
+          {/* ── Precision Horizontal Progress Bar ── */}
+          <div className="w-36 h-1 bg-slate-100 rounded-full overflow-hidden relative">
+            <div className="animate-loading-progress-fill h-full bg-gradient-to-r from-emerald-600 via-teal-400 to-emerald-500 rounded-full" />
+          </div>
+
+          <span className="block text-[11px] sm:text-xs font-bold uppercase tracking-[0.24em] text-emerald-700">
             Curated Home Essentials
           </span>
-        </div>
-
-        {/* ── Precision Horizontal Progress Bar ── */}
-        <div className="animate-brand-text-rise w-40 h-1 bg-slate-100 rounded-full overflow-hidden mt-4 relative pointer-events-none">
-          <div className="animate-loading-progress-fill h-full bg-gradient-to-r from-emerald-600 via-teal-400 to-emerald-500 rounded-full" />
         </div>
       </div>
     </div>

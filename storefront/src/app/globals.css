@@ -170,11 +170,6 @@ body {
   animation: fadeIn 0.18s ease both;
 }
 
-/* ── Immediate Session Splash Dismissal (Zero Flash on Internal Nav / Reload) ── */
-html.splash-dismissed #vastire-splash {
-  display: none !important;
-}
-
 /* ═════════════════════════════════════════════════════════════════════════
    PRODUCTION-GRADE INDUSTRY LAUNCH SCREEN ANIMATIONS
    Choreographed Cart Motion:

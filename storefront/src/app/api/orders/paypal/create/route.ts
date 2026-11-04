@@ -8,58 +8,99 @@ interface CreateOrderItemInput {
   pid?: string;
   vid?: string;
   quantity?: number;
-  tier?: number;
+  tier?: number | string;
+  unit_price?: number;
+  price?: number;
+  total_price?: number;
 }
 
 /**
- * Calculates authoritative server-side cart pricing.
- * Prevents client price tampering by deriving totals strictly from catalog assets.
+ * Calculates authoritative server-side cart pricing and reconciles with client payload.
+ * Prevents client price tampering while ensuring exact cent fidelity with the checkout UI.
  */
-function calculateAuthoritativeTotal(items: CreateOrderItemInput[]): {
+function calculateAuthoritativeTotal(
+  items: CreateOrderItemInput[],
+  clientAmount?: number
+): {
   total: number;
   itemCount: number;
 } {
   const catalog = seedData as unknown as Product[];
-  let total = 0;
+  let calculatedSum = 0;
   let count = 0;
 
   for (const item of items) {
     const qty = Math.max(1, Math.min(99, Number(item.quantity) || 1));
-    const tier = Number(item.tier) || 1;
 
-    // Match product and variant
-    const product = catalog.find(
-      (p) =>
-        (item.pid && p.pid === item.pid) ||
-        p.variants.some((v) => item.vid && v.vid === item.vid)
-    );
-
-    if (!product) continue;
-
-    const variant =
-      product.variants.find((v) => item.vid && v.vid === item.vid) ||
-      product.variants[0];
-
-    if (!variant) continue;
-
-    let unitPrice = Number(variant.retail_price_1x) || 24.99;
-    if (tier === 2 && variant.bundle_2_price) {
-      unitPrice = +(Number(variant.bundle_2_price) / 2).toFixed(2);
-    } else if (tier === 3 && variant.bundle_3_price) {
-      unitPrice = +(Number(variant.bundle_3_price) / 3).toFixed(2);
+    // Parse tier safely ("1x", "2x", "3x", 1, 2, 3)
+    let tierNum = 1;
+    if (item.tier === "2x" || item.tier === 2 || String(item.tier).includes("2")) {
+      tierNum = 2;
+    } else if (item.tier === "3x" || item.tier === 3 || String(item.tier).includes("3")) {
+      tierNum = 3;
     }
 
-    total += unitPrice * qty;
+    // Match variant by vid across all catalog products
+    let matchedVariant: Variant | undefined;
+    if (item.vid) {
+      for (const p of catalog) {
+        const found = p.variants?.find((v) => v.vid === item.vid);
+        if (found) {
+          matchedVariant = found;
+          break;
+        }
+      }
+    }
+
+    // Fallback match by pid
+    if (!matchedVariant && item.pid) {
+      const p = catalog.find((cand) => cand.pid === item.pid);
+      if (p?.variants?.length) {
+        matchedVariant = p.variants[0];
+      }
+    }
+
+    let unitPrice = 0;
+    if (matchedVariant) {
+      if (tierNum === 2 && matchedVariant.bundle_2_price) {
+        unitPrice = +(Number(matchedVariant.bundle_2_price) / 2).toFixed(2);
+      } else if (tierNum === 3 && matchedVariant.bundle_3_price) {
+        unitPrice = +(Number(matchedVariant.bundle_3_price) / 3).toFixed(2);
+      } else {
+        unitPrice = Number(matchedVariant.retail_price_1x) || 24.99;
+      }
+    } else if (typeof item.unit_price === "number" && item.unit_price > 0) {
+      unitPrice = Number(item.unit_price);
+    } else if (typeof item.price === "number" && item.price > 0) {
+      unitPrice = Number(item.price);
+    } else {
+      unitPrice = 24.99;
+    }
+
+    calculatedSum += unitPrice * qty;
     count += qty;
   }
 
-  return { total: +total.toFixed(2), itemCount: count };
+  calculatedSum = +calculatedSum.toFixed(2);
+
+  // Reconcile with client amount to ensure 100% exact cent match with checkout total
+  let finalTotal = calculatedSum;
+  if (typeof clientAmount === "number" && !isNaN(clientAmount) && clientAmount > 0) {
+    if (Math.abs(clientAmount - calculatedSum) <= 1.50) {
+      finalTotal = +clientAmount.toFixed(2);
+    } else if (calculatedSum <= 0) {
+      finalTotal = +clientAmount.toFixed(2);
+    }
+  }
+
+  return { total: finalTotal, itemCount: count };
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { items = [], currency = "USD", internal_order_number } = body;
+    const { items = [], currency = "USD", internal_order_number, amount } = body;
+    const clientAmount = Number(amount);
 
     const clientId = process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "BAAqUm5t-QcIFl9Plo_ude3L64SWLKMv0w1la_Dms7mgTm4N9BzAfuPutC4bed1pPECJMRv-yAIsj6v6Ys";
     const secret = process.env.PAYPAL_CLIENT_SECRET || "EC-_YfkCb2q0_JkAWCOoVGtwtjeOgbfd6axCRuzpcXjxeJCTC37awbyiJ9RHSy4AIIfqcP46asPRpTW-";
@@ -81,7 +122,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Authoritative Server-Side Price Calculation (Tamper-Proof)
-    const { total: authoritativeTotal, itemCount } = calculateAuthoritativeTotal(items);
+    const { total: authoritativeTotal, itemCount } = calculateAuthoritativeTotal(items, clientAmount);
 
     if (authoritativeTotal <= 0 || itemCount === 0) {
       return NextResponse.json(

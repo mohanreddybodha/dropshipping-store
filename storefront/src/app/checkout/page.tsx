@@ -91,6 +91,14 @@ const US_STATES: ThemedDropdownOption[] = [
   { value: "WY", label: "Wyoming (WY)" },
 ];
 
+const COUNTRY_OPTIONS: ThemedDropdownOption[] = [
+  { value: "US", label: "United States", badge: "Eligible" },
+  { value: "CA", label: "Canada (Unavailable)", badge: "Unavailable", disabled: true },
+  { value: "GB", label: "United Kingdom (Unavailable)", badge: "Unavailable", disabled: true },
+  { value: "AU", label: "Australia (Unavailable)", badge: "Unavailable", disabled: true },
+  { value: "INTL", label: "Other International Destinations", badge: "Unavailable", disabled: true },
+];
+
 const PHONE_CODE_OPTIONS: ThemedDropdownOption[] = [
   { value: "+1", label: "+1 US" },
 ];
@@ -504,7 +512,7 @@ function CheckoutContent() {
       setFieldErrors(errors);
       setIsSubmitting(false);
 
-      const fieldPriority = ["name", "email", "phone", "address1", "city", "province", "zip_code"];
+      const fieldPriority = ["country_code", "name", "email", "phone", "address1", "city", "province", "zip_code"];
       const firstInvalid = fieldPriority.find((k) => errors[k]) || Object.keys(errors)[0];
 
       if (typeof window !== "undefined") {
@@ -882,52 +890,161 @@ function CheckoutContent() {
   if (confirmedOrder && isCelebrating) {
     const remainingSeconds = Math.max(1, Math.ceil(5 - (celebrationProgress / 100) * 5));
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-12 text-center animate-in fade-in zoom-in-95 duration-300">
-        {/* Minimal Animated Delivery Package & Ripple Waves (Flipkart Style) */}
-        <div className="relative mb-6">
-          <div className="absolute inset-0 -m-4 bg-emerald-500/10 rounded-full animate-ping duration-1000" />
-          <div className="absolute inset-0 -m-2 bg-emerald-500/15 rounded-full animate-pulse" />
+      <div className="min-h-[75vh] flex flex-col items-center justify-center px-4 py-10 text-center animate-in fade-in duration-300 relative select-none">
+        {/* Inline Keyframe Styles for Smooth Vector Path Drawing */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes drawCheckCircle {
+            0% { stroke-dashoffset: 145; transform: scale(0.85); opacity: 0; }
+            50% { opacity: 1; }
+            100% { stroke-dashoffset: 0; transform: scale(1); opacity: 1; }
+          }
+          @keyframes drawCheckStem {
+            0% { stroke-dashoffset: 48; opacity: 0; }
+            60% { opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+          }
+          @keyframes rippleBloom {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            100% { transform: scale(1.65); opacity: 0; }
+          }
+          @keyframes particleFloat {
+            0% { transform: translateY(0) scale(0.8); opacity: 0; }
+            40% { opacity: 1; }
+            100% { transform: translateY(-16px) scale(1.1); opacity: 0; }
+          }
+        `}} />
 
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-3xl flex items-center justify-center shadow-xl shadow-emerald-500/20 border-4 border-white">
-            <div className="relative flex items-center justify-center">
-              <Package className="w-12 h-12 sm:w-14 sm:h-14 text-white drop-shadow-sm animate-bounce" style={{ animationDuration: "2s" }} />
-              <div className="absolute -bottom-1 -right-1 bg-white text-emerald-600 rounded-full p-1 shadow-md border border-emerald-100">
-                <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
-              </div>
-            </div>
+        {/* ── TRIUMPHANT HERO CELEBRATION BADGE (Flipkart & Payment App Style) ── */}
+        <div className="relative mb-6">
+          {/* Gentle Expanding Ripple Wave */}
+          <div
+            className="absolute inset-0 -m-3 rounded-full bg-emerald-500/20 pointer-events-none"
+            style={{ animation: "rippleBloom 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite" }}
+          />
+          <div
+            className="absolute inset-0 -m-1 rounded-full bg-teal-400/15 pointer-events-none"
+            style={{ animation: "rippleBloom 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s infinite" }}
+          />
+
+          {/* Central Glowing Seal */}
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center shadow-xl shadow-emerald-600/30 ring-4 ring-white">
+            {/* Self-Drawing Animated Vector Checkmark */}
+            <svg
+              className="w-14 h-14 sm:w-16 sm:h-16 text-white drop-shadow-md"
+              viewBox="0 0 52 52"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="26"
+                cy="26"
+                r="23"
+                stroke="rgba(255,255,255,0.35)"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                style={{
+                  strokeDasharray: 145,
+                  strokeDashoffset: 145,
+                  animation: "drawCheckCircle 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+                }}
+              />
+              <path
+                d="M15 27.5L22.5 35L37 19"
+                stroke="#FFFFFF"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  strokeDasharray: 48,
+                  strokeDashoffset: 48,
+                  animation: "drawCheckStem 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards",
+                }}
+              />
+            </svg>
           </div>
 
-          {/* Minimal celebratory sparkle particles */}
-          <div className="absolute -top-1 -left-2 w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping delay-100 opacity-75" />
-          <div className="absolute -bottom-1 -left-2 w-2 h-2 bg-blue-400 rounded-full animate-ping delay-300 opacity-75" />
-          <div className="absolute top-2 -right-2 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping delay-200 opacity-75" />
+          {/* Minimal Celebratory Micro-Sparkles */}
+          <span
+            className="absolute -top-3 -right-2 text-amber-400 text-sm font-bold pointer-events-none"
+            style={{ animation: "particleFloat 2s ease-out infinite" }}
+          >
+            ✦
+          </span>
+          <span
+            className="absolute -top-1 -left-3 text-emerald-400 text-xs font-bold pointer-events-none"
+            style={{ animation: "particleFloat 2.2s ease-out 0.4s infinite" }}
+          >
+            ✦
+          </span>
+          <span
+            className="absolute -bottom-2 right-2 text-sky-400 text-xs font-bold pointer-events-none"
+            style={{ animation: "particleFloat 1.9s ease-out 0.7s infinite" }}
+          >
+            ✦
+          </span>
+          <span
+            className="absolute -bottom-2 -left-2 text-teal-300 text-sm font-bold pointer-events-none"
+            style={{ animation: "particleFloat 2.4s ease-out 0.2s infinite" }}
+          >
+            ✦
+          </span>
         </div>
 
-        <div className="space-y-2 max-w-md mx-auto">
+        {/* ── ENCOURAGING REINFORCEMENT & HEADLINE ── */}
+        <div className="space-y-2.5 max-w-md mx-auto">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/90 shadow-2xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+            <span>Payment Verified &amp; Order Placed</span>
+          </div>
+
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Congratulations! Your order is placed
           </h1>
-          <p className="text-sm font-semibold text-emerald-700">
-            Order Reference: <span className="font-mono">{confirmedOrder.orderNumber}</span>
-          </p>
-          <p className="text-xs text-slate-400">
-            Showing order details in {remainingSeconds} {remainingSeconds === 1 ? "second" : "seconds"}...
+
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+            Great decision! Your domestic order has been confirmed and scheduled for USPS warehouse fulfillment.
           </p>
         </div>
 
-        {/* 5-second animated progress line */}
-        <div className="w-48 sm:w-56 h-1.5 bg-slate-100 rounded-full mx-auto overflow-hidden mt-6 border border-slate-200/60 shadow-inner">
-          <div
-            className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-75 ease-linear"
-            style={{ width: `${celebrationProgress}%` }}
-          />
+        {/* ── ORDER ACHIEVEMENT CARD (Shows Value & Security) ── */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 max-w-sm w-full mx-auto shadow-sm mt-5 space-y-2.5 text-left">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <span className="text-xs font-semibold text-slate-500">Amount Paid</span>
+            <span className="text-sm font-black text-emerald-700 bg-emerald-50/80 px-2.5 py-0.5 rounded-lg border border-emerald-100">
+              ${confirmedOrder.amount.toFixed(2)} USD
+            </span>
+          </div>
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-xs">
+            <span className="font-semibold text-slate-500">Order Reference</span>
+            <span className="font-mono font-bold text-slate-900 select-all">{confirmedOrder.orderNumber}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs pt-0.5">
+            <span className="font-semibold text-slate-500">Fulfillment</span>
+            <span className="font-bold text-slate-800 flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>USPS Tracked Ground</span>
+            </span>
+          </div>
         </div>
 
-        {/* Skip button to view details immediately */}
+        {/* ── 5-SECOND COUNTDOWN PROGRESS BAR ── */}
+        <div className="w-56 sm:w-64 space-y-2 mx-auto mt-6">
+          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60 shadow-inner">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 rounded-full transition-all duration-75 ease-linear shadow-xs"
+              style={{ width: `${celebrationProgress}%` }}
+            />
+          </div>
+          <p className="text-[11px] text-slate-400 font-medium">
+            Directing to order overview in {remainingSeconds} {remainingSeconds === 1 ? "second" : "seconds"}...
+          </p>
+        </div>
+
+        {/* Instant Skip Button */}
         <button
           type="button"
           onClick={() => setIsCelebrating(false)}
-          className="mt-6 inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-emerald-700 font-semibold px-4 py-2 rounded-full hover:bg-emerald-50 transition cursor-pointer"
+          className="mt-4 inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-emerald-700 font-bold px-4 py-2 rounded-full hover:bg-slate-100 transition cursor-pointer"
         >
           <span>View Order Details</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -1277,6 +1394,30 @@ function CheckoutContent() {
             </div>
           )}
 
+          {/* Country Field (Themed Dropdown Locked to US) */}
+          <div id="field-country_code">
+            <ThemedDropdown
+              label="Country"
+              options={COUNTRY_OPTIONS}
+              value={form.country_code}
+              onChange={(val) => {
+                setForm({ ...form, country_code: val });
+                if (fieldErrors.country_code) {
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.country_code;
+                    return next;
+                  });
+                }
+              }}
+            />
+            {fieldErrors.country_code && (
+              <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{fieldErrors.country_code}</span>
+              </p>
+            )}
+          </div>
 
           {/* Contact Details Section */}
           {isAuthenticatedUser ? (
@@ -1505,30 +1646,47 @@ function CheckoutContent() {
             </div>
           </div>
 
-          {/* PIN / ZIP Code */}
-          <div id="field-zip_code" className="relative z-20">
-            <label className="block mb-1">PIN / ZIP Code</label>
-            <input
-              type="text"
-              name="zip_code"
-              value={form.zip_code}
-              onChange={handleChange}
-              placeholder="Enter PIN / ZIP"
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
-                fieldErrors.zip_code
-                  ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"
-                  : "border-slate-200 focus:ring-2 focus:ring-emerald-500"
-              }`}
-              maxLength={10}
-            />
-            {fieldErrors.zip_code ? (
-              <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
-                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>{fieldErrors.zip_code}</span>
-              </p>
-            ) : (
-              <p className="text-[10px] text-slate-400 mt-1">5-digit US ZIP code</p>
-            )}
+          {/* PIN / ZIP Code & County (Optional) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-20">
+            <div id="field-zip_code">
+              <label className="block mb-1">PIN / ZIP Code</label>
+              <input
+                type="text"
+                name="zip_code"
+                value={form.zip_code}
+                onChange={handleChange}
+                placeholder="Enter PIN / ZIP"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none ${
+                  fieldErrors.zip_code
+                    ? "border-rose-500 ring-1 ring-rose-500 bg-rose-50/20 focus:border-rose-500"
+                    : "border-slate-200 focus:ring-2 focus:ring-emerald-500"
+                }`}
+                maxLength={10}
+              />
+              {fieldErrors.zip_code ? (
+                <p className="flex items-center gap-1.5 text-xs text-rose-600 font-semibold mt-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{fieldErrors.zip_code}</span>
+                </p>
+              ) : (
+                <p className="text-[10px] text-slate-400 mt-1">5-digit US ZIP code</p>
+              )}
+            </div>
+
+            <div id="field-county">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block">County</label>
+                <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+              </div>
+              <input
+                type="text"
+                name="county"
+                value={form.county}
+                onChange={handleChange}
+                placeholder="e.g. Orange County (Optional)"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 text-sm transition focus:outline-none"
+              />
+            </div>
           </div>
 
           {/* ── ADDRESS SAVE & TAGGING PREFERENCES (Flipkart / Amazon Style) ── */}
@@ -1660,10 +1818,13 @@ function CheckoutContent() {
                 product_title: item.product.title,
                 pid: item.product.pid,
                 slug: item.product.slug,
+                vid: item.variant?.vid,
+                tier: item.tier,
                 image_url: item.product.hero_image_url || item.product.images?.[0] || "",
                 quantity: item.quantity,
                 unit_price: item.unitPrice,
                 price: item.unitPrice,
+                total_price: item.totalPrice,
                 size: item.selectedSize,
                 color: item.selectedColor,
               }))}
