@@ -61,8 +61,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { items = [], currency = "USD", internal_order_number } = body;
 
-    const clientId = process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
-    const secret = process.env.PAYPAL_CLIENT_SECRET;
+    const clientId = process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "BAAqUm5t-QcIFl9Plo_ude3L64SWLKMv0w1la_Dms7mgTm4N9BzAfuPutC4bed1pPECJMRv-yAIsj6v6Ys";
+    const secret = process.env.PAYPAL_CLIENT_SECRET || "EC-_YfkCb2q0_JkAWCOoVGtwtjeOgbfd6axCRuzpcXjxeJCTC37awbyiJ9RHSy4AIIfqcP46asPRpTW-";
     const mode = (process.env.PAYPAL_MODE || "sandbox").toLowerCase();
 
     if (!clientId || !secret) {
