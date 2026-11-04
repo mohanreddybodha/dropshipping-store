@@ -3,7 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "../lib/cart";
 import { AppShell } from "../components/layout";
-import AppLaunchSplashClient from "../components/ui/AppLaunchSplashClient";
+import AppLaunchSplash from "../components/ui/AppLaunchSplash";
 
 const brandPoppins = Poppins({
   subsets: ["latin"],
@@ -54,11 +54,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              try {
+                if (sessionStorage.getItem('vastire_launch_splash_seen')) {
+                  document.documentElement.classList.add('vastire-splash-seen');
+                }
+              } catch (e) {}
               window.addEventListener('error', function(e) {
                 var isChunkError = e && (
                   (e.message && (e.message.indexOf('Loading chunk') !== -1 || e.message.indexOf('ChunkLoadError') !== -1)) ||
@@ -77,8 +82,11 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased font-sans ${brandPoppins.variable}`}>
-        <AppLaunchSplashClient />
+      <body
+        suppressHydrationWarning
+        className={`min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased font-sans ${brandPoppins.variable}`}
+      >
+        <AppLaunchSplash />
         <CartProvider>
           <AppShell>{children}</AppShell>
         </CartProvider>

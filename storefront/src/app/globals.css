@@ -170,77 +170,54 @@ body {
   animation: fadeIn 0.18s ease both;
 }
 
-/* ── Splash: Cart body slides up from below ── */
-@keyframes cartBodyIn {
-  from { transform: translateY(130%) scale(0.9); opacity: 0; }
-  to   { transform: translateY(0)   scale(1);   opacity: 1; }
-}
-.animate-cart-body-in {
-  animation: cartBodyIn 0.44s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+/* ── Splash Screen Animations ── */
+html.vastire-splash-seen #vastire-splash {
+  display: none !important;
 }
 
-/* ── Splash: Left wheel rolls in from left ── */
-@keyframes wheelLeftIn {
-  from { transform: translateX(-160%) rotate(-540deg); opacity: 0; }
-  to   { transform: translateX(0)      rotate(0deg);   opacity: 1; }
+@keyframes splashIconIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
-.animate-wheel-left {
-  animation: wheelLeftIn 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s both;
-}
-
-/* ── Splash: Right wheel rolls in from right ── */
-@keyframes wheelRightIn {
-  from { transform: translateX(160%)  rotate(540deg); opacity: 0; }
-  to   { transform: translateX(0)     rotate(0deg);   opacity: 1; }
-}
-.animate-wheel-right {
-  animation: wheelRightIn 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) 0.36s both;
-}
-
-/* ── Splash: Cart bounces/settles after assembly ── */
-@keyframes cartBounce {
-  0%   { transform: translateY(0); }
-  35%  { transform: translateY(-11px); }
-  65%  { transform: translateY(4px); }
-  82%  { transform: translateY(-4px); }
-  100% { transform: translateY(0); }
-}
-.animate-cart-bounce {
-  animation: cartBounce 0.52s cubic-bezier(0.34, 1.2, 0.64, 1) 0.72s both;
+.animate-splash-icon {
+  animation: splashIconIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ── Splash: Wordmark fades + scales in ── */
-@keyframes wordmarkIn {
-  from { opacity: 0; transform: scale(0.86) translateY(8px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
+@keyframes splashTextIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.animate-wordmark-in {
-  animation: wordmarkIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.82s both;
-}
-
-/* ── Splash: Loading bar sweeps left → right ── */
-@keyframes loadingSweep {
-  from { width: 0%; }
-  to   { width: 100%; }
-}
-.animate-loading-sweep {
-  animation: loadingSweep 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.95s both;
+.animate-splash-text {
+  animation: splashTextIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
 }
 
-/* ── Splash: Tagline fades in ── */
-@keyframes taglineIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes splashProgressSweep {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 65%;
+  }
+  100% {
+    width: 100%;
+  }
 }
-.animate-tagline-in {
-  animation: taglineIn 0.32s ease 1.08s both;
-}
-
-/* ── Splash: Cart handle slides down ── */
-@keyframes handleIn {
-  from { transform: scaleY(0); opacity: 0; transform-origin: top; }
-  to   { transform: scaleY(1); opacity: 1; transform-origin: top; }
-}
-.animate-handle-in {
-  animation: handleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.52s both;
+.animate-splash-progress {
+  animation: splashProgressSweep 1.3s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both;
 }
