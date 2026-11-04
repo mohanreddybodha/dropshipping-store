@@ -1228,7 +1228,7 @@ function CheckoutContent() {
             >
               <Link
                 href={`/products/${item.product.slug}`}
-                prefetch={true}
+                prefetch={false}
                 className="flex gap-3 items-center flex-1 min-w-0 group cursor-pointer"
               >
                 {item.product.hero_image_url && (

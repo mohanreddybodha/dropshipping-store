@@ -5,6 +5,10 @@ import { Product } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+let cachedDbItems: Product[] | null = null;
+let lastDbFetchTime = 0;
+const DB_CACHE_TTL_MS = 5 * 60 * 1000; // 5-minute high-speed memory cache
+
 function mapDbRowToProduct(r: any): Product {
   const variants = (r.variants || []).map((v: any) => ({
     id: v.id,
@@ -66,7 +70,10 @@ export async function GET(req: NextRequest) {
 
     let items: Product[] = [];
 
-    if (process.env.DATABASE_URL) {
+    const now = Date.now();
+    if (cachedDbItems && now - lastDbFetchTime < DB_CACHE_TTL_MS) {
+      items = cachedDbItems;
+    } else if (process.env.DATABASE_URL) {
       try {
         const sql = getDb();
         const rows = await sql`
@@ -118,6 +125,8 @@ export async function GET(req: NextRequest) {
 
         if (Array.isArray(rows) && rows.length > 0) {
           items = rows.map(mapDbRowToProduct);
+          cachedDbItems = items;
+          lastDbFetchTime = now;
         }
       } catch (dbErr) {
         console.error("Database catalog query fallback:", dbErr);

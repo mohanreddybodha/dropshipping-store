@@ -230,7 +230,7 @@ export default function WatchlistPage() {
           <div className="pt-2">
             <Link
               href="/"
-              prefetch={true}
+              prefetch={false}
               className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition active:scale-95"
             >
               <ShoppingBag className="w-4 h-4" />

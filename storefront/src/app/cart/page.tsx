@@ -15,7 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Product } from "../../lib/types";
-import { getCatalog } from "../../lib/api";
+import { getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
 import HorizontalProductRow from "../../components/catalog/HorizontalProductRow";
 import { showToast } from "../../components/ui/Toast";
 
@@ -65,21 +65,13 @@ export default function CartPage() {
 
     const recentSlugs = new Set(recentList.map((p) => p.slug));
 
-    // 3. Suggested Items populated via live catalog on mount
+    // 3. Instant In-Memory Suggested Items (0ms latency, zero redundant network calls)
+    const suggested = FALLBACK_PRODUCTS.filter(
+      (p) => !cartSlugs.has(p.slug) && !watchlistSlugs.has(p.slug) && !recentSlugs.has(p.slug)
+    ).slice(0, 10);
+    setSuggestedItems(suggested);
   }, [items]);
 
-  // Optionally refresh suggested items from live catalog once on initial mount
-  useEffect(() => {
-    getCatalog({ limit: 30 }).then((res) => {
-      if (Array.isArray(res) && res.length > 0) {
-        const cartSlugs = new Set(items.map((i) => i.product.slug));
-        setSuggestedItems((prev) => {
-          const fresh = res.filter((p) => !cartSlugs.has(p.slug)).slice(0, 10);
-          return fresh.length > 0 ? fresh : prev;
-        });
-      }
-    }).catch(() => {});
-  }, []);
 
   // Dynamic unit text that accurately reflects exact units without double multiplication
   const getUnitText = (quantity: number, tier: string) => {
@@ -257,7 +249,7 @@ export default function CartPage() {
                   {/* Clean, Non-distorted Image Container (Compact on mobile) */}
                   <Link
                     href={`/products/${item.product.slug}`}
-                    prefetch={true}
+                    prefetch={false}
                     className="w-14 h-14 sm:w-20 sm:h-20 min-w-[3.5rem] min-h-[3.5rem] sm:min-w-[5rem] sm:min-h-[5rem] rounded-lg sm:rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 p-1 flex items-center justify-center flex-shrink-0 group block"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -273,7 +265,7 @@ export default function CartPage() {
                     <div className="flex items-start justify-between gap-2">
                       <Link
                         href={`/products/${item.product.slug}`}
-                        prefetch={true}
+                        prefetch={false}
                         className="text-xs sm:text-sm font-bold text-slate-900 hover:text-emerald-700 transition line-clamp-2 leading-snug"
                       >
                         {item.product.title}

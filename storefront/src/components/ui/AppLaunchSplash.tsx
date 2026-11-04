@@ -31,15 +31,15 @@ export default function AppLaunchSplash() {
 
       sessionStorage.setItem("vastire_launch_splash_seen", "true");
 
-      // Smooth slow dissolve transition
+      // Smooth dissolve transition
       const fadeTimer = setTimeout(() => {
         setIsFadingOut(true);
-      }, 3100);
+      }, 1400);
 
       // Clean unmount from DOM
       const unmountTimer = setTimeout(() => {
         setShowSplash(false);
-      }, 3600);
+      }, 1750);
 
       return () => {
         clearTimeout(fadeTimer);

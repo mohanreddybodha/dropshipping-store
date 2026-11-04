@@ -200,7 +200,7 @@ body {
   }
 }
 .animate-drag-cart-body {
-  animation: dragCartBody 1.75s cubic-bezier(0.42, 0, 0.58, 1) both;
+  animation: dragCartBody 0.95s cubic-bezier(0.42, 0, 0.58, 1) both;
 }
 
 /* 2. Wheels: Two wheels (gray & green with gap) roll in smoothly under the cart */
@@ -222,7 +222,7 @@ body {
   }
 }
 .animate-drag-wheels {
-  animation: dragWheels 1.75s cubic-bezier(0.42, 0, 0.58, 1) 0.15s both;
+  animation: dragWheels 0.95s cubic-bezier(0.42, 0, 0.58, 1) 0.08s both;
 }
 
 /* 3. Green Accents: Glide in smoothly from top-left to lock with the frame */
@@ -244,7 +244,7 @@ body {
   }
 }
 .animate-drag-accents {
-  animation: dragAccents 1.75s cubic-bezier(0.42, 0, 0.58, 1) 0.22s both;
+  animation: dragAccents 0.95s cubic-bezier(0.42, 0, 0.58, 1) 0.12s both;
 }
 
 /* 4. Trailing Drag Streaks: Stretch and settle on the left */
@@ -266,7 +266,7 @@ body {
   }
 }
 .animate-drag-streaks {
-  animation: dragStreaks 1.75s cubic-bezier(0.42, 0, 0.58, 1) 0.3s both;
+  animation: dragStreaks 0.95s cubic-bezier(0.42, 0, 0.58, 1) 0.16s both;
 }
 
 /* 5. Assembled Icon Spring Settle */
@@ -282,7 +282,7 @@ body {
   }
 }
 .animate-icon-assemble-settle {
-  animation: iconAssembleSettle 0.6s cubic-bezier(0.42, 0, 0.58, 1) 1.85s both;
+  animation: iconAssembleSettle 0.4s cubic-bezier(0.42, 0, 0.58, 1) 0.95s both;
 }
 
 /* Luxury Ambient Halo Glow behind emblem */
@@ -301,7 +301,7 @@ body {
   }
 }
 .animate-ambient-halo {
-  animation: ambientHaloGlow 1.2s cubic-bezier(0.42, 0, 0.58, 1) 0.5s both;
+  animation: ambientHaloGlow 0.9s cubic-bezier(0.42, 0, 0.58, 1) 0.3s both;
 }
 
 /* 6. Typography & Progress Bar slow ease-in-out rise */
@@ -316,7 +316,7 @@ body {
   }
 }
 .animate-brand-rise-smooth {
-  animation: brandRiseSmooth 0.85s cubic-bezier(0.42, 0, 0.58, 1) 1.75s both;
+  animation: brandRiseSmooth 0.45s cubic-bezier(0.42, 0, 0.58, 1) 0.92s both;
 }
 
 /* 7. Precision Horizontal Loading Progress (Slow & Smooth ease-in-out) */
@@ -335,5 +335,5 @@ body {
   }
 }
 .animate-loading-progress-smooth {
-  animation: loadingProgressSmooth 1.35s cubic-bezier(0.42, 0, 0.58, 1) 1.85s both;
+  animation: loadingProgressSmooth 0.5s cubic-bezier(0.42, 0, 0.58, 1) 0.95s both;
 }

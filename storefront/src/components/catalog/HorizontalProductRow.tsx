@@ -41,6 +41,7 @@ export default function HorizontalProductRow({
           {viewAllHref && (
             <Link
               href={viewAllHref}
+              prefetch={false}
               className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
             >
               <span>{viewAllText}</span>
@@ -87,6 +88,7 @@ export default function HorizontalProductRow({
           {viewAllHref && (
             <Link
               href={viewAllHref}
+              prefetch={false}
               className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition flex items-center gap-1"
             >
               <span>{viewAllText}</span>

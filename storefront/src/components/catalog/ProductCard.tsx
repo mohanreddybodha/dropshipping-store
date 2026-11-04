@@ -101,7 +101,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Clickable Card Body */}
       <Link
         href={`/products/${product.slug}`}
-        prefetch={true}
+        prefetch={false}
         className="block space-y-3"
       >
         {/* 1:1 Aspect Ratio Image Stage */}
@@ -144,7 +144,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Price & Discount Row */}
       <Link
         href={`/products/${product.slug}`}
-        prefetch={true}
+        prefetch={false}
         className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between block"
       >
         <div className="flex items-baseline gap-1.5 min-w-0">
