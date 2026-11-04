@@ -32,33 +32,14 @@ export function VastireIcon({
       }}
       aria-label="Vastire Brand Icon"
     >
-      <svg
-        viewBox="0 0 1024 1024"
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/icon-512.png"
+        alt="Vastire"
         width={pixelSize}
         height={pixelSize}
-        className="w-full h-full select-none pointer-events-none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-        shapeRendering="geometricPrecision"
-        textRendering="geometricPrecision"
-      >
-        <defs>
-          <clipPath id="vastireSquircleCard">
-            <rect x="0" y="0" width="1024" height="1024" rx="220" ry="220" />
-          </clipPath>
-        </defs>
-        <rect x="0" y="0" width="1024" height="1024" rx="220" ry="220" fill="#ffffff" />
-        <g clipPath="url(#vastireSquircleCard)">
-          <image
-            href="/icon-512.png"
-            x="0"
-            y="0"
-            width="1024"
-            height="1024"
-            preserveAspectRatio="xMidYMid slice"
-          />
-        </g>
-      </svg>
+        className="w-full h-full object-contain select-none pointer-events-none drop-shadow-2xs"
+      />
     </div>
   );
 }

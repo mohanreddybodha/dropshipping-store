@@ -99,9 +99,9 @@ export default function AppLaunchSplash() {
         </div>
 
         {/* ── Brand Typography: Wordmark & Tagline ── */}
-        <div className="animate-brand-text-rise text-center mt-4 space-y-1">
+        <div className="animate-brand-text-rise text-center mt-5 space-y-1.5 pointer-events-none">
           <span
-            className="block text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-none font-brand-wordmark"
+            className="block text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-none"
             style={{
               fontFamily:
                 "var(--font-poppins), 'VastireBrandFont', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
@@ -110,13 +110,13 @@ export default function AppLaunchSplash() {
           >
             Vastire
           </span>
-          <span className="block text-[11px] font-bold uppercase tracking-[0.25em] text-emerald-700/90">
+          <span className="block text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">
             Curated Home Essentials
           </span>
         </div>
 
         {/* ── Precision Horizontal Progress Bar ── */}
-        <div className="animate-brand-text-rise w-36 h-[3.5px] bg-slate-100 rounded-full overflow-hidden mt-4 relative">
+        <div className="animate-brand-text-rise w-40 h-1 bg-slate-100 rounded-full overflow-hidden mt-4 relative pointer-events-none">
           <div className="animate-loading-progress-fill h-full bg-gradient-to-r from-emerald-600 via-teal-400 to-emerald-500 rounded-full" />
         </div>
       </div>
