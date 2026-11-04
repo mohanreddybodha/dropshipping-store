@@ -97,12 +97,13 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [imgSrc, setImgSrc] = useState(heroImage);
 
   return (
-    <Link
-      href={`/products/${product.slug}`}
-      prefetch={true}
-      className="group block bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between cursor-pointer"
-    >
-      <div className="space-y-3">
+    <div className="group relative bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between">
+      {/* Clickable Card Body */}
+      <Link
+        href={`/products/${product.slug}`}
+        prefetch={true}
+        className="block space-y-3"
+      >
         {/* 1:1 Aspect Ratio Image Stage */}
         <div className="relative w-full aspect-square bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -117,31 +118,35 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
-
-          {/* Watchlist Quick Toggle Button (Classic Love Icon) */}
-          <button
-            type="button"
-            onClick={toggleWatchlist}
-            aria-label={isSaved ? "Remove from watchlist" : "Add to watchlist"}
-            title={isSaved ? "In Watchlist" : "Add to Watchlist"}
-            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-white transition-all duration-150 active:scale-90 border border-slate-100"
-          >
-            <Heart
-              className={`w-4 h-4 transition-colors ${
-                isSaved ? "fill-rose-500 text-rose-500" : "text-slate-600"
-              }`}
-            />
-          </button>
         </div>
 
         {/* Fixed 2-Line Title Container ensuring all cards match in height */}
         <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 h-9 sm:h-10 leading-snug">
           {product.title}
         </h3>
-      </div>
+      </Link>
 
-      {/* Price & Discount Row (Consistent across all cards, clean single line) */}
-      <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between">
+      {/* Watchlist Quick Toggle Button (Cleanly isolated outside the <a> link) */}
+      <button
+        type="button"
+        onClick={toggleWatchlist}
+        aria-label={isSaved ? "Remove from watchlist" : "Add to watchlist"}
+        title={isSaved ? "In Watchlist" : "Add to Watchlist"}
+        className="absolute top-5 right-5 sm:top-6 sm:right-6 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-white transition-all duration-150 active:scale-90 border border-slate-100"
+      >
+        <Heart
+          className={`w-4 h-4 transition-colors ${
+            isSaved ? "fill-rose-500 text-rose-500" : "text-slate-600"
+          }`}
+        />
+      </button>
+
+      {/* Price & Discount Row */}
+      <Link
+        href={`/products/${product.slug}`}
+        prefetch={true}
+        className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between block"
+      >
         <div className="flex items-baseline gap-1.5 min-w-0">
           <span className="text-sm sm:text-base font-black text-slate-900">
             ${minPrice.toFixed(2)}
@@ -154,7 +159,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-2 py-0.5 rounded-full uppercase tracking-tight whitespace-nowrap flex-shrink-0">
           Save 20%
         </span>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, Lock } from "lucide-react";
@@ -71,7 +71,7 @@ export default function AppShell({ children }: AppShellProps) {
 
         {/* Minimal Checkout Compliance Footer */}
         <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-400 bg-white">
-          <p>© {new Date().getFullYear()} Vastire (vastire.com). All rights reserved.</p>
+          <p>© 2026 Vastire (vastire.com). All rights reserved.</p>
           <p className="mt-1">
             Need assistance with your order? Contact{" "}
             <a href="mailto:support@vastire.com" className="text-slate-600 underline">
@@ -89,11 +89,7 @@ export default function AppShell({ children }: AppShellProps) {
       <ToastContainer />
 
       {/* Top Header: Rendered ONLY on the home page */}
-      {isHome && (
-        <Suspense fallback={<div className="h-16 bg-white border-b border-slate-200" />}>
-          <Navbar />
-        </Suspense>
-      )}
+      {isHome && <Navbar />}
 
       {/* Main Content */}
       <main className="flex-1">{children}</main>

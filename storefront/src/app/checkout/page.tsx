@@ -147,6 +147,8 @@ function CheckoutContent() {
           unitPrice: 29.99,
           totalPrice: 29.99,
           savings: 0,
+          selectedSize: undefined,
+          selectedColor: undefined,
         },
       ];
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Search,
   SlidersHorizontal,
@@ -35,20 +35,21 @@ const SUGGESTED_SEARCHES = [
 
 export default function Navbar() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { itemCount } = useCart();
 
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [catalog, setCatalog] = useState<Product[]>([]);
   const [watchlistCount, setWatchlistCount] = useState(0);
   const [mounted, setMounted] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Client hydration guard & read Watchlist count from localStorage for desktop badge
+  // Client hydration guard & read initial search param + Watchlist count from localStorage
   useEffect(() => {
     setMounted(true);
     try {
+      const q = new URLSearchParams(window.location.search).get("search");
+      if (q) setSearchQuery(q);
       const raw = localStorage.getItem("watchlist_items");
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -124,7 +125,7 @@ export default function Navbar() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSearchExpanded(false);
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     if (searchQuery.trim()) {
       params.set("search", searchQuery.trim());
     } else {
@@ -143,7 +144,7 @@ export default function Navbar() {
 
   const handleViewAllResults = () => {
     setIsSearchExpanded(false);
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     if (searchQuery.trim()) {
       params.set("search", searchQuery.trim());
     } else {

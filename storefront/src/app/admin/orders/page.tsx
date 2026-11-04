@@ -63,6 +63,9 @@ interface AdminOrder {
   shipping_country: string;
   carrier_name: string;
   tracking_number: string | null;
+  fulfillment_status?: string;
+  fulfillment_error?: string | null;
+  dlq_retry_count?: number;
   items: AdminOrderItem[];
   created_at: string;
   grace_period_remaining_seconds: number;
@@ -77,7 +80,8 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTab, setSelectedTab] = useState<"ready" | "grace" | "processing" | "shipped" | "all">("ready");
+  const [selectedTab, setSelectedTab] = useState<"ready" | "grace" | "processing" | "shipped" | "dlq" | "all">("ready");
+  const [retryingOrderId, setRetryingOrderId] = useState<string | null>(null);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -336,6 +340,34 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleRetryFulfillment = async (orderNumber: string) => {
+    if (!currentUser) return;
+    setRetryingOrderId(orderNumber);
+    try {
+      const token = await currentUser.getIdToken();
+      const res = await fetch("/api/admin/orders/retry-fulfillment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ internal_order_number: orderNumber }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || "Order fulfillment pushed to CJ successfully!");
+        await fetchOrders();
+      } else {
+        alert("Fulfillment notice: " + (data.message || data.error || "Retry failed"));
+        await fetchOrders();
+      }
+    } catch (err: any) {
+      alert("Error retrying fulfillment: " + err.message);
+    } finally {
+      setRetryingOrderId(null);
+    }
+  };
+
   // Filtered orders
   const filteredOrders = orders.filter((order) => {
     const q = searchTerm.toLowerCase().trim();
@@ -350,7 +382,7 @@ export default function AdminOrdersPage() {
     if (!matchesSearch) return false;
 
     if (selectedTab === "ready") {
-      return !order.is_grace_active && !order.cj_order_id && order.status !== "CANCELLED";
+      return !order.is_grace_active && !order.cj_order_id && order.status !== "CANCELLED" && order.fulfillment_status !== "FULFILLMENT_FAILED";
     }
     if (selectedTab === "grace") {
       return order.is_grace_active && !order.cj_order_id && order.status !== "CANCELLED";
@@ -361,16 +393,20 @@ export default function AdminOrdersPage() {
     if (selectedTab === "shipped") {
       return !!order.cj_order_id && !!order.tracking_number && order.status !== "CANCELLED";
     }
+    if (selectedTab === "dlq") {
+      return (order.fulfillment_status === "FULFILLMENT_FAILED" || order.status === "FULFILLMENT_FAILED") && !order.cj_order_id;
+    }
 
     return true;
   });
 
   // Top summary counters
   const counts = {
-    ready: orders.filter((o) => !o.is_grace_active && !o.cj_order_id && o.status !== "CANCELLED").length,
+    ready: orders.filter((o) => !o.is_grace_active && !o.cj_order_id && o.status !== "CANCELLED" && o.fulfillment_status !== "FULFILLMENT_FAILED").length,
     grace: orders.filter((o) => o.is_grace_active && !o.cj_order_id && o.status !== "CANCELLED").length,
     processing: orders.filter((o) => !!o.cj_order_id && !o.tracking_number && o.status !== "CANCELLED").length,
     shipped: orders.filter((o) => !!o.cj_order_id && !!o.tracking_number && o.status !== "CANCELLED").length,
+    dlq: orders.filter((o) => (o.fulfillment_status === "FULFILLMENT_FAILED" || o.status === "FULFILLMENT_FAILED") && !o.cj_order_id).length,
     all: orders.length,
   };
 
@@ -640,6 +676,19 @@ export default function AdminOrdersPage() {
 
             <button
               type="button"
+              onClick={() => setSelectedTab("dlq")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer active:scale-95 flex items-center gap-1 ${
+                selectedTab === "dlq"
+                  ? "bg-rose-600 text-white shadow-2xs"
+                  : "bg-white text-rose-700 border border-rose-200 hover:bg-rose-50"
+              }`}
+            >
+              <AlertCircle className="w-3 h-3" />
+              <span>DLQ / Failed ({counts.dlq})</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setSelectedTab("all")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer active:scale-95 ${
                 selectedTab === "all"
@@ -809,6 +858,11 @@ export default function AdminOrdersPage() {
                             <Package className="w-3.5 h-3.5 text-sky-600" />
                             <span>Ordered on CJ</span>
                           </span>
+                        ) : order.fulfillment_status === "FULFILLMENT_FAILED" || order.status === "FULFILLMENT_FAILED" ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-rose-50 text-rose-700 border border-rose-200">
+                            <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+                            <span>Fulfillment Failed (DLQ)</span>
+                          </span>
                         ) : order.is_grace_active ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                             <Clock className="w-3.5 h-3.5 text-amber-600" />
@@ -884,6 +938,68 @@ export default function AdminOrdersPage() {
                           className="text-slate-400 hover:text-slate-600 font-bold px-1 text-sm leading-none cursor-pointer"
                         >
                           ×
+                        </button>
+                      </div>
+                    )}
+
+                    {/* ── DEAD-LETTER QUEUE (DLQ) RETRY PANEL ── */}
+                    {(order.fulfillment_status === "FULFILLMENT_FAILED" || order.fulfillment_error) && !order.cj_order_id && (
+                      <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 text-xs font-black text-rose-800">
+                            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                            <span>Fulfillment Failed (DLQ Alert)</span>
+                            <span className="text-[10px] bg-rose-200/80 text-rose-900 px-1.5 py-0.2 rounded font-mono">
+                              Retries: {order.dlq_retry_count || 0}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRetryFulfillment(order.internal_order_number)}
+                            disabled={retryingOrderId === order.internal_order_number}
+                            className="px-3 py-1 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 disabled:opacity-50 cursor-pointer"
+                          >
+                            {retryingOrderId === order.internal_order_number ? (
+                              <>
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                <span>Retrying...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Zap className="w-3 h-3" />
+                                <span>Retry CJ Fulfillment</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        {order.fulfillment_error && (
+                          <p className="text-[11px] text-rose-700 font-mono bg-white/80 p-2 rounded border border-rose-200 break-all">
+                            {order.fulfillment_error}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ── READY ORDER MANUAL DISPATCH BUTTON ── */}
+                    {!order.cj_order_id && !order.is_grace_active && order.fulfillment_status !== "FULFILLMENT_FAILED" && (
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleRetryFulfillment(order.internal_order_number)}
+                          disabled={retryingOrderId === order.internal_order_number}
+                          className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer"
+                        >
+                          {retryingOrderId === order.internal_order_number ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Submitting to CJ...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Zap className="w-3.5 h-3.5" />
+                              <span>Auto-Push to CJ Dropshipping</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     )}
@@ -1243,6 +1359,7 @@ export default function AdminOrdersPage() {
                         const cleanT = title.toLowerCase().trim();
 
                         const effectivePid = item.pid || "";
+                        const matchedProduct: any = null;
                         const matchedVariant: any = null;
 
                         const effectiveVid = matchedVariant?.vid || item.vid || "";

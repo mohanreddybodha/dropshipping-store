@@ -31,6 +31,9 @@ export interface DbOrder {
   shipping_country?: string | null;
   carrier_name?: string | null;
   tracking_number?: string | null;
+  fulfillment_error?: string | null;
+  dlq_retry_count?: number;
+  fulfillment_status?: string | null;
   items_json: any;
   created_at: string;
   updated_at: string;

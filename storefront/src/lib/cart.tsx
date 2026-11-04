@@ -107,7 +107,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                     retail_price_1x: unitPrice,
                     retail_price_2x: +(unitPrice * 0.88).toFixed(2),
                     retail_price_3x: +(unitPrice * 0.82).toFixed(2),
-                  } as Variant,
+                  } as unknown as Variant,
                 ],
               } as Product;
 

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef, useCallback, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { X, Check } from "lucide-react";
 import { Product } from "../../lib/types";
 import { getCatalog } from "../../lib/api";
@@ -11,28 +11,6 @@ interface CatalogExplorerProps {
   initialProducts: Product[];
   categoriesSummary?: Record<string, number>;
   totalCount?: number;
-}
-
-/**
- * Isolated SearchParams subscriber.
- * Keeps useSearchParams() inside a micro-Suspense boundary so the parent
- * CatalogExplorer can prerender its full HTML product grid during SSR/SSG
- * without triggering Next.js 'Loading catalog…' fallback bailout.
- */
-function SearchParamsSync({
-  onParamsSync,
-}: {
-  onParamsSync: (category: string, search: string, rawParams: URLSearchParams) => void;
-}) {
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const category = searchParams.get("category") || "All Products";
-    const search = searchParams.get("search") || "";
-    onParamsSync(category, search, new URLSearchParams(searchParams.toString()));
-  }, [searchParams, onParamsSync]);
-
-  return null;
 }
 
 const PRICE_RANGES = [
@@ -83,15 +61,26 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
     }
   }, [products.length]);
 
-  // Active URL State (defaulted to clean SSR values, hydrated via SearchParamsSync)
+  // Active URL State (defaulted to clean SSR values, synchronized on client mount)
   const [activeCategory, setActiveCategory] = useState<string>("All Products");
   const [activeSearch, setActiveSearch] = useState<string>("");
   const [urlParams, setUrlParams] = useState<URLSearchParams>(new URLSearchParams());
 
-  const handleParamsSync = useCallback((cat: string, q: string, raw: URLSearchParams) => {
-    setActiveCategory(cat);
-    setActiveSearch(q);
-    setUrlParams(raw);
+  // Direct client-side URL listener without triggering SSR Suspense mismatch
+  useEffect(() => {
+    const syncFromUrl = () => {
+      try {
+        const raw = new URLSearchParams(window.location.search);
+        const cat = raw.get("category") || "All Products";
+        const q = raw.get("search") || "";
+        setActiveCategory(cat);
+        setActiveSearch(q);
+        setUrlParams(raw);
+      } catch {}
+    };
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
   }, []);
 
   // Local Filter States
@@ -236,11 +225,6 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
 
   return (
     <div id="catalog-section" className="space-y-3">
-      {/* Non-blocking client search param listener */}
-      <Suspense fallback={null}>
-        <SearchParamsSync onParamsSync={handleParamsSync} />
-      </Suspense>
-
       {/* Active Filter Chips Bar (Shown cleanly only when filters are active) */}
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-2 pb-1 text-xs">

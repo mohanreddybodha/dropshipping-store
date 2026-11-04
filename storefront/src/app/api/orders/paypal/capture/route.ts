@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { createCjOrder, resolveItemVid, CjOrderProduct } from "@/lib/cjClient";
 
 export const dynamic = "force-dynamic";
 
@@ -281,10 +282,82 @@ export async function POST(req: NextRequest) {
       console.warn("[PayPal Capture] Database write warning:", dbErr.message);
     }
 
+    // 4. Automated Supplier Fulfillment Pipeline (CJ Dropshipping)
+    let cjOrderId: string | null = null;
+    let fulfillmentStatus = "PENDING";
+    let fulfillmentError: string | null = null;
+
+    try {
+      const cjProducts: CjOrderProduct[] = [];
+      for (const it of items) {
+        const vid = resolveItemVid(it);
+        if (vid) {
+          cjProducts.push({ vid, quantity: Number(it.quantity || 1) });
+        }
+      }
+
+      if (cjProducts.length > 0) {
+        const cjResult = await createCjOrder({
+          orderNumber,
+          shippingName: customer_name || "Valued Customer",
+          shippingAddress: shipping_address || "",
+          shippingCity: shipping_city || "",
+          shippingProvince: shipping_province || "CA",
+          shippingZip: shipping_zip || "",
+          shippingCountryCode: shipping_country || "US",
+          shippingPhone: customer_phone || "2135550199",
+          customerEmail: email,
+          products: cjProducts,
+          logisticName: "USPS US to US",
+          remark: "Vastire Headless Store Order",
+        });
+
+        if (cjResult.success) {
+          cjOrderId = cjResult.cjOrderId || null;
+          fulfillmentStatus = "SUPPLIER_PROCESSING";
+          console.info(`[Fulfillment] Order ${orderNumber} successfully submitted to CJ (CJ Order ID: ${cjOrderId})`);
+        } else {
+          fulfillmentStatus = "FULFILLMENT_FAILED";
+          fulfillmentError = cjResult.message || "CJ order creation failed";
+          console.error(`[Fulfillment] Order ${orderNumber} failed CJ submission: ${fulfillmentError}`);
+        }
+      } else {
+        fulfillmentStatus = "FULFILLMENT_FAILED";
+        fulfillmentError = "Unable to resolve valid variant ID (VID) for line items.";
+        console.warn(`[Fulfillment] Order ${orderNumber} has no resolvable VIDs:`, items);
+      }
+
+      // Update order with fulfillment state and CJ order ID
+      const sql = getDb();
+      await sql`
+        UPDATE orders SET
+          cj_order_id = ${cjOrderId},
+          status = ${fulfillmentStatus === "SUPPLIER_PROCESSING" ? "SUPPLIER_PROCESSING" : "ORDER_PLACED"},
+          fulfillment_status = ${fulfillmentStatus},
+          fulfillment_error = ${fulfillmentError},
+          updated_at = NOW()
+        WHERE id = ${orderId}
+      `;
+    } catch (fulfillErr: any) {
+      console.error(`[Fulfillment] Unexpected fulfillment exception for ${orderNumber}:`, fulfillErr);
+      try {
+        const sql = getDb();
+        await sql`
+          UPDATE orders SET
+            fulfillment_status = 'FULFILLMENT_FAILED',
+            fulfillment_error = ${fulfillErr?.message || "Fulfillment exception"},
+            updated_at = NOW()
+          WHERE id = ${orderId}
+        `;
+      } catch {}
+    }
+
+    const finalStatus = fulfillmentStatus === "SUPPLIER_PROCESSING" ? "SUPPLIER_PROCESSING" : "ORDER_PLACED";
     return NextResponse.json({
       id: orderId,
       internal_order_number: orderNumber,
-      status: "ORDER_PLACED",
+      cj_order_id: cjOrderId,
+      status: finalStatus,
       total_retail: totalRetail,
       carrier_name: carrier,
       tracking_number: tracking,

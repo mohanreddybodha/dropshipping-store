@@ -76,7 +76,7 @@ export default function Footer() {
 
         {/* ── Bottom Legal & Copyright ── */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 border-t border-slate-100 pt-6">
-          <p>© {new Date().getFullYear()} Vastire (vastire.com). All rights reserved.</p>
+          <p>© 2026 Vastire (vastire.com). All rights reserved.</p>
           <div className="flex items-center gap-4 text-slate-400">
             <span className="hover:text-slate-600 cursor-pointer transition-colors">Privacy Policy</span>
             <span>•</span>
