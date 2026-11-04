@@ -1,49 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, DbOrder } from "@/lib/db";
+import { verifyAdminAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
-
-function isAuthorized(req: NextRequest, clientEmail?: string | null): boolean {
-  // 1. Direct API Key authentication via header
-  const adminKeyHeader = req.headers.get("x-admin-api-key");
-  const expectedKey = process.env.ADMIN_API_KEY;
-  if (expectedKey && adminKeyHeader && adminKeyHeader.trim() === expectedKey.trim()) {
-    return true;
-  }
-
-  // 2. Email-based authentication for Google OAuth admin users
-  const adminEmailsRaw = process.env.ADMIN_EMAILS || process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
-  const allowedEmails = adminEmailsRaw
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-
-  const emailToCheck = (
-    clientEmail ||
-    req.headers.get("x-admin-email") ||
-    req.nextUrl.searchParams.get("admin_email") ||
-    ""
-  )
-    .trim()
-    .toLowerCase();
-
-  // If no ADMIN_EMAILS is configured yet, allow the user in dev/local mode if signed in, but log warning
-  if (allowedEmails.length === 0) {
-    if (process.env.NODE_ENV !== "production") {
-      return true;
-    }
-    // In production with no ADMIN_EMAILS configured, reject by default for security
-    return false;
-  }
-
-  return allowedEmails.includes(emailToCheck);
-}
 
 // GET: Retrieve all orders for the Admin Command Center
 export async function GET(req: NextRequest) {
   try {
-    const adminEmail = req.headers.get("x-admin-email") || req.nextUrl.searchParams.get("admin_email");
-    if (!isAuthorized(req, adminEmail)) {
+    const authResult = await verifyAdminAuth(req);
+    if (!authResult.authorized) {
       return NextResponse.json(
         {
           error: "FORBIDDEN",
@@ -118,16 +83,16 @@ export async function GET(req: NextRequest) {
 // PATCH: Update order fulfillment status, CJ Order ID, and tracking
 export async function PATCH(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { internal_order_number, cj_order_id, status, tracking_number, carrier_name } = body;
-
-    const adminEmail = req.headers.get("x-admin-email") || body.admin_email;
-    if (!isAuthorized(req, adminEmail)) {
+    const authResult = await verifyAdminAuth(req);
+    if (!authResult.authorized) {
       return NextResponse.json(
         { error: "FORBIDDEN", message: "Unauthorized access to admin fulfillment." },
         { status: 403 }
       );
     }
+
+    const body = await req.json();
+    const { internal_order_number, cj_order_id, status, tracking_number, carrier_name } = body;
 
     if (!internal_order_number) {
       return NextResponse.json(

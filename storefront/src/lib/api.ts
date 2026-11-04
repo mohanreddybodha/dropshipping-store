@@ -397,8 +397,9 @@ export async function createCheckoutOrder(payload: {
 
 export async function createPayPalOrder(
   amount: number,
-  internalOrderNumber?: string
-): Promise<{ order_id: string; status: string }> {
+  internalOrderNumber?: string,
+  items?: any[]
+): Promise<{ order_id: string; status: string; authoritative_amount?: number }> {
   const res = await fetch(`${getApiBaseUrl()}/orders/paypal/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -406,6 +407,7 @@ export async function createPayPalOrder(
       amount: +amount.toFixed(2),
       currency: "USD",
       internal_order_number: internalOrderNumber,
+      items: items || [],
     }),
     signal: AbortSignal.timeout(12000),
   });
@@ -537,9 +539,26 @@ export interface UserSavedAddress {
   is_default: boolean;
 }
 
-export async function getUserSavedAddresses(email: string): Promise<UserSavedAddress[]> {
+export async function getUserSavedAddresses(
+  email: string,
+  token?: string
+): Promise<UserSavedAddress[]> {
   try {
+    let authToken = token;
+    if (!authToken && typeof window !== "undefined") {
+      try {
+        const { auth } = await import("./firebase");
+        authToken = await auth.currentUser?.getIdToken();
+      } catch {}
+    }
+
+    const headers: Record<string, string> = {};
+    if (authToken) {
+      headers["Authorization"] = `Bearer ${authToken}`;
+    }
+
     const res = await fetch(`/api/user/addresses?email=${encodeURIComponent(email)}`, {
+      headers,
       signal: AbortSignal.timeout(6000),
     });
     if (!res.ok) return [];
@@ -550,27 +569,43 @@ export async function getUserSavedAddresses(email: string): Promise<UserSavedAdd
   }
 }
 
-export async function saveUserAddress(payload: {
-  id?: number;
-  email: string;
-  label?: string;
-  recipient_name: string;
-  street_address: string;
-  city: string;
-  province: string;
-  county?: string;
-  zip_code: string;
-  phone?: string;
-  is_default?: boolean;
-}): Promise<any> {
+export async function saveUserAddress(
+  payload: {
+    id?: number;
+    email: string;
+    label?: string;
+    recipient_name: string;
+    street_address: string;
+    city: string;
+    province: string;
+    county?: string;
+    zip_code: string;
+    phone?: string;
+    is_default?: boolean;
+  },
+  token?: string
+): Promise<any> {
   const cleanEmail = (payload.email || "").trim().toLowerCase();
   if (!cleanEmail) {
     return { success: false, message: "Email is required to save address" };
   }
 
+  let authToken = token;
+  if (!authToken && typeof window !== "undefined") {
+    try {
+      const { auth } = await import("./firebase");
+      authToken = await auth.currentUser?.getIdToken();
+    } catch {}
+  }
+
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`;
+  }
+
   const res = await fetch(`/api/user/addresses`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ ...payload, email: cleanEmail }),
     signal: AbortSignal.timeout(6000),
   });

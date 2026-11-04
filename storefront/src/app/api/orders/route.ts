@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, DbOrder } from "@/lib/db";
+import { verifyAdminAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export async function GET(req: NextRequest) {
 
     const sql = getDb();
     let rows: DbOrder[] = [];
+    let isAdmin = false;
 
     if (email && phone) {
       rows = (await sql`
@@ -35,7 +37,19 @@ export async function GET(req: NextRequest) {
         LIMIT 100
       `) as DbOrder[];
     } else {
-      // Return recent orders (admin or fallback)
+      // Parameterless global orders query is strictly restricted to authenticated administrators
+      const adminAuth = await verifyAdminAuth(req);
+      if (!adminAuth.authorized) {
+        return NextResponse.json(
+          {
+            error: "UNAUTHORIZED",
+            message:
+              "Query parameter 'email' or 'phone' is required. Global order history requires administrator authentication.",
+          },
+          { status: 401 }
+        );
+      }
+      isAdmin = true;
       rows = (await sql`
         SELECT * FROM orders
         ORDER BY created_at DESC
@@ -46,11 +60,16 @@ export async function GET(req: NextRequest) {
     const mapped = rows.map((r) => {
       let parsedItems = [];
       try {
-        parsedItems = typeof r.items_json === "string" ? JSON.parse(r.items_json) : r.items_json || [];
+        parsedItems =
+          typeof r.items_json === "string"
+            ? JSON.parse(r.items_json)
+            : r.items_json || [];
       } catch {
         parsedItems = [];
       }
-      return {
+
+      // Base order record safe for customer visibility
+      const baseRecord: Record<string, any> = {
         id: r.id,
         internal_order_number: r.internal_order_number,
         cj_order_id: r.cj_order_id,
@@ -58,8 +77,6 @@ export async function GET(req: NextRequest) {
         customer_phone: r.customer_phone,
         status: r.status,
         total_retail: r.total_retail,
-        total_wholesale: r.total_wholesale,
-        net_profit: r.net_profit,
         shipping_name: r.shipping_name,
         shipping_address: r.shipping_address,
         shipping_city: r.shipping_city,
@@ -71,6 +88,14 @@ export async function GET(req: NextRequest) {
         items: parsedItems,
         created_at: r.created_at,
       };
+
+      // Only include proprietary financial wholesale cost and profit margins for verified admin sessions
+      if (isAdmin) {
+        baseRecord.total_wholesale = r.total_wholesale;
+        baseRecord.net_profit = r.net_profit;
+      }
+
+      return baseRecord;
     });
 
     return NextResponse.json({

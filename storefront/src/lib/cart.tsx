@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { BundleTier, CartItem, Product, Variant } from "./types";
 import { auth, onAuthStateChanged } from "./firebase";
-import { saveUserCart, getUserAuthState, FALLBACK_PRODUCTS } from "./api";
+import { saveUserCart, getUserAuthState } from "./api";
 
 interface CartContextType {
   items: CartItem[];
@@ -92,17 +92,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           setItems((localPrev) => {
             const merged = [...localPrev];
             for (const rc of remoteState.cart) {
-              const matchedProduct =
-                FALLBACK_PRODUCTS.find(
-                  (p) =>
-                    p.pid === rc.product_pid ||
-                    p.variants?.some((v) => v.vid === rc.variant_vid) ||
-                    p.title.toLowerCase() === (rc.title || "").toLowerCase()
-                ) || FALLBACK_PRODUCTS[0];
+              const unitPrice = Number(rc.unit_price) || 24.99;
+              const matchedProduct: Product = {
+                id: 0,
+                pid: rc.product_pid,
+                slug: rc.product_pid || "item",
+                title: rc.title || "Selected Item",
+                hero_image_url: rc.image_url || "/placeholder.jpg",
+                category: "General",
+                variants: [
+                  {
+                    vid: rc.variant_vid,
+                    title: rc.title || "Default",
+                    retail_price_1x: unitPrice,
+                    retail_price_2x: +(unitPrice * 0.88).toFixed(2),
+                    retail_price_3x: +(unitPrice * 0.82).toFixed(2),
+                  } as Variant,
+                ],
+              } as Product;
 
-              const matchedVariant =
-                matchedProduct.variants?.find((v) => v.vid === rc.variant_vid) ||
-                matchedProduct.variants?.[0];
+              const matchedVariant = matchedProduct.variants[0];
 
               const tierStr: BundleTier = rc.tier === 2 ? "2x" : rc.tier === 3 ? "3x" : "1x";
               const existingIdx = merged.findIndex(

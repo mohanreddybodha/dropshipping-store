@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { getDb } from "@/lib/db";
 import {
   validateUsStreetAddress,
@@ -11,6 +12,25 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
+    // Zero-Trust Guard: Public unauthenticated order creation without payment capture is strictly forbidden
+    const adminKey = req.headers.get("x-admin-api-key");
+    const expectedKey = process.env.ADMIN_API_KEY;
+    const isAuthorized =
+      Boolean(expectedKey) &&
+      Boolean(adminKey) &&
+      adminKey!.length === expectedKey!.length &&
+      crypto.timingSafeEqual(Buffer.from(adminKey!), Buffer.from(expectedKey!));
+
+    if (!isAuthorized) {
+      return NextResponse.json(
+        {
+          error: "FORBIDDEN",
+          message: "Direct unauthenticated order creation is disabled. Orders must be submitted through verified payment capture gateways.",
+        },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const {
       internal_order_number,

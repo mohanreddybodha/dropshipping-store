@@ -16,7 +16,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { Product } from "../../lib/types";
-import { FALLBACK_PRODUCTS, getCatalog } from "../../lib/api";
+import { getCatalog } from "../../lib/api";
 import { useCart } from "../../lib/cart";
 import VastireLogo from "../ui/VastireLogo";
 
@@ -40,7 +40,7 @@ export default function Navbar() {
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [catalog, setCatalog] = useState<Product[]>(FALLBACK_PRODUCTS);
+  const [catalog, setCatalog] = useState<Product[]>([]);
   const [watchlistCount, setWatchlistCount] = useState(0);
   const [mounted, setMounted] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);

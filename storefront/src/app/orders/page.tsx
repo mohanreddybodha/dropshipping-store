@@ -26,7 +26,6 @@ import {
   getCustomerOrders,
   updateOrderAddress,
   cancelCustomerOrder,
-  FALLBACK_PRODUCTS,
 } from "@/lib/api";
 import { CustomerOrder } from "@/lib/types";
 import ThemedDropdown, { ThemedDropdownOption } from "@/components/ui/ThemedDropdown";
@@ -90,6 +89,7 @@ interface FlatOrderItem {
   orderCreatedAt: string;
   orderStatus: string;
   totalRetail: number;
+  customerEmail?: string;
   shippingName?: string;
   shippingAddress?: string;
   shippingCity?: string;
@@ -118,20 +118,8 @@ function resolveItemImage(title: string, rawImg?: string, rawSlug?: string) {
     img = "https://cf.cjdropshipping.com/20180906/286623069125331.png";
   }
 
-  if (!img || img === "/placeholder.jpg" || !slug) {
-    const matched = FALLBACK_PRODUCTS.find(
-      (p) =>
-        p.title.toLowerCase() === cleanT ||
-        cleanT.includes(p.title.toLowerCase()) ||
-        p.title.toLowerCase().includes(cleanT)
-    );
-    if (matched) {
-      if (!img || img === "/placeholder.jpg") img = matched.hero_image_url || matched.images?.[0];
-      if (!slug) slug = matched.slug;
-    }
-  }
   return {
-    image: img && img !== "/placeholder.jpg" ? img : FALLBACK_PRODUCTS[0]?.hero_image_url || "/placeholder.jpg",
+    image: img && img !== "/placeholder.jpg" ? img : "/placeholder.jpg",
     slug: slug ? `/products/${slug}` : undefined,
   };
 }
@@ -266,6 +254,7 @@ function OrdersContent() {
           orderCreatedAt: order.created_at,
           orderStatus: order.status || "ORDER_PLACED",
           totalRetail: Number(order.total_retail || 0),
+          customerEmail: order.customer_email,
           shippingName: order.shipping_name,
           shippingAddress: order.shipping_address,
           shippingCity: order.shipping_city,
@@ -292,6 +281,7 @@ function OrdersContent() {
             orderCreatedAt: order.created_at,
             orderStatus: order.status || "ORDER_PLACED",
             totalRetail: Number(order.total_retail || 0),
+            customerEmail: order.customer_email,
             shippingName: order.shipping_name,
             shippingAddress: order.shipping_address,
             shippingCity: order.shipping_city,
@@ -361,8 +351,10 @@ function OrdersContent() {
     setAddressError(null);
 
     try {
+      const customerEmail = activeItemModal.customerEmail || auth.currentUser?.email || undefined;
       await updateOrderAddress({
         orderNumber: activeItemModal.orderNumber,
+        customer_email: customerEmail,
         shipping_name: addressForm.shipping_name,
         shipping_address: addressForm.shipping_address,
         shipping_city: addressForm.shipping_city,
@@ -422,7 +414,7 @@ function OrdersContent() {
     setCancelSubmitting(true);
     setCancelError(null);
     try {
-      const userEmail = auth.currentUser?.email || undefined;
+      const userEmail = activeItemModal.customerEmail || auth.currentUser?.email || undefined;
       const res = await cancelCustomerOrder({
         orderNumber: activeItemModal.orderNumber,
         customer_email: userEmail,
@@ -606,7 +598,7 @@ function OrdersContent() {
                     const isKnife = (item.itemTitle || "").toLowerCase().includes("knife");
                     e.currentTarget.src = isKnife
                       ? "https://cf.cjdropshipping.com/20180906/286623069125331.png"
-                      : FALLBACK_PRODUCTS[0]?.hero_image_url || "/placeholder.jpg";
+                      : "/placeholder.jpg";
                   }}
                   className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-xl border border-slate-200 p-1 bg-slate-50 flex-shrink-0 group-hover:scale-105 transition-transform"
                 />
@@ -684,7 +676,7 @@ function OrdersContent() {
                   const isKnife = (activeItemModal.itemTitle || "").toLowerCase().includes("knife");
                   e.currentTarget.src = isKnife
                     ? "https://cf.cjdropshipping.com/20180906/286623069125331.png"
-                    : FALLBACK_PRODUCTS[0]?.hero_image_url || "/placeholder.jpg";
+                    : "/placeholder.jpg";
                 }}
                 className="w-12 h-12 object-contain rounded-xl border border-slate-200 p-1 bg-slate-50 flex-shrink-0"
               />

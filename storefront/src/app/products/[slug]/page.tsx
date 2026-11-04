@@ -61,23 +61,45 @@ export default async function ProductDetailPage({ params }: PageProps) {
     permanentRedirect(`/products/${product.slug}`);
   }
 
-  // Fetch full catalog for suggested & category products
-  const allProducts = await getCatalog({ limit: 200 });
+  // Fetch catalog and project lightweight summary representations (eliminates 450KB RSC Flight bloat)
+  const allProducts = await getCatalog({ limit: 100 });
   const categoryName = product.category || "Featured";
 
-  // Section 1: Same category products (excluding current product)
-  const sameCategoryProducts = allProducts.filter(
-    (p) =>
-      p.slug !== product.slug &&
-      p.category?.toLowerCase() === product.category?.toLowerCase()
-  );
+  const toCardSummary = (p: typeof product) => ({
+    id: p.id,
+    pid: p.pid,
+    slug: p.slug,
+    title: p.title,
+    hero_image_url: p.hero_image_url || p.images?.[0] || "/placeholder.jpg",
+    category: p.category || "General",
+    variants: [
+      {
+        vid: p.variants?.[0]?.vid || "default",
+        title: p.variants?.[0]?.title || "Default",
+        retail_price_1x: p.variants?.[0]?.retail_price_1x || 24.99,
+      } as any,
+    ],
+  } as typeof product);
 
-  // Section 2: Suggested For You (strictly excluding products from the current product's category)
-  const suggestedProducts = allProducts.filter(
-    (p) =>
-      p.slug !== product.slug &&
-      p.category?.toLowerCase() !== product.category?.toLowerCase()
-  );
+  // Section 1: Same category products (lightweight card projections, max 10)
+  const sameCategoryProducts = allProducts
+    .filter(
+      (p) =>
+        p.slug !== product.slug &&
+        p.category?.toLowerCase() === product.category?.toLowerCase()
+    )
+    .slice(0, 10)
+    .map(toCardSummary);
+
+  // Section 2: Suggested For You (lightweight card projections, max 24)
+  const suggestedProducts = allProducts
+    .filter(
+      (p) =>
+        p.slug !== product.slug &&
+        p.category?.toLowerCase() !== product.category?.toLowerCase()
+    )
+    .slice(0, 24)
+    .map(toCardSummary);
 
   const primaryVariant = product.variants[0];
 

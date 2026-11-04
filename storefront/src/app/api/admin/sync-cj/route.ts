@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, DbOrder } from "@/lib/db";
+import { verifyAdminAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -66,21 +67,12 @@ async function fetchCjOrderInfo(targetId: string, accessToken: string): Promise<
 
 export async function POST(req: NextRequest) {
   try {
-    const adminKeyHeader = req.headers.get("x-admin-api-key");
-    const expectedKey = process.env.ADMIN_API_KEY;
-    const adminEmail = (req.headers.get("x-admin-email") || "").toLowerCase().trim();
-    const adminEmails = (process.env.ADMIN_EMAILS || process.env.NEXT_PUBLIC_ADMIN_EMAILS || "")
-      .split(",")
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean);
-
-    const isAuthorized =
-      (expectedKey && adminKeyHeader === expectedKey) ||
-      (adminEmails.length > 0 && adminEmails.includes(adminEmail)) ||
-      (adminEmails.length === 0 && process.env.NODE_ENV !== "production");
-
-    if (!isAuthorized) {
-      return NextResponse.json({ error: "FORBIDDEN", message: "Unauthorized admin access." }, { status: 403 });
+    const authResult = await verifyAdminAuth(req);
+    if (!authResult.authorized) {
+      return NextResponse.json(
+        { error: "FORBIDDEN", message: "Unauthorized admin access." },
+        { status: 403 }
+      );
     }
 
     let reqBody: any = {};

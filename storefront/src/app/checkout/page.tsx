@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "../../lib/cart";
 import {
-  FALLBACK_PRODUCTS,
   createCheckoutOrder,
   getUserAuthState,
   getUserSavedAddresses,
@@ -93,7 +92,7 @@ const US_STATES: ThemedDropdownOption[] = [
 ];
 
 const COUNTRY_OPTIONS: ThemedDropdownOption[] = [
-  { value: "US", label: "United States (Fast Domestic Delivery)", badge: "Eligible" },
+  { value: "US", label: "United States", badge: "Eligible" },
   { value: "CA", label: "Canada (Unavailable)", badge: "Unavailable", disabled: true },
   { value: "GB", label: "United Kingdom (Unavailable)", badge: "Unavailable", disabled: true },
   { value: "AU", label: "Australia (Unavailable)", badge: "Unavailable", disabled: true },
@@ -141,13 +140,13 @@ function CheckoutContent() {
     ? items
     : [
         {
-          product: FALLBACK_PRODUCTS[0],
-          variant: FALLBACK_PRODUCTS[0].variants[0],
-          tier: "2x" as const,
-          quantity: 2,
-          unitPrice: 63.89,
-          totalPrice: 127.78,
-          savings: 17.44,
+          product: { id: 1, pid: "def", slug: "item", title: "Living Essential", hero_image_url: "/placeholder.jpg", category: "Home", variants: [{ vid: "v1", title: "Default", retail_price_1x: 29.99 }] } as any,
+          variant: { vid: "v1", title: "Default", retail_price_1x: 29.99 } as any,
+          tier: "1x" as const,
+          quantity: 1,
+          unitPrice: 29.99,
+          totalPrice: 29.99,
+          savings: 0,
         },
       ];
 
@@ -1461,7 +1460,6 @@ function CheckoutContent() {
                 placeholder="e.g. Orange County (Optional)"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 text-sm transition focus:outline-none"
               />
-              <p className="text-[10px] text-slate-400 mt-1">County / District name for CJ Dropshipping fulfillment</p>
             </div>
           </div>
 

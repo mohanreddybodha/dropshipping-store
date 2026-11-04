@@ -37,6 +37,7 @@ function freePort() {
 }
 
 function cleanStaleBuild() {
+  if (process.env.NODE_ENV === 'production') return;
   try {
     const dotNext = path.join(__dirname, '..', '.next');
     const buildIdFile = path.join(dotNext, 'BUILD_ID');

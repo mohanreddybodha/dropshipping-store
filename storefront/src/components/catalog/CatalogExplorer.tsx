@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { X, Check } from "lucide-react";
 import { Product } from "../../lib/types";
@@ -11,6 +11,28 @@ interface CatalogExplorerProps {
   initialProducts: Product[];
   categoriesSummary?: Record<string, number>;
   totalCount?: number;
+}
+
+/**
+ * Isolated SearchParams subscriber.
+ * Keeps useSearchParams() inside a micro-Suspense boundary so the parent
+ * CatalogExplorer can prerender its full HTML product grid during SSR/SSG
+ * without triggering Next.js 'Loading catalog…' fallback bailout.
+ */
+function SearchParamsSync({
+  onParamsSync,
+}: {
+  onParamsSync: (category: string, search: string, rawParams: URLSearchParams) => void;
+}) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const category = searchParams.get("category") || "All Products";
+    const search = searchParams.get("search") || "";
+    onParamsSync(category, search, new URLSearchParams(searchParams.toString()));
+  }, [searchParams, onParamsSync]);
+
+  return null;
 }
 
 const PRICE_RANGES = [
@@ -40,7 +62,6 @@ const PAGE_SIZE = 24;
 
 export default function CatalogExplorer({ initialProducts }: CatalogExplorerProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   // Dynamic Product State with Client Hydration Fallback
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -62,9 +83,16 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
     }
   }, [products.length]);
 
-  // Active URL State
-  const activeCategory = searchParams.get("category") || "All Products";
-  const activeSearch = searchParams.get("search") || "";
+  // Active URL State (defaulted to clean SSR values, hydrated via SearchParamsSync)
+  const [activeCategory, setActiveCategory] = useState<string>("All Products");
+  const [activeSearch, setActiveSearch] = useState<string>("");
+  const [urlParams, setUrlParams] = useState<URLSearchParams>(new URLSearchParams());
+
+  const handleParamsSync = useCallback((cat: string, q: string, raw: URLSearchParams) => {
+    setActiveCategory(cat);
+    setActiveSearch(q);
+    setUrlParams(raw);
+  }, []);
 
   // Local Filter States
   const [selectedPriceRange, setSelectedPriceRange] = useState<number>(0);
@@ -184,7 +212,7 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
     setSelectedPriceRange(pendingPriceRange);
     setSortBy(pendingSortBy);
 
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(urlParams.toString());
     if (pendingCategory === "All Products") {
       params.delete("category");
     } else {
@@ -208,6 +236,11 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
 
   return (
     <div id="catalog-section" className="space-y-3">
+      {/* Non-blocking client search param listener */}
+      <Suspense fallback={null}>
+        <SearchParamsSync onParamsSync={handleParamsSync} />
+      </Suspense>
+
       {/* Active Filter Chips Bar (Shown cleanly only when filters are active) */}
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-2 pb-1 text-xs">
@@ -217,7 +250,7 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
               {activeCategory}
               <button
                 onClick={() => {
-                  const params = new URLSearchParams(searchParams.toString());
+                  const params = new URLSearchParams(urlParams.toString());
                   params.delete("category");
                   router.push(`/?${params.toString()}`);
                 }}
@@ -232,7 +265,7 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
               &ldquo;{activeSearch}&rdquo;
               <button
                 onClick={() => {
-                  const params = new URLSearchParams(searchParams.toString());
+                  const params = new URLSearchParams(urlParams.toString());
                   params.delete("search");
                   router.push(`/?${params.toString()}`);
                 }}

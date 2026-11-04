@@ -1,11 +1,15 @@
 import { neon, NeonQueryFunction } from "@neondatabase/serverless";
 
+let cachedSql: NeonQueryFunction<false, false> | null = null;
+
 export function getDb(): NeonQueryFunction<false, false> {
+  if (cachedSql) return cachedSql;
   const url = process.env.DATABASE_URL;
   if (!url) {
     throw new Error("DATABASE_URL environment variable is not defined");
   }
-  return neon(url);
+  cachedSql = neon(url);
+  return cachedSql;
 }
 
 export interface DbOrder {

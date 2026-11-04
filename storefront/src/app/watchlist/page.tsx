@@ -6,7 +6,7 @@ import { Heart, Trash2, ArrowLeft, ShoppingBag } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../../components/ui/Toast";
 import { auth, onAuthStateChanged } from "../../lib/firebase";
-import { toggleUserWatchlist, getUserAuthState, getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
+import { toggleUserWatchlist, getUserAuthState, getCatalog } from "../../lib/api";
 import HorizontalProductRow from "../../components/catalog/HorizontalProductRow";
 
 /** Watchlist card: clean card with delete icon replacing heart, rating in bottom-right of image, and consistent 2-line title */
@@ -72,7 +72,7 @@ export default function WatchlistPage() {
   const [items, setItems] = useState<Product[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
-  const [suggestedItems, setSuggestedItems] = useState<Product[]>(FALLBACK_PRODUCTS.slice(0, 10));
+  const [suggestedItems, setSuggestedItems] = useState<Product[]>([]);
 
   useEffect(() => {
     let currentSaved: Product[] = [];
@@ -107,11 +107,15 @@ export default function WatchlistPage() {
 
     const recentSlugs = new Set(recentList.map((p) => p.slug));
 
-    // 2. Instant In-Memory Suggested Items (0ms latency, zero blocking network delay)
-    const suggested = FALLBACK_PRODUCTS.filter(
-      (p) => !savedSlugs.has(p.slug) && !recentSlugs.has(p.slug)
-    ).slice(0, 10);
-    setSuggestedItems(suggested);
+    // 2. Fetch live suggested items and sync remote watchlist concurrently
+    getCatalog({ limit: 30 }).then((cat) => {
+      if (Array.isArray(cat)) {
+        const filtered = cat.filter(
+          (p) => !savedSlugs.has(p.slug) && !recentSlugs.has(p.slug)
+        ).slice(0, 10);
+        setSuggestedItems(filtered);
+      }
+    }).catch(() => {});
 
     // 3. Cross-device cloud sync: sync user watchlist on auth
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -120,12 +124,13 @@ export default function WatchlistPage() {
         const remoteState = await getUserAuthState(user.uid, user.email, user.phoneNumber);
         if (remoteState?.watchlist && Array.isArray(remoteState.watchlist) && remoteState.watchlist.length > 0) {
           const remotePids = new Set<string>(remoteState.watchlist);
+          const fullCatalog = await getCatalog({ limit: 100 });
           setItems((localPrev) => {
             const merged = [...localPrev];
             const existingPids = new Set(merged.map((p) => p.pid));
             for (const pid of remotePids) {
               if (!existingPids.has(pid)) {
-                const found = FALLBACK_PRODUCTS.find((p) => p.pid === pid);
+                const found = fullCatalog.find((p) => p.pid === pid);
                 if (found) {
                   merged.push(found);
                   existingPids.add(pid);

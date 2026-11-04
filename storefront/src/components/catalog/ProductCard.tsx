@@ -12,19 +12,44 @@ interface ProductCardProps {
   product: Product;
 }
 
+// Global in-memory cache of saved slugs (hydrated ONCE across all cards, zero 48x disk read lag)
+let cachedSavedSlugs: Set<string> | null = null;
+const watchlistListeners = new Set<() => void>();
+
+function getWatchlistSlugs(): Set<string> {
+  if (cachedSavedSlugs === null) {
+    cachedSavedSlugs = new Set();
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("watchlist_items");
+        if (raw) {
+          const list = JSON.parse(raw);
+          if (Array.isArray(list)) {
+            list.forEach((item: any) => {
+              if (item?.slug) cachedSavedSlugs!.add(item.slug);
+            });
+          }
+        }
+      } catch {
+        // Storage disabled or error
+      }
+    }
+  }
+  return cachedSavedSlugs;
+}
+
 export default function ProductCard({ product }: ProductCardProps) {
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("watchlist_items");
-      if (raw) {
-        const list: Product[] = JSON.parse(raw);
-        setIsSaved(list.some((p) => p.slug === product.slug));
-      }
-    } catch {
-      // Ignore
-    }
+    const syncState = () => {
+      setIsSaved(getWatchlistSlugs().has(product.slug));
+    };
+    syncState();
+    watchlistListeners.add(syncState);
+    return () => {
+      watchlistListeners.delete(syncState);
+    };
   }, [product.slug]);
 
   const toggleWatchlist = (e: React.MouseEvent) => {
@@ -33,16 +58,22 @@ export default function ProductCard({ product }: ProductCardProps) {
     try {
       const raw = localStorage.getItem("watchlist_items");
       let list: Product[] = raw ? JSON.parse(raw) : [];
+      const slugs = getWatchlistSlugs();
+
       if (isSaved) {
         list = list.filter((p) => p.slug !== product.slug);
+        slugs.delete(product.slug);
         setIsSaved(false);
         showToast("Removed from Watchlist", "watchlist-remove");
       } else {
         list.push(product);
+        slugs.add(product.slug);
         setIsSaved(true);
         showToast("Added to Watchlist", "watchlist-add");
       }
+
       localStorage.setItem("watchlist_items", JSON.stringify(list));
+      watchlistListeners.forEach((fn) => fn());
       window.dispatchEvent(new Event("watchlist_updated"));
 
       // Synchronize with database if user is logged in

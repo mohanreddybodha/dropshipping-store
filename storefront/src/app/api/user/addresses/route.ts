@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { verifyUserAuth } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ addresses: [] });
     }
 
+    // Zero-Trust Guard: Require cryptographically verified bearer token matching the target email or admin key
+    const authResult = await verifyUserAuth(req, cleanEmail);
+    if (!authResult.authorized) {
+      return NextResponse.json(
+        {
+          error: "UNAUTHORIZED",
+          message: "Access to saved delivery addresses requires authentication as the account owner.",
+        },
+        { status: 401 }
+      );
+    }
+
     const sql = getDb();
 
     // 1. Fetch from user_saved_addresses table
@@ -37,7 +50,7 @@ export async function GET(req: NextRequest) {
       ORDER BY is_default DESC, id ASC
     `) as SavedAddressRecord[];
 
-    // 2. If table is empty for this user, auto-harvest past distinct addresses from their orders!
+    // 2. If table is empty for this user, auto-harvest past distinct addresses from their verified past orders
     if (addresses.length === 0) {
       const pastOrders = (await sql`
         SELECT DISTINCT ON (shipping_address, shipping_zip)
@@ -87,6 +100,18 @@ export async function POST(req: NextRequest) {
     const cleanEmail = (email || "").trim().toLowerCase();
     if (!cleanEmail || !street_address || !city || !province || !zip_code) {
       return NextResponse.json({ error: "Missing required address fields" }, { status: 400 });
+    }
+
+    // Zero-Trust Guard: Require cryptographically verified bearer token matching the target email or admin key
+    const authResult = await verifyUserAuth(req, cleanEmail);
+    if (!authResult.authorized) {
+      return NextResponse.json(
+        {
+          error: "UNAUTHORIZED",
+          message: "Saving or updating delivery addresses requires authentication as the account owner.",
+        },
+        { status: 401 }
+      );
     }
 
     const sql = getDb();
@@ -153,10 +178,22 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Missing id or email" }, { status: 400 });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+    const authResult = await verifyUserAuth(req, cleanEmail);
+    if (!authResult.authorized) {
+      return NextResponse.json(
+        {
+          error: "UNAUTHORIZED",
+          message: "Deleting a saved address requires authentication as the account owner.",
+        },
+        { status: 401 }
+      );
+    }
+
     const sql = getDb();
     await sql`
       DELETE FROM user_saved_addresses
-      WHERE id = ${Number(id)} AND LOWER(user_email) = ${email.trim().toLowerCase()}
+      WHERE id = ${Number(id)} AND LOWER(user_email) = ${cleanEmail}
     `;
 
     return NextResponse.json({ success: true });

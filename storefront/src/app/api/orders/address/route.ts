@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { verifyAdminApiKey } from "@/lib/adminAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -52,11 +53,27 @@ export async function PATCH(req: NextRequest) {
 
     const order = rows[0];
 
-    // Optional email ownership check if email provided
-    if (customer_email && order.customer_email) {
-      if (order.customer_email.toLowerCase() !== customer_email.toLowerCase().trim()) {
+    // Strict Zero-Trust Authorization check: Prevent BOLA / IDOR address hijacking
+    const isAdmin = verifyAdminApiKey(req);
+    const orderCustomerEmail = (order.customer_email || "").trim().toLowerCase();
+    const providedCustomerEmail = (customer_email || "").trim().toLowerCase();
+
+    if (!isAdmin) {
+      if (!providedCustomerEmail) {
         return NextResponse.json(
-          { error: "Unauthorized: Email does not match order record." },
+          {
+            error: "UNAUTHORIZED",
+            message: "Customer email is required to authorize delivery address modification.",
+          },
+          { status: 401 }
+        );
+      }
+      if (orderCustomerEmail && providedCustomerEmail !== orderCustomerEmail) {
+        return NextResponse.json(
+          {
+            error: "FORBIDDEN",
+            message: "Unauthorized: Customer email does not match order record.",
+          },
           { status: 403 }
         );
       }

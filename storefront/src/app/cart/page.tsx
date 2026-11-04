@@ -15,7 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Product } from "../../lib/types";
-import { FALLBACK_PRODUCTS, getCatalog } from "../../lib/api";
+import { getCatalog } from "../../lib/api";
 import HorizontalProductRow from "../../components/catalog/HorizontalProductRow";
 import { showToast } from "../../components/ui/Toast";
 
@@ -25,9 +25,7 @@ export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const [watchlistItems, setWatchlistItems] = useState<Product[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
-  const [suggestedItems, setSuggestedItems] = useState<Product[]>(
-    FALLBACK_PRODUCTS.slice(0, 10)
-  );
+  const [suggestedItems, setSuggestedItems] = useState<Product[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -67,11 +65,7 @@ export default function CartPage() {
 
     const recentSlugs = new Set(recentList.map((p) => p.slug));
 
-    // 3. Instant In-Memory Suggested Items (0ms latency, zero redundant network calls on quantity change)
-    const suggested = FALLBACK_PRODUCTS.filter(
-      (p) => !cartSlugs.has(p.slug) && !watchlistSlugs.has(p.slug) && !recentSlugs.has(p.slug)
-    ).slice(0, 10);
-    setSuggestedItems(suggested);
+    // 3. Suggested Items populated via live catalog on mount
   }, [items]);
 
   // Optionally refresh suggested items from live catalog once on initial mount

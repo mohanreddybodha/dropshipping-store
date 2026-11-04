@@ -27,7 +27,6 @@ import {
   Zap,
 } from "lucide-react";
 import { auth, loginWithGoogle, logoutUser, FirebaseUser } from "@/lib/firebase";
-import { FALLBACK_PRODUCTS } from "@/lib/api";
 
 interface AdminOrderItem {
   product_title?: string;
@@ -115,9 +114,10 @@ export default function AdminOrdersPage() {
     setSyncResult(null);
 
     try {
+      const token = await currentUser.getIdToken();
       const res = await fetch("/api/admin/orders", {
         headers: {
-          "x-admin-email": currentUser.email,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -198,11 +198,12 @@ export default function AdminOrdersPage() {
     setIsSubmitting(true);
 
     try {
+      const token = await currentUser.getIdToken();
       const res = await fetch("/api/admin/orders", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-email": currentUser.email,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           internal_order_number: orderNumber,
@@ -231,10 +232,11 @@ export default function AdminOrdersPage() {
     setSyncResult(null);
 
     try {
+      const token = await currentUser.getIdToken();
       const res = await fetch("/api/admin/sync-cj", {
         method: "POST",
         headers: {
-          "x-admin-email": currentUser.email,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -279,11 +281,12 @@ export default function AdminOrdersPage() {
     });
 
     try {
+      const token = await currentUser.getIdToken();
       const res = await fetch("/api/admin/sync-cj", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-email": currentUser.email,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           internal_order_number: orderNumber,
@@ -1239,22 +1242,8 @@ export default function AdminOrdersPage() {
                         const title = item.product_title || item.title || "Product";
                         const cleanT = title.toLowerCase().trim();
 
-                        const matchedProduct = FALLBACK_PRODUCTS.find(
-                          (p) =>
-                            (item.pid && p.pid === item.pid) ||
-                            (item.slug && p.slug === item.slug) ||
-                            p.title.toLowerCase().trim() === cleanT ||
-                            p.title.toLowerCase().includes(cleanT) ||
-                            cleanT.includes(p.title.toLowerCase())
-                        );
-
-                        const effectivePid = matchedProduct?.pid || item.pid || "";
-                        const matchedVariant = matchedProduct?.variants?.find(
-                          (v) =>
-                            (item.vid && v.vid === item.vid) ||
-                            (item.variant_sku && v.sku === item.variant_sku) ||
-                            (item.sku && v.sku === item.sku)
-                        ) || matchedProduct?.variants?.[0];
+                        const effectivePid = item.pid || "";
+                        const matchedVariant: any = null;
 
                         const effectiveVid = matchedVariant?.vid || item.vid || "";
                         const effectiveSku = matchedVariant?.sku || item.variant_sku || item.sku || "";

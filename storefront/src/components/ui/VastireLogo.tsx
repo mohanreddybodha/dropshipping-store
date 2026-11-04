@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { VASTIRE_ICON_DATA_URI } from "./vastireIconDataUri";
 
 interface VastireLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -13,7 +12,7 @@ interface VastireLogoProps {
 
 /**
  * High-Performance Brand Icon for Vastire.
- * Smooth, anti-aliased, flat visuals with zero artificial sharpening or shiny drop shadow halos.
+ * Uses cached static asset /icon-512.png (zero JS bundle bloat, hardware accelerated).
  */
 export function VastireIcon({
   size = 42,
@@ -51,7 +50,7 @@ export function VastireIcon({
         <rect x="0" y="0" width="1024" height="1024" rx="220" ry="220" fill="#ffffff" />
         <g clipPath="url(#vastireSquircleCard)">
           <image
-            href={VASTIRE_ICON_DATA_URI}
+            href="/icon-512.png"
             x="0"
             y="0"
             width="1024"

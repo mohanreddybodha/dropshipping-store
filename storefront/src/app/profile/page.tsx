@@ -32,7 +32,6 @@ import {
   lookupOrdersDualFactor,
   getCustomerOrders,
   createCheckoutOrder,
-  FALLBACK_PRODUCTS,
 } from "../../lib/api";
 import { CustomerOrder } from "../../lib/types";
 
@@ -42,25 +41,8 @@ function resolveOrderItemInfo(item: any) {
   let imageUrl = item.image_url;
   let slug = item.slug;
 
-  if (!imageUrl || imageUrl === "/placeholder.jpg" || !slug) {
-    const cleanT = (title || "").toLowerCase();
-    const matched = FALLBACK_PRODUCTS.find(
-      (p) =>
-        p.title.toLowerCase() === cleanT ||
-        cleanT.includes(p.title.toLowerCase()) ||
-        p.title.toLowerCase().includes(cleanT)
-    );
-    if (matched) {
-      if (!imageUrl || imageUrl === "/placeholder.jpg") {
-        imageUrl = matched.hero_image_url || matched.images?.[0];
-      }
-      if (!slug) slug = matched.slug;
-    }
-  }
-
-  // Defensively ensure imageUrl is never a broken link; fallback to catalog hero image
   if (!imageUrl || imageUrl === "/placeholder.jpg") {
-    imageUrl = FALLBACK_PRODUCTS[0]?.hero_image_url || "";
+    imageUrl = "/placeholder.jpg";
   }
 
   return {
@@ -723,7 +705,7 @@ export default function ProfilePage() {
                                   src={info.imageUrl}
                                   alt={info.title}
                                   onError={(e) => {
-                                    e.currentTarget.src = FALLBACK_PRODUCTS[0]?.hero_image_url || "";
+                                    e.currentTarget.src = "/placeholder.jpg";
                                   }}
                                   className="w-10 h-10 object-contain rounded-lg bg-slate-50 border border-slate-200 flex-shrink-0"
                                 />
