@@ -12,8 +12,8 @@ interface VastireLogoProps {
 }
 
 /**
- * High-Performance Scalable Vector Brand Icon for Vastire.
- * Smooth, anti-aliased rendering with zero artificial contrast sharpening or drop shadow halos.
+ * High-Performance Brand Icon for Vastire.
+ * Smooth, anti-aliased, flat visuals with zero artificial sharpening or shiny drop shadow halos.
  */
 export function VastireIcon({
   size = 42,
@@ -45,10 +45,10 @@ export function VastireIcon({
       >
         <defs>
           <clipPath id="vastireSquircleCard">
-            <rect x="42" y="42" width="940" height="940" rx="210" ry="210" />
+            <rect x="0" y="0" width="1024" height="1024" rx="220" ry="220" />
           </clipPath>
         </defs>
-        <rect x="42" y="42" width="940" height="940" rx="210" ry="210" fill="#ffffff" />
+        <rect x="0" y="0" width="1024" height="1024" rx="220" ry="220" fill="#ffffff" />
         <g clipPath="url(#vastireSquircleCard)">
           <image
             href={VASTIRE_ICON_DATA_URI}
@@ -59,17 +59,6 @@ export function VastireIcon({
             preserveAspectRatio="xMidYMid slice"
           />
         </g>
-        <rect
-          x="42"
-          y="42"
-          width="940"
-          height="940"
-          rx="210"
-          ry="210"
-          fill="none"
-          stroke="#E2E8F0"
-          strokeWidth="3"
-        />
       </svg>
     </div>
   );

@@ -62,11 +62,6 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              try {
-                if (sessionStorage.getItem('vastire_launch_splash_seen')) {
-                  document.documentElement.classList.add('vastire-splash-seen');
-                }
-              } catch (e) {}
               window.addEventListener('error', function(e) {
                 var isChunkError = e && (
                   (e.message && (e.message.indexOf('Loading chunk') !== -1 || e.message.indexOf('ChunkLoadError') !== -1)) ||
