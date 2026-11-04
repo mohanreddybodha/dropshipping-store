@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import {
+  validateUsStreetAddress,
+  validateUsCity,
+  validateUsZip,
+  validateUsPhone,
+} from "@/lib/usAddressValidation";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +36,44 @@ export async function POST(req: NextRequest) {
         { error: "Customer email is required" },
         { status: 400 }
       );
+    }
+
+    // Server-side delivery boundary verification (Contiguous 48 US States only)
+    if ((shipping_country || "US").toUpperCase() !== "US") {
+      return NextResponse.json(
+        { error: "Domestic delivery is restricted to the United States." },
+        { status: 400 }
+      );
+    }
+
+    if (shipping_address) {
+      const streetVal = validateUsStreetAddress(shipping_address);
+      if (!streetVal.isValid) {
+        return NextResponse.json(
+          { error: streetVal.error || "Invalid street address for domestic delivery." },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (shipping_city) {
+      const cityVal = validateUsCity(shipping_city);
+      if (!cityVal.isValid) {
+        return NextResponse.json(
+          { error: cityVal.error || "Invalid city for domestic delivery." },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (shipping_zip) {
+      const zipVal = validateUsZip(shipping_zip, shipping_province);
+      if (!zipVal.isValid) {
+        return NextResponse.json(
+          { error: zipVal.error || "Invalid ZIP code for domestic delivery." },
+          { status: 400 }
+        );
+      }
     }
 
     const orderNumber =

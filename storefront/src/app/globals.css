@@ -59,6 +59,16 @@ body {
   animation-play-state: paused;
 }
 
+/* ── App Launch Screen Progress Bar ── */
+@keyframes indeterminate-bar {
+  0% { transform: translateX(-100%); width: 35%; }
+  50% { transform: translateX(60%); width: 55%; }
+  100% { transform: translateX(260%); width: 35%; }
+}
+.animate-indeterminate-bar {
+  animation: indeterminate-bar 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 /* ── Fade-up scroll reveal ── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }

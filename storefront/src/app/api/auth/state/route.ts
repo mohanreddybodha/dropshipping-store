@@ -39,10 +39,10 @@ export async function GET(req: NextRequest) {
 
     const [cartRows, watchRows, orderRows] = await Promise.all([
       user?.id
-        ? (sql`SELECT * FROM user_carts WHERE user_id = ${user.id} ORDER BY updated_at DESC` as Promise<DbCartItem[]>)
+        ? (sql`SELECT * FROM user_carts WHERE user_id = ${user.id} ORDER BY updated_at DESC` as unknown as Promise<DbCartItem[]>)
         : Promise.resolve([] as DbCartItem[]),
       user?.id
-        ? (sql`SELECT product_pid FROM user_watchlists WHERE user_id = ${user.id} ORDER BY created_at DESC` as Promise<{ product_pid: string }[]>)
+        ? (sql`SELECT product_pid FROM user_watchlists WHERE user_id = ${user.id} ORDER BY created_at DESC` as unknown as Promise<{ product_pid: string }[]>)
         : Promise.resolve([] as { product_pid: string }[]),
       lookupEmail || lookupPhone
         ? lookupEmail && lookupPhone
@@ -52,20 +52,20 @@ export async function GET(req: NextRequest) {
                  OR customer_phone = ${lookupPhone}
               ORDER BY created_at DESC
               LIMIT 100
-            ` as Promise<DbOrder[]>)
+            ` as unknown as Promise<DbOrder[]>)
           : lookupEmail
           ? (sql`
               SELECT * FROM orders
               WHERE LOWER(customer_email) = ${lookupEmail.toLowerCase()}
               ORDER BY created_at DESC
               LIMIT 100
-            ` as Promise<DbOrder[]>)
+            ` as unknown as Promise<DbOrder[]>)
           : (sql`
               SELECT * FROM orders
               WHERE customer_phone = ${lookupPhone}
               ORDER BY created_at DESC
               LIMIT 100
-            ` as Promise<DbOrder[]>)
+            ` as unknown as Promise<DbOrder[]>)
         : Promise.resolve([] as DbOrder[]),
     ]);
 

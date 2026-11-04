@@ -90,7 +90,6 @@ export async function GET(req: NextRequest) {
         shipping_address: r.shipping_address || "",
         shipping_city: r.shipping_city || "",
         shipping_province: r.shipping_province || "",
-        shipping_county: r.shipping_county || "",
         shipping_zip: r.shipping_zip || "",
         shipping_country: r.shipping_country || "US",
         carrier_name: r.carrier_name || "USPS",

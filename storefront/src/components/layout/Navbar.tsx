@@ -10,7 +10,6 @@ import {
   TrendingUp,
   Tag,
   ArrowRight,
-  Star,
   Truck,
   User,
   Heart,
@@ -379,11 +378,6 @@ export default function Navbar() {
                                   {product.title}
                                 </h4>
                                 <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                                  <span className="flex items-center gap-0.5 text-amber-500 font-bold">
-                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                    {rating.toFixed(1)}
-                                  </span>
-                                  <span>•</span>
                                   <span className="text-emerald-700 font-semibold flex items-center gap-1">
                                     <Truck className="w-3 h-3" /> Free Delivery
                                   </span>
@@ -434,11 +428,6 @@ export default function Navbar() {
                               {product.title}
                             </h4>
                             <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                              <span className="flex items-center gap-0.5 text-amber-500 font-bold">
-                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                {rating.toFixed(1)}
-                              </span>
-                              <span>•</span>
                               <span className="text-emerald-700 font-semibold flex items-center gap-1">
                                 <Truck className="w-3 h-3" /> Free Delivery
                               </span>

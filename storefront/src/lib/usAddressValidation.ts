@@ -174,7 +174,11 @@ export const US_STATE_ZIP_PREFIXES: Record<string, { name: string; prefixes: str
 };
 
 // ── Non-US / Indian Location Disallow List ──────────────────────────────────
-const NON_US_LOCATION_TERMS = [
+// ── Undeliverable Remote, Island Territory, Military & International Terms ──
+const UNDELIVERABLE_LOCATION_TERMS = [
+  "puerto rico", "guam", "virgin islands", "usvi", "american samoa", "northern mariana",
+  "saipan", "pago pago", "san juan", "ponce", "bayamon", "carolina", "caguas", "guaynabo",
+  "mayaguez", "tamuning", "dededo", "hagatna", "federated states of micronesia", "marshall islands", "palau",
   "india", "bharat", "delhi", "mumbai", "bombay", "bangalore", "bengaluru",
   "hyderabad", "chennai", "madras", "kolkata", "calcutta", "pune", "ahmedabad",
   "jaipur", "surat", "lucknow", "kanpur", "nagpur", "indore", "thane",
@@ -309,6 +313,52 @@ export function validateUsZip(zip: string, stateCode?: string): ValidationResult
   const fiveDigitZip = trimmed.slice(0, 5);
   const prefix3 = fiveDigitZip.slice(0, 3);
 
+  // Explicit rejection of Military APO/FPO and US Outlying Territories
+  const TERRITORY_AND_MILITARY_ZIPS: Record<string, string> = {
+    "006": "Puerto Rico (PR)",
+    "007": "Puerto Rico (PR)",
+    "008": "U.S. Virgin Islands (VI)",
+    "009": "Puerto Rico (PR)",
+    "090": "Military Europe (APO/FPO AE)",
+    "091": "Military Europe (APO/FPO AE)",
+    "092": "Military Europe (APO/FPO AE)",
+    "093": "Military Europe (APO/FPO AE)",
+    "094": "Military Europe (APO/FPO AE)",
+    "095": "Military Europe (APO/FPO AE)",
+    "096": "Military Europe (APO/FPO AE)",
+    "097": "Military Europe (APO/FPO AE)",
+    "098": "Military Europe (APO/FPO AE)",
+    "340": "Military Americas (APO/FPO AA)",
+    "962": "Military Pacific (APO/FPO AP)",
+    "963": "Military Pacific (APO/FPO AP)",
+    "964": "Military Pacific (APO/FPO AP)",
+    "965": "Military Pacific (APO/FPO AP)",
+    "966": "Military Pacific (APO/FPO AP)",
+    "969": "Guam / Northern Mariana Islands (GU/MP)",
+  };
+
+  if (TERRITORY_AND_MILITARY_ZIPS[prefix3]) {
+    return {
+      isValid: false,
+      error: `Delivery to ${TERRITORY_AND_MILITARY_ZIPS[prefix3]} is unavailable. Domestic 3-5 day fulfillment is restricted to the 48 Contiguous United States.`,
+    };
+  }
+
+  if (fiveDigitZip === "96799") {
+    return {
+      isValid: false,
+      error: "Delivery to American Samoa (AS) is unavailable. Domestic fulfillment is restricted to the 48 Contiguous United States.",
+    };
+  }
+
+  // Alaska & Hawaii: unserviceable by standard 3-5 day domestic warehouse lines
+  if (stateCode === "AK" || stateCode === "HI") {
+    return {
+      isValid: false,
+      error: `Delivery to ${stateCode === "AK" ? "Alaska (AK)" : "Hawaii (HI)"} is currently unserviceable by standard 3-5 day domestic ground shipping. Service is strictly limited to the 48 Contiguous US States.`,
+    };
+  }
+
   // If a state is selected, cross-validate against that state's USPS prefixes
   if (stateCode && US_STATE_ZIP_PREFIXES[stateCode]) {
     const stateInfo = US_STATE_ZIP_PREFIXES[stateCode];
@@ -341,13 +391,32 @@ export function validateUsStreetAddress(address: string): ValidationResult {
     return { isValid: false, error: "Street Address is too short. Please include house number and street name." };
   }
 
+  // 1. Strict P.O. Box Rejection (CJ US domestic warehouses and private couriers cannot deliver to PO Boxes)
+  const poBoxPattern = /\b(p\.?\s*o\.?\s*box|post\s*office\s*box|p\s*o\s*b|pobox|box\s*\d+)\b/i;
+  if (poBoxPattern.test(trimmed)) {
+    return {
+      isValid: false,
+      error: "Domestic express couriers cannot deliver to P.O. Boxes. Please enter a physical residential or commercial street address.",
+    };
+  }
+
+  // 2. Military Installation Rejection (APO / FPO / DPO)
+  const militaryPattern = /\b(apo|fpo|dpo|armed\s*forces)\b/i;
+  if (militaryPattern.test(trimmed)) {
+    return {
+      isValid: false,
+      error: "Military APO/FPO/DPO installations are not supported by domestic commercial couriers. Please provide a standard domestic street address.",
+    };
+  }
+
+  // 3. Remote Territories and International check
   const lower = trimmed.toLowerCase();
-  for (const term of NON_US_LOCATION_TERMS) {
+  for (const term of UNDELIVERABLE_LOCATION_TERMS) {
     const regex = new RegExp(`\\b${term}\\b`, "i");
     if (regex.test(lower)) {
       return {
         isValid: false,
-        error: `Invalid domestic address: "${term}" is an international location. Vastire fulfills orders exclusively within the United States.`,
+        error: `Undeliverable location: "${term}". Domestic 3-5 day shipping is restricted strictly to the 48 Contiguous United States.`,
       };
     }
   }
@@ -386,13 +455,21 @@ export function validateUsCity(city: string): ValidationResult {
     return { isValid: false, error: "City name cannot contain numbers." };
   }
 
+  // Military check for City
+  if (/\b(apo|fpo|dpo)\b/i.test(trimmed)) {
+    return {
+      isValid: false,
+      error: "Military APO/FPO/DPO destinations are not supported by domestic express lines.",
+    };
+  }
+
   const lower = trimmed.toLowerCase();
-  for (const term of NON_US_LOCATION_TERMS) {
+  for (const term of UNDELIVERABLE_LOCATION_TERMS) {
     const regex = new RegExp(`\\b${term}\\b`, "i");
     if (regex.test(lower)) {
       return {
         isValid: false,
-        error: `Invalid domestic city: "${term}" is outside the United States. Only US cities are eligible for domestic delivery.`,
+        error: `Undeliverable city: "${term}". Domestic fulfillment is limited strictly to the 48 Contiguous United States.`,
       };
     }
   }

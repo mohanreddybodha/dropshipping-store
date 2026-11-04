@@ -40,6 +40,8 @@ export function VastireIcon({
         className="w-full h-full select-none pointer-events-none drop-shadow-xs"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
+        shapeRendering="geometricPrecision"
+        textRendering="geometricPrecision"
       >
         <defs>
           <clipPath id="vastireSquircleCard">
@@ -55,6 +57,7 @@ export function VastireIcon({
             width="1024"
             height="1024"
             preserveAspectRatio="xMidYMid slice"
+            style={{ imageRendering: "-webkit-optimize-contrast" }}
           />
         </g>
         <rect

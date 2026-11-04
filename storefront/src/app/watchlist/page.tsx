@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, Trash2, ArrowLeft, Star, ShoppingBag } from "lucide-react";
+import { Heart, Trash2, ArrowLeft, ShoppingBag } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../../components/ui/Toast";
 import { auth, onAuthStateChanged } from "../../lib/firebase";
@@ -15,7 +15,6 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
   const retailPrice = primaryVariant?.retail_price_1x || 24.99;
   const comparePrice = +(retailPrice * 1.25).toFixed(2);
   const heroImage = product.hero_image_url || product.images?.[0] || "/placeholder.jpg";
-  const rating = product.rating || 4.8;
 
   return (
     <div className="group block bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-xl hover:border-rose-300 transition-all duration-200 flex flex-col justify-between">
@@ -43,12 +42,6 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
           >
             <Trash2 className="w-4 h-4" />
           </button>
-
-          {/* Rating Badge in bottom-right corner of image (Rating number only, no count) */}
-          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-600 shadow-sm border border-slate-100">
-            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-            <span>{rating.toFixed(1)}</span>
-          </div>
         </div>
 
         {/* Fixed 2-Line Title Container ensuring all cards match in height */}

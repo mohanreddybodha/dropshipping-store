@@ -141,7 +141,6 @@ function sanitizeTrackingNumber(tracking: string | null | undefined, status: str
   const s = (status || "").toUpperCase();
   const isDispatched = s.includes("SHIPPED") || s.includes("TRANSIT") || s.includes("DELIVERED");
   if (!isDispatched) return null;
-  if (tracking.startsWith("9400111899223344556677")) return null;
   return tracking;
 }
 

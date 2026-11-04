@@ -11,6 +11,7 @@ export interface Variant {
   vid: string;
   sku: string;
   size?: string;
+  color?: string;
   variant_name?: string;
   /** Human-readable label shown to customers. Preserves variant_name for CJ ordering. */
   display_name?: string;

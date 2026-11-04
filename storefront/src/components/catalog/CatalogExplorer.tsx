@@ -22,9 +22,9 @@ const PRICE_RANGES = [
 
 const SORT_OPTIONS = [
   { label: "Featured", value: "featured" },
+  { label: "Newest Arrivals", value: "newest" },
   { label: "Price: Low to High", value: "price_asc" },
   { label: "Price: High to Low", value: "price_desc" },
-  { label: "Highest Rated", value: "rating" },
 ];
 
 const CATEGORIES = [
@@ -143,11 +143,9 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
     result.sort((a, b) => {
       const priceA = a.variants[0]?.retail_price_1x || 0;
       const priceB = b.variants[0]?.retail_price_1x || 0;
-      const ratingA = a.rating || 4.8;
-      const ratingB = b.rating || 4.8;
       if (sortBy === "price_asc") return priceA - priceB;
       if (sortBy === "price_desc") return priceB - priceA;
-      if (sortBy === "rating") return ratingB - ratingA;
+      if (sortBy === "newest") return b.id - a.id;
       return a.id - b.id;
     });
 

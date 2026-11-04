@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Star, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../ui/Toast";
 import { auth } from "../../lib/firebase";
@@ -59,12 +59,9 @@ export default function ProductCard({ product }: ProductCardProps) {
     .map((v) => v.retail_price_1x)
     .filter((p) => typeof p === "number" && p > 0);
   const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : (primaryVariant?.retail_price_1x || 24.99);
-  const maxPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : minPrice;
-  const hasPriceRange = maxPrice - minPrice > 0.5;
 
   const comparePrice = +(minPrice * 1.25).toFixed(2);
   const heroImage = product.hero_image_url || product.images?.[0] || "/placeholder.jpg";
-  const rating = product.rating || 4.8;
 
   const [imgSrc, setImgSrc] = useState(heroImage);
 
@@ -104,12 +101,6 @@ export default function ProductCard({ product }: ProductCardProps) {
               }`}
             />
           </button>
-
-          {/* Rating Badge in bottom-right corner of image (Rating number only, no count) */}
-          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-bold text-amber-600 shadow-sm border border-slate-100">
-            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-            <span>{rating.toFixed(1)}</span>
-          </div>
         </div>
 
         {/* Fixed 2-Line Title Container ensuring all cards match in height */}
@@ -118,14 +109,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         </h3>
       </div>
 
-      {/* Price & Discount Row (Consistent across all cards) */}
+      {/* Price & Discount Row (Consistent across all cards, clean single line) */}
       <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between">
-        <div className="flex items-baseline gap-1.5">
-          {hasPriceRange && (
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
-              From
-            </span>
-          )}
+        <div className="flex items-baseline gap-1.5 min-w-0">
           <span className="text-sm sm:text-base font-black text-slate-900">
             ${minPrice.toFixed(2)}
           </span>
@@ -134,7 +120,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-2 py-0.5 rounded-full uppercase tracking-tight">
+        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-2 py-0.5 rounded-full uppercase tracking-tight whitespace-nowrap flex-shrink-0">
           Save 20%
         </span>
       </div>

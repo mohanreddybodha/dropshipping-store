@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { permanentRedirect } from "next/navigation";
 import { getProductBySlug, getCatalog, FALLBACK_PRODUCTS } from "../../../lib/api";
 import {
   ProductGallery,
@@ -13,7 +14,7 @@ import {
 } from "../../../components/product";
 import TrackRecentlyViewed from "../../../components/product/TrackRecentlyViewed";
 import HorizontalProductRow from "../../../components/catalog/HorizontalProductRow";
-import { Star, Truck } from "lucide-react";
+import { Truck, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 
 export const dynamicParams = true;
@@ -55,6 +56,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
     );
   }
 
+  // Canonical URL Enforcement: redirect non-standard or spaced slugs to the official slug
+  if (product.slug && decodeURIComponent(slug).trim() !== product.slug) {
+    permanentRedirect(`/products/${product.slug}`);
+  }
+
   // Fetch full catalog for suggested & category products
   const allProducts = await getCatalog({ limit: 200 });
   const categoryName = product.category || "Featured";
@@ -74,8 +80,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
   );
 
   const primaryVariant = product.variants[0];
-  const rating = product.rating || 4.8;
-  const reviewCount = product.review_count || 142;
 
   // Programmatic JSON-LD Schema
   const productSchema = {
@@ -88,11 +92,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
     "brand": {
       "@type": "Brand",
       "name": product.brand_title || "Vastire",
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": rating,
-      "reviewCount": reviewCount,
     },
     "offers": {
       "@type": "Offer",
@@ -148,18 +147,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
             title={product.title}
           />
 
-          {/* Free Delivery & Rating opposite each other below images */}
+          {/* Free Delivery & Domestic Fulfillment Status opposite each other below images */}
           <div className="flex items-center justify-between py-1.5 px-1 text-xs border-b border-slate-100">
             <span className="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100 flex items-center gap-1.5 text-[11px]">
               <Truck className="w-3.5 h-3.5 text-emerald-600" />
               Free Delivery
             </span>
 
-            {/* Clean Rating */}
-            <div className="flex items-center gap-1 text-amber-500 font-bold text-xs">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span className="text-slate-900 ml-0.5">{rating.toFixed(1)}</span>
-              <span className="text-slate-400 font-normal">({reviewCount})</span>
+            {/* Fulfillment Trust Badge */}
+            <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-[11px]">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Contiguous US Fulfillment</span>
             </div>
           </div>
         </div>

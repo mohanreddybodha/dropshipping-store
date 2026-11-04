@@ -40,7 +40,7 @@ import {
 
 const US_STATES: ThemedDropdownOption[] = [
   { value: "AL", label: "Alabama (AL)" },
-  { value: "AK", label: "Alaska (AK)" },
+  { value: "AK", label: "Alaska (AK) — Contiguous US Only", badge: "Unavailable", disabled: true },
   { value: "AZ", label: "Arizona (AZ)" },
   { value: "AR", label: "Arkansas (AR)" },
   { value: "CA", label: "California (CA)" },
@@ -50,7 +50,7 @@ const US_STATES: ThemedDropdownOption[] = [
   { value: "DC", label: "District of Columbia (DC)" },
   { value: "FL", label: "Florida (FL)" },
   { value: "GA", label: "Georgia (GA)" },
-  { value: "HI", label: "Hawaii (HI)" },
+  { value: "HI", label: "Hawaii (HI) — Contiguous US Only", badge: "Unavailable", disabled: true },
   { value: "ID", label: "Idaho (ID)" },
   { value: "IL", label: "Illinois (IL)" },
   { value: "IN", label: "Indiana (IN)" },
@@ -1024,20 +1024,20 @@ function CheckoutContent() {
         <ArrowLeft className="w-4 h-4" /> Continue Shopping
       </Link>
 
-      {/* ── PROMINENT US-ONLY DELIVERY BANNER (Single Line Header on Small Screens) ── */}
+      {/* ── PROMINENT CONTIGUOUS US DELIVERY BANNER ── */}
       <div className="bg-emerald-950 text-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-emerald-900 space-y-1.5">
         <div className="flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
           <div className="flex items-center gap-1.5 min-w-0 truncate">
             <span className="text-[11px] sm:text-xs font-black uppercase tracking-tight text-emerald-400 truncate">
-              US Domestic Shipping Only
+              Contiguous 48 US States Only
             </span>
           </div>
           <span className="text-[9px] sm:text-[10px] bg-emerald-800/90 text-emerald-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex-shrink-0">
-            USPS Tracked
+            USPS Domestic Ground (3–5 Days)
           </span>
         </div>
         <p className="text-[11px] sm:text-xs text-emerald-200/90 leading-relaxed">
-          Orders are dispatched directly from our US fulfillment centers via tracked USPS domestic ground (3–5 business days). <strong>Delivery outside the United States is unavailable.</strong>
+          Orders are dispatched directly from domestic fulfillment centers via tracked USPS ground (3–5 business days). <strong>Delivery is serviced strictly to physical street addresses across the 48 Contiguous US States (No P.O. Boxes, Military APO/FPO, Alaska, Hawaii, or US Island Territories).</strong>
         </p>
       </div>
 
