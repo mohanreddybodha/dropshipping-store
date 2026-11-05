@@ -10,9 +10,25 @@ export async function GET(req: NextRequest) {
     const email = searchParams.get("email")?.trim() || "";
     const phone = searchParams.get("phone")?.trim() || "";
 
+    // Fail-fast Zero-Trust Security: Parameterless global order dump requires verified admin authentication
+    let isAdmin = false;
+    if (!email && !phone) {
+      const adminAuth = await verifyAdminAuth(req);
+      if (!adminAuth.authorized) {
+        return NextResponse.json(
+          {
+            error: "UNAUTHORIZED",
+            message:
+              "Query parameter 'email' or 'phone' is required. Global order history requires administrator authentication.",
+          },
+          { status: 401 }
+        );
+      }
+      isAdmin = true;
+    }
+
     const sql = getDb();
     let rows: DbOrder[] = [];
-    let isAdmin = false;
 
     if (email && phone) {
       rows = (await sql`
@@ -36,20 +52,7 @@ export async function GET(req: NextRequest) {
         ORDER BY created_at DESC
         LIMIT 100
       `) as DbOrder[];
-    } else {
-      // Parameterless global orders query is strictly restricted to authenticated administrators
-      const adminAuth = await verifyAdminAuth(req);
-      if (!adminAuth.authorized) {
-        return NextResponse.json(
-          {
-            error: "UNAUTHORIZED",
-            message:
-              "Query parameter 'email' or 'phone' is required. Global order history requires administrator authentication.",
-          },
-          { status: 401 }
-        );
-      }
-      isAdmin = true;
+    } else if (isAdmin) {
       rows = (await sql`
         SELECT * FROM orders
         ORDER BY created_at DESC

@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60; // 60 seconds execution limit on Vercel
 
 function verifyCronSecret(req: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET || process.env.ADMIN_API_KEY;
-  if (!cronSecret) return false;
+  const validSecrets = [process.env.CRON_SECRET, process.env.ADMIN_API_KEY].filter(Boolean) as string[];
+  if (validSecrets.length === 0) return false;
 
   const authHeader = req.headers.get("authorization") || "";
   const customHeader = req.headers.get("x-cron-secret") || "";
@@ -23,14 +23,14 @@ function verifyCronSecret(req: NextRequest): boolean {
 
   if (!candidate) return false;
 
-  try {
-    const candidateBuf = Buffer.from(candidate);
-    const secretBuf = Buffer.from(cronSecret);
-    if (candidateBuf.length !== secretBuf.length) return false;
-    return crypto.timingSafeEqual(candidateBuf, secretBuf);
-  } catch {
-    return false;
+  const candidateBuf = Buffer.from(candidate);
+  for (const secret of validSecrets) {
+    const secretBuf = Buffer.from(secret);
+    if (candidateBuf.length === secretBuf.length && crypto.timingSafeEqual(candidateBuf, secretBuf)) {
+      return true;
+    }
   }
+  return false;
 }
 
 async function handleSync(req: NextRequest) {

@@ -35,13 +35,21 @@ export async function verifyFirebaseIdToken(
 }
 
 export function verifyAdminApiKey(req: NextRequest): boolean {
-  const adminKeyHeader = req.headers.get("x-admin-api-key");
   const expectedKey = process.env.ADMIN_API_KEY;
-  if (!adminKeyHeader || !expectedKey) return false;
-  if (adminKeyHeader.length !== expectedKey.length) return false;
+  if (!expectedKey) return false;
+
+  let candidate = req.headers.get("x-admin-api-key") || "";
+  if (!candidate) {
+    const authHeader = req.headers.get("authorization") || "";
+    if (authHeader.startsWith("Bearer ")) {
+      candidate = authHeader.slice(7).trim();
+    }
+  }
+
+  if (!candidate || candidate.length !== expectedKey.length) return false;
   try {
     return crypto.timingSafeEqual(
-      Buffer.from(adminKeyHeader),
+      Buffer.from(candidate),
       Buffer.from(expectedKey)
     );
   } catch {

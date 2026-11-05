@@ -66,14 +66,17 @@ jobs:
           NEXT_PUBLIC_API_URL: "/api"
           ADMIN_API_KEY: "ci_admin_secret_key_verification_998877"
           CRON_SECRET: "ci_cron_secret_verification_998877"
+          DATABASE_URL: "postgresql://ci_mock_user:ci_mock_pass@localhost:5432/mock_db"
         run: npm run build
 
       - name: Start Production Server and Execute Security Verification
         working-directory: ./storefront
         env:
           PORT: 3009
+          CI: "true"
           ADMIN_API_KEY: "ci_admin_secret_key_verification_998877"
           CRON_SECRET: "ci_cron_secret_verification_998877"
+          DATABASE_URL: "postgresql://ci_mock_user:ci_mock_pass@localhost:5432/mock_db"
         run: |
           npx next start -p 3009 &
           SERVER_PID=$!

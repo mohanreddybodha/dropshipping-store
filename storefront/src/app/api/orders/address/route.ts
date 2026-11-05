@@ -34,6 +34,20 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    // Fail-fast Zero-Trust Authorization check: Prevent BOLA / IDOR address hijacking
+    const isAdmin = verifyAdminApiKey(req);
+    const providedCustomerEmail = (customer_email || "").trim().toLowerCase();
+
+    if (!isAdmin && !providedCustomerEmail) {
+      return NextResponse.json(
+        {
+          error: "UNAUTHORIZED",
+          message: "Customer email is required to authorize delivery address modification.",
+        },
+        { status: 401 }
+      );
+    }
+
     const sql = getDb();
 
     // 1. Fetch order to verify existence and check server-authoritative 30-minute grace period
@@ -52,22 +66,9 @@ export async function PATCH(req: NextRequest) {
     }
 
     const order = rows[0];
-
-    // Strict Zero-Trust Authorization check: Prevent BOLA / IDOR address hijacking
-    const isAdmin = verifyAdminApiKey(req);
     const orderCustomerEmail = (order.customer_email || "").trim().toLowerCase();
-    const providedCustomerEmail = (customer_email || "").trim().toLowerCase();
 
     if (!isAdmin) {
-      if (!providedCustomerEmail) {
-        return NextResponse.json(
-          {
-            error: "UNAUTHORIZED",
-            message: "Customer email is required to authorize delivery address modification.",
-          },
-          { status: 401 }
-        );
-      }
       if (orderCustomerEmail && providedCustomerEmail !== orderCustomerEmail) {
         return NextResponse.json(
           {
