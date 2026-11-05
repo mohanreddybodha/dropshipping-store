@@ -647,6 +647,7 @@ function CheckoutContent() {
       unit_price: item.unitPrice,
       size: item.selectedSize,
       color: item.selectedColor,
+      status: "ORDER_PLACED",
     }));
 
     try {
@@ -774,6 +775,7 @@ function CheckoutContent() {
         unit_price: item.unitPrice,
         size: item.selectedSize,
         color: item.selectedColor,
+        status: "ORDER_PLACED",
       }));
 
       const trackingNumber: string | undefined = undefined;
@@ -1096,7 +1098,7 @@ function CheckoutContent() {
             </div>
             <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-slate-700 text-[11px] font-medium flex items-center gap-2 text-left">
               <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span>Zero-trust encrypted verification in progress. Please do not refresh or press back.</span>
+              <span>Secure encrypted verification in progress. Please do not refresh or press back.</span>
             </div>
           </div>
         </div>

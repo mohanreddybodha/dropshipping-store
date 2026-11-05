@@ -85,6 +85,7 @@ const US_STATES: ThemedDropdownOption[] = [
 
 interface FlatOrderItem {
   orderNumber: string;
+  displayOrderNumber: string;
   orderId: number;
   orderCreatedAt: string;
   orderStatus: string;
@@ -261,19 +262,24 @@ function OrdersContent() {
     };
   }, []);
 
-  // Flatten orders into item-centric cards
+  // Flatten orders into item-centric cards with independent sub-order identifiers and item status
   const flatItems: FlatOrderItem[] = useMemo(() => {
     const items: FlatOrderItem[] = [];
     orders.forEach((order) => {
       const cleanTracking = sanitizeTrackingNumber(order.tracking_number, order.status);
       const orderItems = order.items && order.items.length > 0 ? order.items : [];
+      const parentStatus = (order.status || "ORDER_PLACED").toUpperCase();
+      const isMultiItem = orderItems.length > 1;
+
       if (orderItems.length === 0) {
         const resolved = resolveItemImage("Vastire Essential");
+        const itStatus = parentStatus === "CANCELLED" ? "CANCELLED" : "ORDER_PLACED";
         items.push({
           orderNumber: order.internal_order_number,
+          displayOrderNumber: order.internal_order_number,
           orderId: order.id,
           orderCreatedAt: order.created_at,
-          orderStatus: order.status || "ORDER_PLACED",
+          orderStatus: parentStatus,
           totalRetail: Number(order.total_retail || 0),
           customerEmail: order.customer_email,
           shippingName: order.shipping_name,
@@ -289,6 +295,7 @@ function OrdersContent() {
           itemImage: resolved.image,
           itemQuantity: 1,
           itemPrice: Number(order.total_retail || 0),
+          itemStatus: itStatus,
           itemIndex: 0,
         });
       } else {
@@ -299,11 +306,23 @@ function OrdersContent() {
           const size = it.size || it.selectedSize;
           const color = it.color || it.selectedColor;
           const resolved = resolveItemImage(rawTitle, rawImg, it.slug, vid, size, color);
+
+          // Dedicated item-level cancellation resolution
+          let itStatus = (it.status || "").toUpperCase();
+          if (!itStatus) {
+            itStatus = parentStatus === "CANCELLED" ? "CANCELLED" : "ORDER_PLACED";
+          }
+
+          const dispNum = isMultiItem
+            ? `${order.internal_order_number} #${String(idx + 1).padStart(2, "0")}`
+            : order.internal_order_number;
+
           items.push({
             orderNumber: order.internal_order_number,
+            displayOrderNumber: dispNum,
             orderId: order.id,
             orderCreatedAt: order.created_at,
-            orderStatus: order.status || "ORDER_PLACED",
+            orderStatus: parentStatus,
             totalRetail: Number(order.total_retail || 0),
             customerEmail: order.customer_email,
             shippingName: order.shipping_name,
@@ -322,7 +341,7 @@ function OrdersContent() {
             itemSize: size,
             itemColor: color,
             itemVid: vid,
-            itemStatus: it.status,
+            itemStatus: itStatus,
             itemIndex: idx,
           });
         });
@@ -450,7 +469,7 @@ function OrdersContent() {
       });
 
       setCancelSuccess(
-        res.message || "Product cancelled successfully. Refund issued to your PayPal account."
+        res.message || "Item cancelled successfully. Refund issued to your PayPal account."
       );
 
       // Optimistically update active modal
@@ -464,13 +483,18 @@ function OrdersContent() {
           : null
       );
 
-      // Optimistically update orders in list so only this item is marked cancelled
+      // Optimistically update orders in list so only this specific item is marked cancelled
       setOrders((prevOrders) =>
         prevOrders.map((o) => {
           if (o.internal_order_number === activeItemModal.orderNumber) {
             const updatedItems = (o.items || []).map((it: any, idx: number) => {
-              if (idx === activeItemModal.itemIndex) {
-                return { ...it, status: "CANCELLED" };
+              if (idx === activeItemModal.itemIndex || (activeItemModal.itemVid && it.vid === activeItemModal.itemVid)) {
+                return {
+                  ...it,
+                  status: "CANCELLED",
+                  refund_amount: res.refundAmount,
+                  cancelled_at: new Date().toISOString(),
+                };
               }
               return it;
             });
@@ -484,6 +508,41 @@ function OrdersContent() {
           return o;
         })
       );
+
+      // Persist cancellation in local storage so refreshing preserves this item's cancelled state while other items stay active
+      try {
+        const rawLocal = localStorage.getItem("customer_orders");
+        if (rawLocal) {
+          const parsed = JSON.parse(rawLocal);
+          if (Array.isArray(parsed)) {
+            const updatedLocal = parsed.map((o: any) => {
+              if (o.internal_order_number === activeItemModal.orderNumber) {
+                const updatedItems = (o.items || []).map((it: any, idx: number) => {
+                  if (idx === activeItemModal.itemIndex || (activeItemModal.itemVid && it.vid === activeItemModal.itemVid)) {
+                    return {
+                      ...it,
+                      status: "CANCELLED",
+                      refund_amount: res.refundAmount,
+                      cancelled_at: new Date().toISOString(),
+                    };
+                  }
+                  return it;
+                });
+                const allCancelled = updatedItems.every((x: any) => (x.status || "").toUpperCase() === "CANCELLED");
+                return {
+                  ...o,
+                  status: res.orderStatus || (allCancelled ? "CANCELLED" : "PARTIALLY_CANCELLED"),
+                  items: updatedItems,
+                };
+              }
+              return o;
+            });
+            localStorage.setItem("customer_orders", JSON.stringify(updatedLocal));
+          }
+        }
+      } catch (storageErr) {
+        console.error("Failed to update local storage on cancellation:", storageErr);
+      }
 
       setTimeout(() => {
         setIsCancellingOrder(false);
@@ -501,11 +560,11 @@ function OrdersContent() {
     const s = (status || "").toUpperCase();
     const remaining = getGracePeriodRemaining(createdAt);
 
-    if (s.includes("CANCEL")) {
+    if (s === "CANCELLED") {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
           <X className="w-3 h-3 text-rose-600" />
-          Order Cancelled (Refunded)
+          Cancelled (Refunded)
         </span>
       );
     }
@@ -655,7 +714,7 @@ function OrdersContent() {
                     <span className="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md text-xs">
                       ${(item.itemPrice * item.itemQuantity).toFixed(2)}
                     </span>
-                    {item.orderStatus && item.orderStatus.toUpperCase().includes("CANCEL") ? (
+                    {item.itemStatus?.toUpperCase() === "CANCELLED" ? (
                       <span className="font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded text-[10px]">
                         Cancelled
                       </span>
@@ -731,7 +790,7 @@ function OrdersContent() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-[10px] font-mono font-bold text-slate-400 uppercase truncate">
-                      {activeItemModal.orderNumber}
+                      {activeItemModal.displayOrderNumber || activeItemModal.orderNumber}
                     </div>
                     <h3 className="text-xs sm:text-sm font-bold text-slate-900 truncate leading-snug group-hover:text-emerald-700 transition flex items-center gap-1">
                       <span>{activeItemModal.itemTitle}</span>
@@ -910,9 +969,6 @@ function OrdersContent() {
                   <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-1 animate-in fade-in">
                     <Check className="w-5 h-5 text-emerald-600 mx-auto" />
                     <p className="text-xs font-bold text-emerald-800">{cancelSuccess}</p>
-                    <p className="text-[11px] text-emerald-700">
-                      100% of your payment has been automatically refunded to your original payment method.
-                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3 text-xs">
@@ -941,7 +997,7 @@ function OrdersContent() {
                             </span>
                           </div>
                           <p className="text-[10px] text-slate-500 leading-relaxed">
-                            Automated refund for this product returned directly to your original payment method via PayPal. Zero fees deducted.
+                            A refund of ${itemRefundAmount.toFixed(2)} USD will be credited directly to your PayPal account. No cancellation fees apply.
                           </p>
                         </div>
                       );
@@ -1007,54 +1063,63 @@ function OrdersContent() {
               </div>
             ) : (
               /* Detail View */
-              <>
-                {/* Fulfillment Status & Tracking in ONE sleek box */}
-                <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-3 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 font-semibold">Fulfillment Status:</span>
-                    <div>{renderModalStatusBadge(activeItemModal.orderStatus, activeItemModal.orderCreatedAt)}</div>
-                  </div>
+              (() => {
+                  const isThisItemCancelled = (activeItemModal.itemStatus || "").toUpperCase() === "CANCELLED";
+                  const effectiveItemStatus = isThisItemCancelled
+                    ? "CANCELLED"
+                    : activeItemModal.orderStatus === "PARTIALLY_CANCELLED"
+                    ? "ORDER_PLACED"
+                    : activeItemModal.orderStatus;
 
-                  <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between gap-2 text-xs">
-                    <div>
-                      <span className="text-[10px] text-slate-400 block">Domestic Carrier:</span>
-                      <span className="font-bold text-slate-800 text-[11px]">{activeItemModal.carrierName || "USPS Ground"}</span>
-                    </div>
-                    <div>
-                      {activeItemModal.trackingNumber ? (
-                        <a
-                          href={`https://tools.usps.com/go/TrackConfirmAction?tLabels=${activeItemModal.trackingNumber}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition"
-                        >
-                          <Truck className="w-3 h-3" />
-                          <span>{activeItemModal.trackingNumber}</span>
-                          <ExternalLink className="w-2.5 h-2.5" />
-                        </a>
+                  return (
+                    <>
+                      {/* Fulfillment Status & Tracking in ONE sleek box */}
+                      <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-3 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-500 font-semibold">Fulfillment Status:</span>
+                          <div>{renderModalStatusBadge(effectiveItemStatus, activeItemModal.orderCreatedAt)}</div>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between gap-2 text-xs">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">Domestic Carrier:</span>
+                            <span className="font-bold text-slate-800 text-[11px]">{activeItemModal.carrierName || "USPS Ground"}</span>
+                          </div>
+                          <div>
+                            {activeItemModal.trackingNumber ? (
+                              <a
+                                href={`https://tools.usps.com/go/TrackConfirmAction?tLabels=${activeItemModal.trackingNumber}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow-xs transition"
+                              >
+                                <Truck className="w-3 h-3" />
+                                <span>{activeItemModal.trackingNumber}</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 italic">
+                                Assigned upon dispatch
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ── 4-STEP FULFILLMENT STEPPER OR CANCELLED BANNER ── */}
+                      {isThisItemCancelled ? (
+                        <div className="border border-rose-200 bg-rose-50/70 rounded-xl p-3.5 text-center space-y-1.5">
+                          <div className="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto text-xs font-bold">
+                            ✕
+                          </div>
+                          <div className="text-xs font-bold text-rose-900">
+                            Item Cancelled & Refunded
+                          </div>
+                          <div className="text-[11px] text-rose-700 leading-relaxed max-w-xs mx-auto">
+                            A refund of <strong>${(activeItemModal.itemPrice * activeItemModal.itemQuantity).toFixed(2)} USD</strong> has been credited to your PayPal account.
+                          </div>
+                        </div>
                       ) : (
-                        <span className="text-[11px] text-slate-400 italic">
-                          Assigned upon dispatch
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── 4-STEP FULFILLMENT STEPPER OR CANCELLED BANNER ── */}
-                {(activeItemModal.itemStatus?.toUpperCase() === "CANCELLED" || activeItemModal.orderStatus.toUpperCase() === "CANCELLED") ? (
-                  <div className="border border-rose-200 bg-rose-50/70 rounded-xl p-3.5 text-center space-y-1.5">
-                    <div className="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto text-xs font-bold">
-                      ✕
-                    </div>
-                    <div className="text-xs font-bold text-rose-900">
-                      {activeItemModal.orderStatus.toUpperCase() === "CANCELLED" ? "Order Cancelled & 100% Refunded" : "Product Cancelled & Refunded"}
-                    </div>
-                    <div className="text-[11px] text-rose-700 leading-relaxed max-w-xs mx-auto">
-                      An automated refund of <strong>${(activeItemModal.itemPrice * activeItemModal.itemQuantity).toFixed(2)} USD</strong> has been returned to your original payment method via PayPal.
-                    </div>
-                  </div>
-                ) : (
                   <div className="border border-slate-200 rounded-xl p-3 space-y-2">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
                       Fulfillment Progress
@@ -1158,9 +1223,9 @@ function OrdersContent() {
                       <MapPin className="w-3.5 h-3.5 text-emerald-600" />
                       <span>US Delivery Address</span>
                     </span>
-                    {activeItemModal.orderStatus.toUpperCase().includes("CANCEL") ? (
+                    {isThisItemCancelled ? (
                       <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded">
-                        Order Voided
+                        Item Cancelled
                       </span>
                     ) : getGracePeriodRemaining(activeItemModal.orderCreatedAt) ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
@@ -1186,47 +1251,44 @@ function OrdersContent() {
                   </div>
 
                   {/* Grace Countdown Helper - ONLY placed here */}
-                  {getGracePeriodRemaining(activeItemModal.orderCreatedAt) &&
-                    !activeItemModal.orderStatus.toUpperCase().includes("CANCEL") && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200/80">
-                        <Clock className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                        <span>
-                          You have <strong>{getGracePeriodRemaining(activeItemModal.orderCreatedAt)}</strong> left to edit this address or cancel for a 100% full refund.
-                        </span>
-                      </div>
-                    )}
+                  {getGracePeriodRemaining(activeItemModal.orderCreatedAt) && !isThisItemCancelled && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200/80">
+                      <Clock className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                      <span>
+                        You have <strong>{getGracePeriodRemaining(activeItemModal.orderCreatedAt)}</strong> left to edit this address or cancel for a full refund.
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* ── UNIFIED ACTION BUTTONS: Cancel Item & Edit Address in Single Line Above Close ── */}
-                {getGracePeriodRemaining(activeItemModal.orderCreatedAt) &&
-                  !activeItemModal.orderStatus.toUpperCase().includes("CANCEL") &&
-                  activeItemModal.itemStatus?.toUpperCase() !== "CANCELLED" && (
-                    <div className="pt-2 grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsCancellingOrder(true);
-                          setIsEditingAddress(false);
-                          setCancelError(null);
-                        }}
-                        className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 py-2.5 px-3 rounded-xl border border-rose-200 transition cursor-pointer active:scale-95 whitespace-nowrap"
-                      >
-                        <Ban className="w-3.5 h-3.5 text-rose-600" />
-                        <span>Cancel Item</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleStartEditAddress(activeItemModal);
-                          setIsCancellingOrder(false);
-                        }}
-                        className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 py-2.5 px-3 rounded-xl border border-emerald-200 transition cursor-pointer active:scale-95 whitespace-nowrap"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                        <span>Edit Address</span>
-                      </button>
-                    </div>
-                  )}
+                {getGracePeriodRemaining(activeItemModal.orderCreatedAt) && !isThisItemCancelled && (
+                  <div className="pt-2 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCancellingOrder(true);
+                        setIsEditingAddress(false);
+                        setCancelError(null);
+                      }}
+                      className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 py-2.5 px-3 rounded-xl border border-rose-200 transition cursor-pointer active:scale-95 whitespace-nowrap"
+                    >
+                      <Ban className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Cancel Item</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleStartEditAddress(activeItemModal);
+                        setIsCancellingOrder(false);
+                      }}
+                      className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 py-2.5 px-3 rounded-xl border border-emerald-200 transition cursor-pointer active:scale-95 whitespace-nowrap"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Edit Address</span>
+                    </button>
+                  </div>
+                )}
 
                 <div className="pt-1 flex justify-end">
                   <button
@@ -1237,7 +1299,9 @@ function OrdersContent() {
                   </button>
                 </div>
               </>
-            )}
+            );
+          })()
+        )}
           </div>
         </div>
       )}

@@ -753,7 +753,7 @@ export default function ProfilePage() {
         />
         <FaqItem
           question="Can I modify my shipping address after checkout?"
-          answer="We offer a 30-minute grace window after checkout before orders are automatically sent to our automated packaging facility. Contact our support team immediately if you need to correct your address."
+          answer="We offer a 30-minute grace window after checkout before orders are locked for domestic packaging. You can edit your delivery address directly in the My Orders tab during this window."
         />
         <FaqItem
           question="Why can’t I order to addresses outside the United States?"

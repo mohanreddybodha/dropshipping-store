@@ -288,9 +288,9 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: `Product cancelled successfully. A partial refund of $${refundAmount.toFixed(
+        message: `Item cancelled successfully. A refund of $${refundAmount.toFixed(
           2
-        )} USD has been issued to your original PayPal payment method.`,
+        )} USD has been credited to your PayPal account.`,
         orderNumber: order.internal_order_number,
         itemIndex: itemIndex,
         refundAmount: refundAmount,
@@ -314,9 +314,9 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: `Order cancelled successfully. A 100% full refund of $${refundAmount.toFixed(
+        message: `Order cancelled successfully. A refund of $${refundAmount.toFixed(
           2
-        )} USD has been issued to your original PayPal payment method.`,
+        )} USD has been credited to your PayPal account.`,
         orderNumber: order.internal_order_number,
         refundAmount: refundAmount,
         orderStatus: "CANCELLED",

@@ -276,7 +276,7 @@ export default function PayPalButton({
       {!sdkReady && (
         <div className="py-6 flex items-center justify-center gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl">
           <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
-          <span>Connecting to PayPal Zero-Trust Encryption Gateway...</span>
+          <span>Connecting securely to PayPal...</span>
         </div>
       )}
       <div ref={containerRef} className="w-full min-h-[44px]" />
