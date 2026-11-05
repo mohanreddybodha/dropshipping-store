@@ -9,18 +9,29 @@ interface ProductGalleryProps {
 }
 
 export default function ProductGallery({ images = [], title }: ProductGalleryProps) {
-  // Fallback to placeholder if empty
-  const validImages = images && images.length > 0 ? images : ["/placeholder.jpg"];
+  // Ensure non-empty initial array
+  const initialImages = images && images.length > 0 ? images : ["/placeholder.jpg"];
+  const [galleryImages, setGalleryImages] = useState<string[]>(initialImages);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
+  // Sync state if parent images prop updates
+  useEffect(() => {
+    if (images && images.length > 0) {
+      setGalleryImages((prev) => {
+        const combined = Array.from(new Set([...images, ...prev.filter((i) => i !== "/placeholder.jpg")]));
+        return combined.length > 0 ? combined : ["/placeholder.jpg"];
+      });
+    }
+  }, [images]);
+
   const handlePrev = useCallback(() => {
-    setSelectedIndex((prev) => (prev === 0 ? validImages.length - 1 : prev - 1));
-  }, [validImages.length]);
+    setSelectedIndex((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+  }, [galleryImages.length]);
 
   const handleNext = useCallback(() => {
-    setSelectedIndex((prev) => (prev === validImages.length - 1 ? 0 : prev + 1));
-  }, [validImages.length]);
+    setSelectedIndex((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
+  }, [galleryImages.length]);
 
   // Handle escape key to close lightbox & left/right arrows for navigation
   useEffect(() => {
@@ -35,20 +46,33 @@ export default function ProductGallery({ images = [], title }: ProductGalleryPro
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isLightboxOpen, handlePrev, handleNext]);
 
-  // Synchronize gallery when user switches product variants
+  // Synchronize gallery when user switches product variants across ALL products
   useEffect(() => {
     const handleVariantImage = (e: Event) => {
       const detail = (e as CustomEvent<{ imageUrl?: string }>).detail;
-      if (detail?.imageUrl) {
-        const foundIdx = validImages.findIndex((img) => img === detail.imageUrl);
+      const targetUrl = detail?.imageUrl?.trim();
+      if (!targetUrl) return;
+
+      const normalize = (u: string) => u.replace(/^https?:/, "").replace(/\/$/, "");
+      const targetNorm = normalize(targetUrl);
+
+      setGalleryImages((currentList) => {
+        const foundIdx = currentList.findIndex((img) => normalize(img) === targetNorm);
         if (foundIdx >= 0) {
           setSelectedIndex(foundIdx);
+          return currentList;
+        } else {
+          // Prepend variant image to the gallery so it becomes immediately visible at index 0
+          const newList = [targetUrl, ...currentList.filter((img) => img !== "/placeholder.jpg")];
+          setSelectedIndex(0);
+          return newList;
         }
-      }
+      });
     };
+
     window.addEventListener("product:variant_image_change", handleVariantImage);
     return () => window.removeEventListener("product:variant_image_change", handleVariantImage);
-  }, [validImages]);
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -56,7 +80,7 @@ export default function ProductGallery({ images = [], title }: ProductGalleryPro
       <div className="relative w-full aspect-square max-h-[500px] bg-slate-50 border border-slate-200/80 rounded-3xl overflow-hidden group shadow-sm flex items-center justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={validImages[selectedIndex]}
+          src={galleryImages[selectedIndex] || galleryImages[0] || "/placeholder.jpg"}
           alt={`${title} - View ${selectedIndex + 1}`}
           className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105 cursor-zoom-in"
           onClick={() => setIsLightboxOpen(true)}
@@ -73,7 +97,7 @@ export default function ProductGallery({ images = [], title }: ProductGalleryPro
         </button>
 
         {/* Left/Right Floating Navigation Chevrons */}
-        {validImages.length > 1 && (
+        {galleryImages.length > 1 && (
           <>
             <button
               onClick={(e) => {
@@ -100,11 +124,11 @@ export default function ProductGallery({ images = [], title }: ProductGalleryPro
       </div>
 
       {/* Interactive Thumbnail Strip */}
-      {validImages.length > 1 && (
+      {galleryImages.length > 1 && (
         <div className="flex items-center gap-2.5 overflow-x-auto py-1 scrollbar-thin">
-          {validImages.map((img, idx) => (
+          {galleryImages.map((img, idx) => (
             <button
-              key={idx}
+              key={`${img}-${idx}`}
               onClick={() => setSelectedIndex(idx)}
               className={`relative flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-slate-50 border-2 transition active:scale-95 ${
                 selectedIndex === idx
@@ -133,7 +157,7 @@ export default function ProductGallery({ images = [], title }: ProductGalleryPro
           {/* Top Bar with Counter & Close */}
           <div className="flex items-center justify-between text-white max-w-7xl mx-auto w-full z-10">
             <span className="text-sm font-bold tracking-wide bg-white/10 px-3 py-1 rounded-full">
-              {selectedIndex + 1} / {validImages.length}
+              {selectedIndex + 1} / {galleryImages.length}
             </span>
             <button
               onClick={() => setIsLightboxOpen(false)}
@@ -151,13 +175,13 @@ export default function ProductGallery({ images = [], title }: ProductGalleryPro
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={validImages[selectedIndex]}
+              src={galleryImages[selectedIndex] || galleryImages[0] || "/placeholder.jpg"}
               alt={`${title} full display`}
               className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl"
             />
 
             {/* Modal Navigation Buttons */}
-            {validImages.length > 1 && (
+            {galleryImages.length > 1 && (
               <>
                 <button
                   onClick={handlePrev}
@@ -178,14 +202,14 @@ export default function ProductGallery({ images = [], title }: ProductGalleryPro
           </div>
 
           {/* Bottom Thumbnails in Lightbox */}
-          {validImages.length > 1 && (
+          {galleryImages.length > 1 && (
             <div
               className="flex items-center justify-center gap-2 overflow-x-auto py-2 z-10"
               onClick={(e) => e.stopPropagation()}
             >
-              {validImages.map((img, idx) => (
+              {galleryImages.map((img, idx) => (
                 <button
-                  key={idx}
+                  key={`${img}-lb-${idx}`}
                   onClick={() => setSelectedIndex(idx)}
                   className={`w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden border-2 transition ${
                     selectedIndex === idx

@@ -128,14 +128,14 @@ export default function ProductInteractivePanel({
   };
 
   return (
-    <div className="space-y-4 bg-white border border-slate-200 rounded-3xl p-4 sm:p-5 shadow-sm">
+    <div className="space-y-4 bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm">
       {/* Price Banner without duplicate in-stock tags */}
       <div className="flex items-baseline justify-between">
-        <div>
+        <div className="flex items-baseline flex-wrap">
           <span className="text-2xl sm:text-3xl font-black text-slate-900">
             ${currentPrice.toFixed(2)}
           </span>
-          <span className="text-xs text-slate-500 ml-2 font-medium">
+          <span className="text-xs text-slate-500 ml-2 font-medium whitespace-nowrap">
             (${unitPrice}/each)
           </span>
         </div>

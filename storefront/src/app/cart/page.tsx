@@ -116,7 +116,7 @@ export default function CartPage() {
   // ── EMPTY CART VIEW ──
   if (items.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5 sm:space-y-6">
         {/* Desktop Back Icon */}
         <div className="hidden sm:flex items-center gap-3">
           <Link
@@ -186,7 +186,7 @@ export default function CartPage() {
 
   // ── ACTIVE CART VIEW ──
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-6">
+    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5 sm:space-y-6">
       {/* Cart Title Bar */}
       <div className="flex items-center justify-between border-b border-slate-200 pb-3">
         <div className="flex items-center gap-3">
@@ -242,7 +242,7 @@ export default function CartPage() {
             return (
               <div
                 key={`${item.variant.vid}-${item.tier}-${item.selectedSize || ""}-${item.selectedColor || ""}`}
-                className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs transition hover:border-slate-300 space-y-3"
+                className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-5 shadow-xs transition hover:border-slate-300 space-y-3"
               >
                 {/* Top Section: High-Fidelity Thumbnail + Product Details & Pricing */}
                 <div className="flex items-start gap-3.5 sm:gap-4">
@@ -421,10 +421,7 @@ export default function CartPage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
 
-            <div className="pt-2.5 flex items-center gap-2 text-[11px] text-slate-500 border-t border-slate-100">
-              <Truck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span>Free 3–5 Business Day Delivery via USPS Domestic</span>
-            </div>
+
           </div>
         </div>
       </div>

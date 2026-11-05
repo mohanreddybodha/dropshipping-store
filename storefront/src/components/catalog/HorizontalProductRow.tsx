@@ -101,7 +101,7 @@ export default function HorizontalProductRow({
       {/* Horizontal Carousel */}
       <div
         ref={rowRef}
-        className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none snap-x snap-mandatory"
+        className="flex gap-2.5 sm:gap-4 overflow-x-auto pb-3 pt-1 -mx-2.5 px-2.5 sm:mx-0 sm:px-0 scrollbar-none snap-x snap-mandatory"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {products.map((item) => (

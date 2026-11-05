@@ -34,6 +34,7 @@ import {
   Plus,
   Bookmark,
   Clock,
+  Send,
   Package,
 } from "lucide-react";
 
@@ -245,7 +246,7 @@ function CheckoutContent() {
               setConfirmedOrder({
                 orderNumber: latest.internal_order_number,
                 amount: latest.total_retail,
-                shippingSla: "3–5 Business Days (Tracked USPS Ground)",
+                shippingSla: "3–5 Business Days",
                 items: checkoutItems,
               });
               clearCart();
@@ -715,7 +716,7 @@ function CheckoutContent() {
     setConfirmedOrder({
       orderNumber: orderId,
       amount: finalAmount,
-      shippingSla: "3–5 Business Days (Tracked USPS Ground)",
+      shippingSla: "3–5 Business Days",
       items: checkoutItems,
     });
     setCelebrationProgress(0);
@@ -864,7 +865,7 @@ function CheckoutContent() {
       setConfirmedOrder({
         orderNumber: orderId,
         amount: finalAmount,
-        shippingSla: "3–5 Business Days (Tracked USPS Ground)",
+        shippingSla: "3–5 Business Days",
         items: checkoutItems,
       });
       setCelebrationProgress(0);
@@ -888,167 +889,86 @@ function CheckoutContent() {
   };
 
   if (confirmedOrder && isCelebrating) {
-    const remainingSeconds = Math.max(1, Math.ceil(5 - (celebrationProgress / 100) * 5));
     return (
-      <div className="min-h-[75vh] flex flex-col items-center justify-center px-4 py-10 text-center animate-in fade-in duration-300 relative select-none">
-        {/* Inline Keyframe Styles for Smooth Vector Path Drawing */}
+      <div className="min-h-[75vh] flex flex-col items-center justify-center px-4 py-12 text-center animate-in fade-in duration-300 relative select-none">
+        {/* Inline Keyframe Styles for Flipkart / Telegram Paper-Plane Flight Animation */}
         <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes drawCheckCircle {
-            0% { stroke-dashoffset: 145; transform: scale(0.85); opacity: 0; }
-            50% { opacity: 1; }
-            100% { stroke-dashoffset: 0; transform: scale(1); opacity: 1; }
+          @keyframes telegramSwoop {
+            0% {
+              transform: translateY(220px) scale(0.6) rotate(-22deg);
+              opacity: 0;
+            }
+            25% {
+              opacity: 1;
+            }
+            68% {
+              transform: translateY(-10px) scale(1.08) rotate(4deg);
+            }
+            85% {
+              transform: translateY(3px) scale(0.98) rotate(-1deg);
+            }
+            100% {
+              transform: translateY(0) scale(1) rotate(0deg);
+              opacity: 1;
+            }
           }
-          @keyframes drawCheckStem {
-            0% { stroke-dashoffset: 48; opacity: 0; }
-            60% { opacity: 1; }
-            100% { stroke-dashoffset: 0; opacity: 1; }
+          @keyframes ripplePulse {
+            0% { transform: scale(0.85); opacity: 0.85; }
+            100% { transform: scale(2.4); opacity: 0; }
           }
-          @keyframes rippleBloom {
-            0% { transform: scale(0.9); opacity: 0.7; }
-            100% { transform: scale(1.65); opacity: 0; }
+          @keyframes planeGlow {
+            0%, 100% { filter: drop-shadow(0 4px 14px rgba(16, 185, 129, 0.4)); }
+            50% { filter: drop-shadow(0 8px 24px rgba(16, 185, 129, 0.7)); }
           }
-          @keyframes particleFloat {
-            0% { transform: translateY(0) scale(0.8); opacity: 0; }
-            40% { opacity: 1; }
-            100% { transform: translateY(-16px) scale(1.1); opacity: 0; }
+          @keyframes smoothFadeUp {
+            0% { opacity: 0; transform: translateY(18px); }
+            100% { opacity: 1; transform: translateY(0); }
           }
         `}} />
 
-        {/* ── TRIUMPHANT HERO CELEBRATION BADGE (Flipkart & Payment App Style) ── */}
-        <div className="relative mb-6">
-          {/* Gentle Expanding Ripple Wave */}
+        {/* ── FLIPKART-STYLE TELEGRAM PAPER AIRPLANE CELEBRATION ── */}
+        <div className="relative mb-7 flex items-center justify-center">
+          {/* Radiant Expanding Pulsing Rings */}
           <div
-            className="absolute inset-0 -m-3 rounded-full bg-emerald-500/20 pointer-events-none"
-            style={{ animation: "rippleBloom 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite" }}
+            className="absolute w-28 h-28 rounded-full bg-emerald-500/20 pointer-events-none"
+            style={{ animation: "ripplePulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite" }}
           />
           <div
-            className="absolute inset-0 -m-1 rounded-full bg-teal-400/15 pointer-events-none"
-            style={{ animation: "rippleBloom 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s infinite" }}
+            className="absolute w-28 h-28 rounded-full bg-teal-400/20 pointer-events-none"
+            style={{ animation: "ripplePulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) 0.8s infinite" }}
           />
 
-          {/* Central Glowing Seal */}
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center shadow-xl shadow-emerald-600/30 ring-4 ring-white">
-            {/* Self-Drawing Animated Vector Checkmark */}
-            <svg
-              className="w-14 h-14 sm:w-16 sm:h-16 text-white drop-shadow-md"
-              viewBox="0 0 52 52"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                cx="26"
-                cy="26"
-                r="23"
-                stroke="rgba(255,255,255,0.35)"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                style={{
-                  strokeDasharray: 145,
-                  strokeDashoffset: 145,
-                  animation: "drawCheckCircle 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
-                }}
-              />
-              <path
-                d="M15 27.5L22.5 35L37 19"
-                stroke="#FFFFFF"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{
-                  strokeDasharray: 48,
-                  strokeDashoffset: 48,
-                  animation: "drawCheckStem 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards",
-                }}
-              />
-            </svg>
+          {/* Central Hero Disc with Telegram Paper Plane */}
+          <div
+            className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center shadow-2xl shadow-emerald-600/35 ring-4 ring-white"
+            style={{
+              animation: "telegramSwoop 1.7s cubic-bezier(0.22, 1, 0.36, 1) forwards, planeGlow 3s ease-in-out infinite",
+            }}
+          >
+            <Send className="w-11 h-11 sm:w-13 sm:h-13 text-white -translate-y-0.5 translate-x-0.5 fill-white/20 stroke-[2.2]" />
           </div>
-
-          {/* Minimal Celebratory Micro-Sparkles */}
-          <span
-            className="absolute -top-3 -right-2 text-amber-400 text-sm font-bold pointer-events-none"
-            style={{ animation: "particleFloat 2s ease-out infinite" }}
-          >
-            ✦
-          </span>
-          <span
-            className="absolute -top-1 -left-3 text-emerald-400 text-xs font-bold pointer-events-none"
-            style={{ animation: "particleFloat 2.2s ease-out 0.4s infinite" }}
-          >
-            ✦
-          </span>
-          <span
-            className="absolute -bottom-2 right-2 text-sky-400 text-xs font-bold pointer-events-none"
-            style={{ animation: "particleFloat 1.9s ease-out 0.7s infinite" }}
-          >
-            ✦
-          </span>
-          <span
-            className="absolute -bottom-2 -left-2 text-teal-300 text-sm font-bold pointer-events-none"
-            style={{ animation: "particleFloat 2.4s ease-out 0.2s infinite" }}
-          >
-            ✦
-          </span>
         </div>
 
-        {/* ── ENCOURAGING REINFORCEMENT & HEADLINE ── */}
-        <div className="space-y-2.5 max-w-md mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/90 shadow-2xs">
+        {/* ── TRIUMPHANT SUCCESS HEADLINE ── */}
+        <div
+          className="space-y-2 max-w-md mx-auto"
+          style={{
+            animation: "smoothFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both",
+          }}
+        >
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-            <span>Payment Verified &amp; Order Placed</span>
+            <span>Order Confirmed</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Congratulations! Your order is placed
+            Your order placed successfully
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-            Great decision! Your domestic order has been confirmed and scheduled for USPS warehouse fulfillment.
+          <p className="text-xs sm:text-sm text-slate-500 font-medium">
+            Preparing your domestic fulfillment package...
           </p>
         </div>
-
-        {/* ── ORDER ACHIEVEMENT CARD (Shows Value & Security) ── */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 max-w-sm w-full mx-auto shadow-sm mt-5 space-y-2.5 text-left">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-            <span className="text-xs font-semibold text-slate-500">Amount Paid</span>
-            <span className="text-sm font-black text-emerald-700 bg-emerald-50/80 px-2.5 py-0.5 rounded-lg border border-emerald-100">
-              ${confirmedOrder.amount.toFixed(2)} USD
-            </span>
-          </div>
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-xs">
-            <span className="font-semibold text-slate-500">Order Reference</span>
-            <span className="font-mono font-bold text-slate-900 select-all">{confirmedOrder.orderNumber}</span>
-          </div>
-          <div className="flex items-center justify-between text-xs pt-0.5">
-            <span className="font-semibold text-slate-500">Fulfillment</span>
-            <span className="font-bold text-slate-800 flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>USPS Tracked Ground</span>
-            </span>
-          </div>
-        </div>
-
-        {/* ── 5-SECOND COUNTDOWN PROGRESS BAR ── */}
-        <div className="w-56 sm:w-64 space-y-2 mx-auto mt-6">
-          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60 shadow-inner">
-            <div
-              className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 rounded-full transition-all duration-75 ease-linear shadow-xs"
-              style={{ width: `${celebrationProgress}%` }}
-            />
-          </div>
-          <p className="text-[11px] text-slate-400 font-medium">
-            Directing to order overview in {remainingSeconds} {remainingSeconds === 1 ? "second" : "seconds"}...
-          </p>
-        </div>
-
-        {/* Instant Skip Button */}
-        <button
-          type="button"
-          onClick={() => setIsCelebrating(false)}
-          className="mt-4 inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-emerald-700 font-bold px-4 py-2 rounded-full hover:bg-slate-100 transition cursor-pointer"
-        >
-          <span>View Order Details</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
       </div>
     );
   }
@@ -1156,7 +1076,7 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-6 relative">
+    <div className="max-w-2xl mx-auto px-2.5 sm:px-6 py-6 sm:py-8 space-y-5 sm:space-y-6 relative">
       {/* ── FULL-SCREEN SECURE PAYMENT VERIFICATION MODAL ── */}
       {(isPaymentProcessing || isSubmitting) && (
         <div className="fixed inset-0 z-[9999] bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1213,7 +1133,7 @@ function CheckoutContent() {
       </div>
 
       {/* TOP: ORDER SUMMARY */}
-      <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4 shadow-sm">
+      <section className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-6 space-y-4 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <h2 className="text-base font-black text-slate-900">
             Order Summary ({checkoutItems.reduce((acc, i) => acc + i.quantity, 0)} {checkoutItems.reduce((acc, i) => acc + i.quantity, 0) === 1 ? "Unit" : "Units"})
@@ -1286,7 +1206,7 @@ function CheckoutContent() {
       {/* BOTTOM: SHIPPING ADDRESS & PAYMENT FORM */}
       <form
         onSubmit={handlePlaceOrder}
-        className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-5 shadow-sm"
+        className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-6 space-y-5 shadow-sm"
       >
         <div className="flex items-center justify-between">
           <div>
@@ -1646,7 +1566,7 @@ function CheckoutContent() {
             </div>
           </div>
 
-          {/* PIN / ZIP Code & County (Optional) */}
+          {/* PIN / ZIP Code */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-20">
             <div id="field-zip_code">
               <label className="block mb-1">PIN / ZIP Code</label>
@@ -1671,21 +1591,6 @@ function CheckoutContent() {
               ) : (
                 <p className="text-[10px] text-slate-400 mt-1">5-digit US ZIP code</p>
               )}
-            </div>
-
-            <div id="field-county">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block">County</label>
-                <span className="text-[10px] text-slate-400 font-normal">Optional</span>
-              </div>
-              <input
-                type="text"
-                name="county"
-                value={form.county}
-                onChange={handleChange}
-                placeholder="e.g. Orange County (Optional)"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 text-sm transition focus:outline-none"
-              />
             </div>
           </div>
 
@@ -1792,9 +1697,8 @@ function CheckoutContent() {
 
           {/* Official PayPal Smart Button Integration */}
           <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-3">
-            <div className="flex items-center justify-between text-xs text-slate-600 pb-1 border-b border-slate-200/60">
-              <span className="font-medium">Pay with PayPal, Pay Later, or Card:</span>
-              <span className="font-mono text-[10px] text-slate-400">USD • Zero-Trust Processing</span>
+            <div className="text-xs text-slate-600 pb-1 border-b border-slate-200/60">
+              <span className="font-semibold">Pay with PayPal, Pay Later, or Card:</span>
             </div>
 
             <PayPalButton

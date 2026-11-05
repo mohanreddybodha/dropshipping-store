@@ -509,7 +509,7 @@ function OrdersContent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-32 sm:pb-16 space-y-4">
+    <div className="max-w-4xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-4 pb-32 sm:pb-16 space-y-4">
       {/* ── HEADER (Back button before icon, no breadcrumbs, no description) ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <div className="flex items-center gap-2.5">
@@ -1063,7 +1063,7 @@ function OrdersContent() {
                   </div>
                 )}
 
-                {/* ── US DELIVERY ADDRESS & GRACE WINDOW (Timer ONLY here) ── */}
+                {/* ── US DELIVERY ADDRESS & GRACE WINDOW (Clean Header & Spaced Info) ── */}
                 <div className="border border-slate-200 rounded-xl p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
@@ -1075,29 +1075,10 @@ function OrdersContent() {
                         Order Voided
                       </span>
                     ) : getGracePeriodRemaining(activeItemModal.orderCreatedAt) ? (
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => {
-                            setIsCancellingOrder(true);
-                            setIsEditingAddress(false);
-                            setCancelError(null);
-                          }}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 transition cursor-pointer"
-                        >
-                          <Ban className="w-3 h-3 text-rose-600" />
-                          <span>Cancel Order</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            handleStartEditAddress(activeItemModal);
-                            setIsCancellingOrder(false);
-                          }}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200 transition cursor-pointer"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                          <span>Edit Address</span>
-                        </button>
-                      </div>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        <span>Grace Window Active</span>
+                      </span>
                     ) : (
                       <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
                         <Lock className="w-2.5 h-2.5 inline mr-1" /> Address Locked
@@ -1128,10 +1109,40 @@ function OrdersContent() {
                     )}
                 </div>
 
+                {/* ── UNIFIED ACTION BUTTONS: Cancel Order & Edit Address in Single Line Above Close ── */}
+                {getGracePeriodRemaining(activeItemModal.orderCreatedAt) &&
+                  !activeItemModal.orderStatus.toUpperCase().includes("CANCEL") && (
+                    <div className="pt-2 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCancellingOrder(true);
+                          setIsEditingAddress(false);
+                          setCancelError(null);
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 py-2.5 px-3 rounded-xl border border-rose-200 transition cursor-pointer active:scale-95 whitespace-nowrap"
+                      >
+                        <Ban className="w-3.5 h-3.5 text-rose-600" />
+                        <span>Cancel Order</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleStartEditAddress(activeItemModal);
+                          setIsCancellingOrder(false);
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 py-2.5 px-3 rounded-xl border border-emerald-200 transition cursor-pointer active:scale-95 whitespace-nowrap"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Edit Address</span>
+                      </button>
+                    </div>
+                  )}
+
                 <div className="pt-1 flex justify-end">
                   <button
                     onClick={() => setActiveItemModal(null)}
-                    className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                    className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer"
                   >
                     Close
                   </button>

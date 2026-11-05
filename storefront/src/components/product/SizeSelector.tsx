@@ -366,10 +366,10 @@ export default function SizeSelector({
                     const nextVariant = sameSizeMatch ? sameSizeMatch.variant : matchingSizes[0]?.variant;
                     if (nextVariant) {
                       onSelectSize(sameSizeMatch?.size || matchingSizes[0]?.size || "M", nextVariant);
-                      if (typeof window !== "undefined" && nextVariant.image_url) {
+                      if (typeof window !== "undefined" && (nextVariant.image_url || product.hero_image_url)) {
                         window.dispatchEvent(
                           new CustomEvent("product:variant_image_change", {
-                            detail: { imageUrl: nextVariant.image_url },
+                            detail: { imageUrl: nextVariant.image_url || product.hero_image_url },
                           })
                         );
                       }
@@ -411,10 +411,10 @@ export default function SizeSelector({
                     type="button"
                     onClick={() => {
                       onSelectSize(size, variant);
-                      if (typeof window !== "undefined" && variant.image_url) {
+                      if (typeof window !== "undefined" && (variant.image_url || product.hero_image_url)) {
                         window.dispatchEvent(
                           new CustomEvent("product:variant_image_change", {
-                            detail: { imageUrl: variant.image_url },
+                            detail: { imageUrl: variant.image_url || product.hero_image_url },
                           })
                         );
                       }
@@ -446,18 +446,20 @@ export default function SizeSelector({
         )}
 
         {/* Dynamic Active Selection & Inclusions Card for Apparel & Pet Gear */}
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-slate-900 flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span>
-                Active Selection:{" "}
-                <strong className="text-emerald-700">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5 animate-in fade-in duration-200">
+          <div className="flex items-start justify-between gap-2 text-xs">
+            <div className="flex items-start gap-1.5 min-w-0">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div className="text-slate-900 font-bold leading-tight">
+                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                  Active Selection
+                </span>
+                <span className="text-emerald-700 font-extrabold break-words">
                   {activeColor}{availableSizes.length > 1 ? ` / ${curSize}` : ""}
-                </strong>
-              </span>
-            </span>
-            <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 text-[11px]">
+                </span>
+              </div>
+            </div>
+            <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[11px] whitespace-nowrap flex-shrink-0">
               ${currentVariant.retail_price_1x.toFixed(2)} / unit
             </span>
           </div>
@@ -550,10 +552,10 @@ export default function SizeSelector({
               type="button"
               onClick={() => {
                 onSelectSize(displayLabel, v);
-                if (typeof window !== "undefined" && v.image_url) {
+                if (typeof window !== "undefined" && (v.image_url || product.hero_image_url)) {
                   window.dispatchEvent(
                     new CustomEvent("product:variant_image_change", {
-                      detail: { imageUrl: v.image_url },
+                      detail: { imageUrl: v.image_url || product.hero_image_url },
                     })
                   );
                 }
@@ -605,12 +607,19 @@ export default function SizeSelector({
 
       {/* ── DYNAMIC SPECIFICATION & INCLUSIONS BREAKDOWN CARD ── */}
       <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5 animate-in fade-in duration-200">
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-slate-900 flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Active Selection: <strong className="text-emerald-700">{currentLabel}</strong></span>
-          </span>
-          <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 text-[11px]">
+        <div className="flex items-start justify-between gap-2 text-xs">
+          <div className="flex items-start gap-1.5 min-w-0">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+            <div className="text-slate-900 font-bold leading-tight">
+              <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">
+                Active Selection
+              </span>
+              <span className="text-emerald-700 font-extrabold break-words">
+                {currentLabel}
+              </span>
+            </div>
+          </div>
+          <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[11px] whitespace-nowrap flex-shrink-0">
             ${currentVariant.retail_price_1x.toFixed(2)} / unit
           </span>
         </div>

@@ -97,12 +97,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [imgSrc, setImgSrc] = useState(heroImage);
 
   return (
-    <div className="group relative bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between">
+    <div className="group relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between">
       {/* Clickable Card Body */}
       <Link
         href={`/products/${product.slug}`}
         prefetch={false}
-        className="block space-y-3"
+        className="block space-y-2.5 sm:space-y-3"
       >
         {/* 1:1 Aspect Ratio Image Stage */}
         <div className="relative w-full aspect-square bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center">
@@ -132,10 +132,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         onClick={toggleWatchlist}
         aria-label={isSaved ? "Remove from watchlist" : "Add to watchlist"}
         title={isSaved ? "In Watchlist" : "Add to Watchlist"}
-        className="absolute top-5 right-5 sm:top-6 sm:right-6 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-white transition-all duration-150 active:scale-90 border border-slate-100"
+        className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-white transition-all duration-150 active:scale-90 border border-slate-100"
       >
         <Heart
-          className={`w-4 h-4 transition-colors ${
+          className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${
             isSaved ? "fill-rose-500 text-rose-500" : "text-slate-600"
           }`}
         />
@@ -145,7 +145,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link
         href={`/products/${product.slug}`}
         prefetch={false}
-        className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between block"
+        className="pt-2 sm:pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between block"
       >
         <div className="flex items-baseline gap-1.5 min-w-0">
           <span className="text-sm sm:text-base font-black text-slate-900">
@@ -156,7 +156,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-2 py-0.5 rounded-full uppercase tracking-tight whitespace-nowrap flex-shrink-0">
+        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-1.5 sm:px-2 py-0.5 rounded-full uppercase tracking-tight whitespace-nowrap flex-shrink-0">
           Save 20%
         </span>
       </Link>

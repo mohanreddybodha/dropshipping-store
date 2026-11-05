@@ -132,7 +132,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-24 sm:pb-28 md:pb-10 space-y-6 sm:space-y-8">
+    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-24 sm:pb-28 md:pb-10 space-y-5 sm:space-y-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
@@ -159,15 +159,26 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </h1>
           </div>
 
-          {/* Interactive Product Gallery */}
-          <ProductGallery
-            images={
-              product.images && product.images.length > 0
-                ? product.images
-                : [product.hero_image_url || "/placeholder.jpg"]
+          {/* Interactive Product Gallery with All Variant Images */}
+          {(() => {
+            const allImages: string[] = [];
+            if (product.hero_image_url) allImages.push(product.hero_image_url);
+            if (product.images && Array.isArray(product.images)) {
+              allImages.push(...product.images);
             }
-            title={product.title}
-          />
+            if (product.variants && Array.isArray(product.variants)) {
+              product.variants.forEach((v) => {
+                if (v.image_url) allImages.push(v.image_url);
+              });
+            }
+            const uniqueImages = Array.from(new Set(allImages.filter(Boolean)));
+            return (
+              <ProductGallery
+                images={uniqueImages.length > 0 ? uniqueImages : ["/placeholder.jpg"]}
+                title={product.title}
+              />
+            );
+          })()}
 
           {/* Free Delivery & Domestic Fulfillment Status opposite each other below images */}
           <div className="flex items-center justify-between py-1.5 px-1 text-xs border-b border-slate-100">
