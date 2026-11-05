@@ -118,9 +118,11 @@ function resolveItemImage(title: string, rawImg?: string, rawSlug?: string) {
     img = "https://cf.cjdropshipping.com/20180906/286623069125331.png";
   }
 
+  const cleanSlug = slug ? (slug.startsWith("/products/") ? slug : `/products/${slug}`) : undefined;
+
   return {
     image: img && img !== "/placeholder.jpg" ? img : "/placeholder.jpg",
-    slug: slug ? `/products/${slug}` : undefined,
+    slug: cleanSlug,
   };
 }
 
@@ -667,31 +669,71 @@ function OrdersContent() {
             </button>
 
             {/* Header: Order Number & Product */}
-            <div className="flex items-center gap-3 pr-8 border-b border-slate-100 pb-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={activeItemModal.itemImage}
-                alt={activeItemModal.itemTitle}
-                onError={(e) => {
-                  const isKnife = (activeItemModal.itemTitle || "").toLowerCase().includes("knife");
-                  e.currentTarget.src = isKnife
-                    ? "https://cf.cjdropshipping.com/20180906/286623069125331.png"
-                    : "/placeholder.jpg";
-                }}
-                className="w-12 h-12 object-contain rounded-xl border border-slate-200 p-1 bg-slate-50 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-mono font-bold text-slate-400 uppercase truncate">
-                  {activeItemModal.orderNumber}
+            {/* Clickable Product Header (Navigates directly to product details page) */}
+            {activeItemModal.itemSlug ? (
+              <Link
+                href={activeItemModal.itemSlug}
+                prefetch={false}
+                className="group flex items-center justify-between gap-3 pr-8 border-b border-slate-100 pb-3 hover:bg-slate-50/80 -m-1 p-2 rounded-xl transition cursor-pointer"
+                title="Click to view product details"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={activeItemModal.itemImage}
+                    alt={activeItemModal.itemTitle}
+                    onError={(e) => {
+                      const isKnife = (activeItemModal.itemTitle || "").toLowerCase().includes("knife");
+                      e.currentTarget.src = isKnife
+                        ? "https://cf.cjdropshipping.com/20180906/286623069125331.png"
+                        : "/placeholder.jpg";
+                    }}
+                    className="w-12 h-12 object-contain rounded-xl border border-slate-200 p-1 bg-slate-50 flex-shrink-0 group-hover:scale-105 transition-transform"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-mono font-bold text-slate-400 uppercase truncate">
+                      {activeItemModal.orderNumber}
+                    </div>
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 truncate leading-snug group-hover:text-emerald-700 transition flex items-center gap-1">
+                      <span>{activeItemModal.itemTitle}</span>
+                      <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-emerald-600 flex-shrink-0" />
+                    </h3>
+                    <div className="text-[11px] font-semibold text-emerald-700">
+                      ${activeItemModal.itemPrice.toFixed(2)} USD • {activeItemModal.itemQuantity} {activeItemModal.itemQuantity === 1 ? "Unit" : "Units"}
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 truncate leading-snug">
-                  {activeItemModal.itemTitle}
-                </h3>
-                <div className="text-[11px] font-semibold text-emerald-700">
-                  ${activeItemModal.itemPrice.toFixed(2)} USD • {activeItemModal.itemQuantity} {activeItemModal.itemQuantity === 1 ? "Unit" : "Units"}
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition flex-shrink-0">
+                  View Product →
+                </span>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-3 pr-8 border-b border-slate-100 pb-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={activeItemModal.itemImage}
+                  alt={activeItemModal.itemTitle}
+                  onError={(e) => {
+                    const isKnife = (activeItemModal.itemTitle || "").toLowerCase().includes("knife");
+                    e.currentTarget.src = isKnife
+                      ? "https://cf.cjdropshipping.com/20180906/286623069125331.png"
+                      : "/placeholder.jpg";
+                  }}
+                  className="w-12 h-12 object-contain rounded-xl border border-slate-200 p-1 bg-slate-50 flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-mono font-bold text-slate-400 uppercase truncate">
+                    {activeItemModal.orderNumber}
+                  </div>
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 truncate leading-snug">
+                    {activeItemModal.itemTitle}
+                  </h3>
+                  <div className="text-[11px] font-semibold text-emerald-700">
+                    ${activeItemModal.itemPrice.toFixed(2)} USD • {activeItemModal.itemQuantity} {activeItemModal.itemQuantity === 1 ? "Unit" : "Units"}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* If In Address Edit Mode, show form right here */}
             {isEditingAddress ? (

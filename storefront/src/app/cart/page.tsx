@@ -235,6 +235,7 @@ export default function CartPage() {
         <div className="lg:col-span-8 space-y-3.5">
           {items.map((item) => {
             const heroImg =
+              item.variant?.image_url ||
               item.product.hero_image_url ||
               item.product.images?.[0] ||
               "/placeholder.jpg";

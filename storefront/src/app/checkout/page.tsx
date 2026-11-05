@@ -890,73 +890,75 @@ function CheckoutContent() {
 
   if (confirmedOrder && isCelebrating) {
     return (
-      <div className="min-h-[75vh] flex flex-col items-center justify-center px-4 py-12 text-center animate-in fade-in duration-300 relative select-none">
-        {/* Inline Keyframe Styles for Flipkart / Telegram Paper-Plane Flight Animation */}
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-12 text-center animate-in fade-in duration-300 relative select-none">
+        {/* Inline Keyframe Styles for Centered, Calm & Elegant Success Seal */}
         <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes telegramSwoop {
-            0% {
-              transform: translateY(220px) scale(0.6) rotate(-22deg);
-              opacity: 0;
-            }
-            25% {
-              opacity: 1;
-            }
-            68% {
-              transform: translateY(-10px) scale(1.08) rotate(4deg);
-            }
-            85% {
-              transform: translateY(3px) scale(0.98) rotate(-1deg);
-            }
-            100% {
-              transform: translateY(0) scale(1) rotate(0deg);
-              opacity: 1;
-            }
+          @keyframes calmSealBloom {
+            0% { transform: scale(0.85); opacity: 0; }
+            50% { transform: scale(1.04); }
+            100% { transform: scale(1); opacity: 1; }
           }
-          @keyframes ripplePulse {
-            0% { transform: scale(0.85); opacity: 0.85; }
-            100% { transform: scale(2.4); opacity: 0; }
+          @keyframes calmGlowPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.28); opacity: 0.15; }
           }
-          @keyframes planeGlow {
-            0%, 100% { filter: drop-shadow(0 4px 14px rgba(16, 185, 129, 0.4)); }
-            50% { filter: drop-shadow(0 8px 24px rgba(16, 185, 129, 0.7)); }
+          @keyframes checkDraw {
+            0% { stroke-dashoffset: 40; opacity: 0; }
+            40% { opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
           }
-          @keyframes smoothFadeUp {
-            0% { opacity: 0; transform: translateY(18px); }
+          @keyframes textFade {
+            0% { opacity: 0; transform: translateY(8px); }
             100% { opacity: 1; transform: translateY(0); }
           }
         `}} />
 
-        {/* ── FLIPKART-STYLE TELEGRAM PAPER AIRPLANE CELEBRATION ── */}
-        <div className="relative mb-7 flex items-center justify-center">
-          {/* Radiant Expanding Pulsing Rings */}
+        {/* ── CENTERED ELEGANT CONFIRMATION SEAL (Apple Pay / Stripe Style) ── */}
+        <div className="relative mb-6 flex items-center justify-center">
+          {/* Gentle Centered Ambient Ring */}
           <div
-            className="absolute w-28 h-28 rounded-full bg-emerald-500/20 pointer-events-none"
-            style={{ animation: "ripplePulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite" }}
-          />
-          <div
-            className="absolute w-28 h-28 rounded-full bg-teal-400/20 pointer-events-none"
-            style={{ animation: "ripplePulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) 0.8s infinite" }}
+            className="absolute w-28 h-28 rounded-full bg-emerald-500/15 pointer-events-none"
+            style={{ animation: "calmGlowPulse 2.8s ease-in-out infinite" }}
           />
 
-          {/* Central Hero Disc with Telegram Paper Plane */}
+          {/* Central Hero Seal */}
           <div
-            className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center shadow-2xl shadow-emerald-600/35 ring-4 ring-white"
+            className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-xl shadow-emerald-600/25 ring-4 ring-emerald-50"
             style={{
-              animation: "telegramSwoop 1.7s cubic-bezier(0.22, 1, 0.36, 1) forwards, planeGlow 3s ease-in-out infinite",
+              animation: "calmSealBloom 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
             }}
           >
-            <Send className="w-11 h-11 sm:w-13 sm:h-13 text-white -translate-y-0.5 translate-x-0.5 fill-white/20 stroke-[2.2]" />
+            {/* Elegant Vector Checkmark */}
+            <svg
+              className="w-10 h-10 sm:w-12 sm:h-12 text-white"
+              viewBox="0 0 48 48"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M14 25L21 32L34 17"
+                stroke="currentColor"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  strokeDasharray: 40,
+                  strokeDashoffset: 40,
+                  animation: "checkDraw 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards",
+                }}
+              />
+            </svg>
           </div>
         </div>
 
-        {/* ── TRIUMPHANT SUCCESS HEADLINE ── */}
+        {/* ── TRIUMPHANT SUCCESS HEADLINE (Centered) ── */}
         <div
           className="space-y-2 max-w-md mx-auto"
           style={{
-            animation: "smoothFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both",
+            animation: "textFade 0.6s ease-out 0.45s both",
           }}
         >
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/90 shadow-2xs">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
             <span>Order Confirmed</span>
           </div>
@@ -1023,7 +1025,7 @@ function CheckoutContent() {
             </h3>
             <div className="divide-y divide-slate-100">
               {confirmedOrder.items.map((item, idx) => {
-                const heroImg = item.product.hero_image_url || item.product.images?.[0] || "/placeholder.jpg";
+                const heroImg = item.variant?.image_url || item.product.hero_image_url || item.product.images?.[0] || "/placeholder.jpg";
                 return (
                   <div key={idx} className="py-2.5 flex items-center gap-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1141,48 +1143,76 @@ function CheckoutContent() {
         </div>
 
         <div className="space-y-3">
-          {checkoutItems.map((item, idx) => (
-            <div
-              key={idx}
-              className="flex gap-3 items-center text-xs text-slate-800 pb-3 border-b border-slate-100 last:border-b-0 last:pb-0"
-            >
-              <Link
-                href={`/products/${item.product.slug}`}
-                prefetch={false}
-                className="flex gap-3 items-center flex-1 min-w-0 group cursor-pointer"
+          {checkoutItems.map((item, idx) => {
+            const specParts: string[] = [];
+            if (item.selectedColor) specParts.push(`Color: ${item.selectedColor}`);
+            if (item.selectedSize) specParts.push(`Size: ${item.selectedSize}`);
+            if (specParts.length === 0 && item.variant?.variant_name && item.variant.variant_name.toLowerCase() !== "default") {
+              specParts.push(item.variant.variant_name);
+            }
+            const hasCustomSpec = specParts.length > 0;
+            const specText = specParts.join(" • ");
+            const itemThumbnail =
+              item.variant?.image_url ||
+              item.product.hero_image_url ||
+              item.product.images?.[0] ||
+              "/placeholder.jpg";
+
+            return (
+              <div
+                key={idx}
+                className="flex gap-3 items-center text-xs text-slate-800 pb-3 border-b border-slate-100 last:border-b-0 last:pb-0"
               >
-                {item.product.hero_image_url && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
+                <Link
+                  href={`/products/${item.product.slug}`}
+                  prefetch={false}
+                  className="flex gap-3 items-center flex-1 min-w-0 group cursor-pointer"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.product.hero_image_url}
+                    src={itemThumbnail}
                     alt={item.product.title}
-                    className="w-12 h-12 object-cover rounded-lg border border-slate-200 flex-shrink-0 bg-white group-hover:scale-105 transition-transform"
+                    className="w-12 h-12 object-contain rounded-lg border border-slate-200 p-0.5 flex-shrink-0 bg-white group-hover:scale-105 transition-transform"
                   />
-                )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold line-clamp-1 group-hover:text-emerald-700 transition">
-                    {item.product.title}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
-                    {item.selectedSize && (
-                      <span className="font-semibold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded">
-                        Size: {item.selectedSize}
-                      </span>
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    {/* Line 1: Product Name */}
+                    <h3 className="font-bold text-xs sm:text-sm text-slate-900 line-clamp-1 group-hover:text-emerald-700 transition">
+                      {item.product.title}
+                    </h3>
+
+                    {hasCustomSpec ? (
+                      <>
+                        {/* Line 2: Specification Badge (dedicated line for long spec text) */}
+                        <div className="text-[11px] text-emerald-800 font-semibold line-clamp-1">
+                          <span className="bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] inline-block font-bold">
+                            {specText}
+                          </span>
+                        </div>
+                        {/* Line 3: Selected Units and Price per unit */}
+                        <div className="text-[11px] text-slate-500 font-medium">
+                          <span>{item.quantity} {item.quantity === 1 ? "Unit" : "Units"}</span>
+                          <span className="mx-1.5">•</span>
+                          <span>${item.unitPrice.toFixed(2)}/Unit</span>
+                        </div>
+                      </>
+                    ) : (
+                      /* If user didn't select custom specification: Standard + units + price in second line */
+                      <div className="text-[11px] text-slate-500 font-medium">
+                        <span className="text-slate-600 font-semibold">Standard</span>
+                        <span className="mx-1.5">•</span>
+                        <span>{item.quantity} {item.quantity === 1 ? "Unit" : "Units"}</span>
+                        <span className="mx-1.5">•</span>
+                        <span>${item.unitPrice.toFixed(2)}/Unit</span>
+                      </div>
                     )}
-                    <span>
-                      {item.quantity} {item.quantity === 1 ? "Unit" : "Units"}
-                    </span>
-                    <span>•</span>
-                    {/* Consistent Unit indicator instead of ea */}
-                    <span>${item.unitPrice.toFixed(2)}/Unit</span>
                   </div>
-                </div>
-              </Link>
-              <span className="font-black text-sm text-slate-900">
-                ${item.totalPrice.toFixed(2)}
-              </span>
-            </div>
-          ))}
+                </Link>
+                <span className="font-black text-sm text-slate-900 whitespace-nowrap flex-shrink-0 self-center">
+                  ${item.totalPrice.toFixed(2)}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         <div className="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
@@ -1724,7 +1754,7 @@ function CheckoutContent() {
                 slug: item.product.slug,
                 vid: item.variant?.vid,
                 tier: item.tier,
-                image_url: item.product.hero_image_url || item.product.images?.[0] || "",
+                image_url: item.variant?.image_url || item.product.hero_image_url || item.product.images?.[0] || "",
                 quantity: item.quantity,
                 unit_price: item.unitPrice,
                 price: item.unitPrice,

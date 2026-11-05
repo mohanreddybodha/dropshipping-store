@@ -168,7 +168,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         variant_vid: item.variant?.vid || "",
         product_pid: item.product?.pid || "",
         title: item.product?.title || "",
-        image_url: item.product?.hero_image_url || "",
+        image_url: item.variant?.image_url || item.product?.hero_image_url || "",
         tier: item.tier === "2x" ? 2 : item.tier === "3x" ? 3 : 1,
         selected_size: item.selectedSize || null,
         quantity: item.quantity,
