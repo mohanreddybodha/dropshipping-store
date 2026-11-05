@@ -194,10 +194,10 @@ export default function CartPage() {
                 clearCart();
                 showToast("Cart cleared", "cart-remove");
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-xs font-semibold transition active:scale-95 cursor-pointer shadow-2xs"
+              className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
               title="Clear all cart items"
             >
-              <Trash2 className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-500" />
+              <Trash2 className="w-3.5 h-3.5" />
               <span>Clear Cart</span>
             </button>
           )}

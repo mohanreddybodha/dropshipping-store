@@ -19,7 +19,7 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
   return (
     <div className="group block bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-xl hover:border-rose-300 transition-all duration-200 flex flex-col justify-between">
       {/* Image Stage */}
-      <Link href={`/products/${product.slug}`} className="block">
+      <Link href={`/products/${product.slug}`} prefetch={false} className="block">
         <div className="relative w-full aspect-square bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center mb-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
     } else if (process.env.DATABASE_URL) {
       try {
         const sql = getDb();
-        const rows = await sql`
+        const dbPromise = sql`
           SELECT 
             p.id,
             p.pid,
@@ -122,6 +122,8 @@ export async function GET(req: NextRequest) {
           GROUP BY p.id
           ORDER BY p.id ASC;
         `;
+        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Neon DB timeout")), 1200));
+        const rows = await Promise.race([dbPromise, timeout]);
 
         if (Array.isArray(rows) && rows.length > 0) {
           items = rows.map(mapDbRowToProduct);

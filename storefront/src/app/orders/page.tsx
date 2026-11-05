@@ -641,16 +641,26 @@ function OrdersContent() {
         </div>
       </div>
 
-      {/* ── LOADING SKELETON ── */}
+      {/* ── DENSE TOP-TO-BOTTOM VIEWPORT SKELETON ── */}
       {loading ? (
-        <div className="space-y-3 py-4">
-          {[1, 2, 3].map((n) => (
-            <div key={n} className="bg-white border border-slate-200 rounded-2xl p-4 flex gap-4 animate-pulse">
-              <div className="w-16 h-16 bg-slate-100 rounded-xl flex-shrink-0" />
-              <div className="flex-1 space-y-2 py-1">
-                <div className="h-4 bg-slate-100 rounded w-2/3" />
-                <div className="h-3 bg-slate-100 rounded w-1/3" />
+        <div className="space-y-2.5 py-1">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+            <div
+              key={n}
+              className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-4 shadow-xs flex items-center justify-between gap-3 animate-pulse"
+            >
+              <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-slate-200 flex-shrink-0 border border-slate-100" />
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className={`h-4 bg-slate-200 rounded-md ${n % 2 === 0 ? "w-3/5 sm:w-2/5" : "w-4/5 sm:w-1/2"}`} />
+                  <div className="flex items-center gap-2">
+                    <div className="h-5 w-14 bg-slate-200 rounded-md" />
+                    <div className="h-5 w-16 bg-slate-200 rounded-md" />
+                    <div className="h-3.5 w-24 bg-slate-100 rounded-md hidden sm:block" />
+                  </div>
+                </div>
               </div>
+              <div className="w-8 h-8 rounded-full bg-slate-100 flex-shrink-0" />
             </div>
           ))}
         </div>

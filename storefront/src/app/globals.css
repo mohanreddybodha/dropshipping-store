@@ -1,3 +1,8 @@
+/* Zero-flash immediate dismiss for returning users */
+html.splash-dismissed #vastire-splash {
+  display: none !important;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

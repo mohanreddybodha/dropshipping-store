@@ -119,7 +119,7 @@ export async function getCatalog(options?: CatalogQueryOptions): Promise<Product
       const queryStr = params.toString() ? `?${params.toString()}` : "";
       const res = await fetch(`${getApiBaseUrl()}/catalog${queryStr}`, {
         next: { revalidate: 60 },
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(2000),
       });
       if (!res.ok) throw new Error("Catalog fetch failed");
       const data = await res.json();
@@ -184,7 +184,7 @@ export async function getPaginatedCatalog(options?: CatalogQueryOptions): Promis
 
     const res = await fetch(`${getApiBaseUrl()}/catalog?${params.toString()}`, {
       next: { revalidate: 60 },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) throw new Error("Paginated catalog fetch failed");
     return await res.json();
@@ -231,7 +231,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/catalog/${encodeURIComponent(normalizedHyphenSlug)}`, {
       next: { revalidate: 60 },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) throw new Error("Product fetch failed");
     return await res.json();
@@ -245,7 +245,7 @@ export async function getCustomerOrders(email: string): Promise<CustomerOrder[]>
     const cleanEmail = encodeURIComponent(email.trim().toLowerCase());
     const res = await fetch(`${getApiBaseUrl()}/orders?email=${cleanEmail}`, {
       cache: "no-store",
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -266,7 +266,7 @@ export async function lookupOrdersDualFactor(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: email.trim(), zip_code: zipCode.trim() }),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -295,7 +295,7 @@ export async function syncUserAuth(payload: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -343,7 +343,7 @@ export async function getUserAuthState(
 
       const res = await fetch(`${getApiBaseUrl()}/auth/state?${params.toString()}`, {
         method: "GET",
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(2000),
       });
       if (!res.ok) return null;
       const data = await res.json();
@@ -383,7 +383,7 @@ export async function createCheckoutOrder(payload: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -498,7 +498,7 @@ export async function updateOrderAddress(payload: {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(2000),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -562,7 +562,7 @@ export async function getUserSavedAddresses(
 
     const res = await fetch(`/api/user/addresses?email=${encodeURIComponent(email)}`, {
       headers,
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -610,7 +610,7 @@ export async function saveUserAddress(
     method: "POST",
     headers,
     body: JSON.stringify({ ...payload, email: cleanEmail }),
-    signal: AbortSignal.timeout(6000),
+    signal: AbortSignal.timeout(2000),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

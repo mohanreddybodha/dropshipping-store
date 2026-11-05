@@ -17,7 +17,7 @@ import React, { useState, useEffect } from "react";
  * 3600ms  — 8. Component cleanly unmounts from DOM
  */
 export default function AppLaunchSplash() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
@@ -25,21 +25,21 @@ export default function AppLaunchSplash() {
       // Check if already shown in this browser session
       const alreadySeen = sessionStorage.getItem("vastire_launch_splash_seen");
       if (alreadySeen) {
-        setShowSplash(false);
         return;
       }
 
+      setShowSplash(true);
       sessionStorage.setItem("vastire_launch_splash_seen", "true");
 
       // Smooth dissolve transition
       const fadeTimer = setTimeout(() => {
         setIsFadingOut(true);
-      }, 1400);
+      }, 700);
 
       // Clean unmount from DOM
       const unmountTimer = setTimeout(() => {
         setShowSplash(false);
-      }, 1750);
+      }, 950);
 
       return () => {
         clearTimeout(fadeTimer);
