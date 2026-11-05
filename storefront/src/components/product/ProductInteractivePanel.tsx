@@ -11,11 +11,15 @@ import { showToast } from "../ui/Toast";
 interface ProductInteractivePanelProps {
   product: Product;
   variant: Variant;
+  initialSize?: string;
+  initialColor?: string;
 }
 
 export default function ProductInteractivePanel({
   product,
   variant,
+  initialSize,
+  initialColor,
 }: ProductInteractivePanelProps) {
   const router = useRouter();
   const { addItem, items } = useCart();
@@ -25,8 +29,9 @@ export default function ProductInteractivePanel({
   const [selectedTier, setSelectedTier] = useState<BundleTier>("1x");
   const [isAdded, setIsAdded] = useState(false);
 
-  // Inferred initial color and size from genuine variant
+  // Inferred initial color and size from genuine variant or explicit query params
   const [selectedSize, setSelectedSize] = useState<string>(() => {
+    if (initialSize) return initialSize;
     const parsed = parseApparelVariant(initialVariant);
     if (parsed) return parsed.size;
     if (initialVariant?.size) {
@@ -39,11 +44,23 @@ export default function ProductInteractivePanel({
   });
 
   const [selectedColor, setSelectedColor] = useState<string>(() => {
+    if (initialColor) return initialColor;
     const parsed = parseApparelVariant(initialVariant);
     if (parsed) return parsed.color;
     if (initialVariant?.color && !initialVariant.color.includes("-")) return initialVariant.color;
     return "";
   });
+
+  // Ensure gallery switches to initial variant image if present
+  useEffect(() => {
+    if (typeof window !== "undefined" && initialVariant?.image_url) {
+      window.dispatchEvent(
+        new CustomEvent("product:variant_image_change", {
+          detail: { imageUrl: initialVariant.image_url },
+        })
+      );
+    }
+  }, [initialVariant]);
 
   // Check if current configuration is already in cart
   useEffect(() => {

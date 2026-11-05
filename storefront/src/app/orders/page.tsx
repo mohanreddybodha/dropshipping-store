@@ -105,10 +105,19 @@ interface FlatOrderItem {
   itemPrice: number;
   itemSize?: string;
   itemColor?: string;
+  itemVid?: string;
+  itemStatus?: string;
   itemIndex: number;
 }
 
-function resolveItemImage(title: string, rawImg?: string, rawSlug?: string) {
+function resolveItemImage(
+  title: string,
+  rawImg?: string,
+  rawSlug?: string,
+  vid?: string,
+  size?: string,
+  color?: string
+) {
   let img = rawImg;
   let slug = rawSlug;
   const cleanT = (title || "").toLowerCase();
@@ -118,7 +127,17 @@ function resolveItemImage(title: string, rawImg?: string, rawSlug?: string) {
     img = "https://cf.cjdropshipping.com/20180906/286623069125331.png";
   }
 
-  const cleanSlug = slug ? (slug.startsWith("/products/") ? slug : `/products/${slug}`) : undefined;
+  let cleanSlug = slug ? (slug.startsWith("/products/") ? slug : `/products/${slug}`) : undefined;
+  if (cleanSlug) {
+    const params = new URLSearchParams();
+    if (vid) params.set("vid", vid);
+    if (size) params.set("size", size);
+    if (color) params.set("color", color);
+    const qs = params.toString();
+    if (qs) {
+      cleanSlug = `${cleanSlug}?${qs}`;
+    }
+  }
 
   return {
     image: img && img !== "/placeholder.jpg" ? img : "/placeholder.jpg",
@@ -276,7 +295,10 @@ function OrdersContent() {
         orderItems.forEach((it: any, idx: number) => {
           const rawTitle = it.product_title || it.title || "Vastire Essential";
           const rawImg = it.image_url || it.image || it.hero_image_url;
-          const resolved = resolveItemImage(rawTitle, rawImg, it.slug);
+          const vid = it.vid || it.variant_vid || it.variant_id || (it.variant && it.variant.vid);
+          const size = it.size || it.selectedSize;
+          const color = it.color || it.selectedColor;
+          const resolved = resolveItemImage(rawTitle, rawImg, it.slug, vid, size, color);
           items.push({
             orderNumber: order.internal_order_number,
             orderId: order.id,
@@ -297,8 +319,10 @@ function OrdersContent() {
             itemImage: resolved.image,
             itemQuantity: Number(it.quantity || 1),
             itemPrice: Number(it.price || it.unit_price || 0),
-            itemSize: it.size || it.selectedSize,
-            itemColor: it.color || it.selectedColor,
+            itemSize: size,
+            itemColor: color,
+            itemVid: vid,
+            itemStatus: it.status,
             itemIndex: idx,
           });
         });
@@ -410,7 +434,7 @@ function OrdersContent() {
     }
   }
 
-  // Confirm Cancellation & Automated 100% Full Refund via PayPal
+  // Confirm Cancellation & Line-Item Partial or Full Refund via PayPal
   async function handleConfirmCancel() {
     if (!activeItemModal) return;
     setCancelSubmitting(true);
@@ -421,10 +445,12 @@ function OrdersContent() {
         orderNumber: activeItemModal.orderNumber,
         customer_email: userEmail,
         reason: cancelReason,
+        itemIndex: activeItemModal.itemIndex,
+        itemVid: activeItemModal.itemVid,
       });
 
       setCancelSuccess(
-        res.message || "Order cancelled successfully. 100% full refund issued."
+        res.message || "Product cancelled successfully. Refund issued to your PayPal account."
       );
 
       // Optimistically update active modal
@@ -432,18 +458,31 @@ function OrdersContent() {
         prev
           ? {
               ...prev,
-              orderStatus: "CANCELLED",
+              itemStatus: "CANCELLED",
+              orderStatus: res.orderStatus || prev.orderStatus,
             }
           : null
       );
 
-      // Optimistically update orders in list
+      // Optimistically update orders in list so only this item is marked cancelled
       setOrders((prevOrders) =>
-        prevOrders.map((o) =>
-          o.internal_order_number === activeItemModal.orderNumber
-            ? { ...o, status: "CANCELLED" }
-            : o
-        )
+        prevOrders.map((o) => {
+          if (o.internal_order_number === activeItemModal.orderNumber) {
+            const updatedItems = (o.items || []).map((it: any, idx: number) => {
+              if (idx === activeItemModal.itemIndex) {
+                return { ...it, status: "CANCELLED" };
+              }
+              return it;
+            });
+            const allCancelled = updatedItems.every((x: any) => (x.status || "").toUpperCase() === "CANCELLED");
+            return {
+              ...o,
+              status: res.orderStatus || (allCancelled ? "CANCELLED" : "PARTIALLY_CANCELLED"),
+              items: updatedItems,
+            };
+          }
+          return o;
+        })
       );
 
       setTimeout(() => {
@@ -889,17 +928,24 @@ function OrdersContent() {
                     </div>
 
                     {/* Refund Guarantee */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
-                      <div className="flex justify-between items-center text-xs font-bold text-slate-900">
-                        <span>Total Refund Amount:</span>
-                        <span className="text-emerald-700 font-extrabold text-sm">
-                          ${activeItemModal.totalRetail.toFixed(2)} USD
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 leading-relaxed">
-                        100% full refund directly returned to your original payment method via PayPal. Zero fees deducted.
-                      </p>
-                    </div>
+                    {(() => {
+                      const itemRefundAmount = +(
+                        Number(activeItemModal.itemPrice) * Number(activeItemModal.itemQuantity || 1)
+                      ).toFixed(2);
+                      return (
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+                          <div className="flex justify-between items-center text-xs font-bold text-slate-900">
+                            <span>Item Refund Amount:</span>
+                            <span className="text-emerald-700 font-extrabold text-sm">
+                              ${itemRefundAmount.toFixed(2)} USD
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 leading-relaxed">
+                            Automated refund for this product returned directly to your original payment method via PayPal. Zero fees deducted.
+                          </p>
+                        </div>
+                      );
+                    })()}
 
                     {/* Reason Selector */}
                     <div>
@@ -941,7 +987,7 @@ function OrdersContent() {
                         ) : (
                           <>
                             <Ban className="w-3.5 h-3.5" />
-                            <span>Confirm Cancellation ($ {activeItemModal.totalRetail.toFixed(2)})</span>
+                            <span>Confirm Cancellation (${(Number(activeItemModal.itemPrice) * Number(activeItemModal.itemQuantity || 1)).toFixed(2)})</span>
                           </>
                         )}
                       </button>
@@ -996,16 +1042,16 @@ function OrdersContent() {
                 </div>
 
                 {/* ── 4-STEP FULFILLMENT STEPPER OR CANCELLED BANNER ── */}
-                {activeItemModal.orderStatus.toUpperCase().includes("CANCEL") ? (
+                {(activeItemModal.itemStatus?.toUpperCase() === "CANCELLED" || activeItemModal.orderStatus.toUpperCase() === "CANCELLED") ? (
                   <div className="border border-rose-200 bg-rose-50/70 rounded-xl p-3.5 text-center space-y-1.5">
                     <div className="w-7 h-7 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto text-xs font-bold">
                       ✕
                     </div>
                     <div className="text-xs font-bold text-rose-900">
-                      Order Cancelled & 100% Refunded
+                      {activeItemModal.orderStatus.toUpperCase() === "CANCELLED" ? "Order Cancelled & 100% Refunded" : "Product Cancelled & Refunded"}
                     </div>
                     <div className="text-[11px] text-rose-700 leading-relaxed max-w-xs mx-auto">
-                      A 100% full refund of <strong>${activeItemModal.totalRetail.toFixed(2)} USD</strong> has been automatically returned to your original payment method via PayPal.
+                      An automated refund of <strong>${(activeItemModal.itemPrice * activeItemModal.itemQuantity).toFixed(2)} USD</strong> has been returned to your original payment method via PayPal.
                     </div>
                   </div>
                 ) : (
@@ -1151,9 +1197,10 @@ function OrdersContent() {
                     )}
                 </div>
 
-                {/* ── UNIFIED ACTION BUTTONS: Cancel Order & Edit Address in Single Line Above Close ── */}
+                {/* ── UNIFIED ACTION BUTTONS: Cancel Item & Edit Address in Single Line Above Close ── */}
                 {getGracePeriodRemaining(activeItemModal.orderCreatedAt) &&
-                  !activeItemModal.orderStatus.toUpperCase().includes("CANCEL") && (
+                  !activeItemModal.orderStatus.toUpperCase().includes("CANCEL") &&
+                  activeItemModal.itemStatus?.toUpperCase() !== "CANCELLED" && (
                     <div className="pt-2 grid grid-cols-2 gap-2">
                       <button
                         type="button"
@@ -1165,7 +1212,7 @@ function OrdersContent() {
                         className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 py-2.5 px-3 rounded-xl border border-rose-200 transition cursor-pointer active:scale-95 whitespace-nowrap"
                       >
                         <Ban className="w-3.5 h-3.5 text-rose-600" />
-                        <span>Cancel Order</span>
+                        <span>Cancel Item</span>
                       </button>
                       <button
                         type="button"

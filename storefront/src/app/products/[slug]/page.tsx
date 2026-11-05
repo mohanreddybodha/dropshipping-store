@@ -22,6 +22,7 @@ export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ vid?: string; size?: string; color?: string }>;
 }
 
 export async function generateStaticParams() {
@@ -43,8 +44,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ProductDetailPage({ params }: PageProps) {
+export default async function ProductDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const sp = searchParams ? await searchParams : {};
   const product = await getProductBySlug(slug);
 
   if (!product) {
@@ -101,7 +103,20 @@ export default async function ProductDetailPage({ params }: PageProps) {
     .slice(0, 24)
     .map(toCardSummary);
 
-  const primaryVariant = product.variants[0];
+  // Match requested variant from deep link if vid, size, or color query parameters are present
+  let targetVariant = product.variants[0];
+  if (sp.vid) {
+    const foundByVid = product.variants.find((v) => v.vid === sp.vid);
+    if (foundByVid) targetVariant = foundByVid;
+  } else if (sp.color || sp.size) {
+    const foundByOption = product.variants.find((v) => {
+      const matchColor = !sp.color || (v.color && v.color.toLowerCase() === sp.color.toLowerCase()) || (v.variant_name && v.variant_name.toLowerCase().includes(sp.color.toLowerCase()));
+      const matchSize = !sp.size || (v.size && v.size.toLowerCase() === sp.size.toLowerCase()) || (v.variant_name && v.variant_name.toLowerCase().includes(sp.size.toLowerCase()));
+      return matchColor && matchSize;
+    });
+    if (foundByOption) targetVariant = foundByOption;
+  }
+  const primaryVariant = targetVariant;
 
   // Programmatic JSON-LD Schema
   const productSchema = {
@@ -162,6 +177,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* Interactive Product Gallery with All Variant Images */}
           {(() => {
             const allImages: string[] = [];
+            if (targetVariant?.image_url) allImages.push(targetVariant.image_url);
             if (product.hero_image_url) allImages.push(product.hero_image_url);
             if (product.images && Array.isArray(product.images)) {
               allImages.push(...product.images);
@@ -197,7 +213,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
         {/* Right Column: Pricing & Bundle Selector + Product Details Accordion (5 cols) */}
         <div className="lg:col-span-5 space-y-3 sm:space-y-4">
-          <ProductInteractivePanel product={product} variant={primaryVariant} />
+          <ProductInteractivePanel
+            product={product}
+            variant={targetVariant}
+            initialSize={sp.size}
+            initialColor={sp.color}
+          />
 
           {/* Compact Product Details, Specs & Features Accordion (collapsed by default, smooth animated) */}
           <ProductAccordion product={product} />
@@ -221,7 +242,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       />
 
       {/* Mobile Sticky Bottom Action Bar */}
-      <MobileStickyBuyBar product={product} variant={primaryVariant} />
+      <MobileStickyBuyBar product={product} variant={targetVariant} />
     </div>
   );
 }

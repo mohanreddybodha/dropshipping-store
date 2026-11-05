@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { orderNumber, customer_email, reason } = body;
+    const { orderNumber, customer_email, reason, itemIndex, itemVid } = body;
 
     if (!orderNumber || typeof orderNumber !== "string") {
       return NextResponse.json(
@@ -37,8 +37,6 @@ export async function POST(req: NextRequest) {
     const order = rows[0];
 
     // 2. Strict Zero-Trust Authorization: Prevent BOLA / IDOR cancellations
-    // Either the caller provides a verified admin API key,
-    // OR customer_email must be explicitly provided and match the order's customer_email.
     const isAdmin = verifyAdminApiKey(req);
     const orderCustomerEmail = (order.customer_email || "").trim().toLowerCase();
     const providedCustomerEmail = (customer_email || "").trim().toLowerCase();
@@ -66,9 +64,9 @@ export async function POST(req: NextRequest) {
 
     // 3. Status validation: reject if already cancelled or already in fulfillment
     const currentStatus = (order.status || "").toUpperCase();
-    if (currentStatus === "CANCELLED" || currentStatus.includes("CANCEL")) {
+    if (currentStatus === "CANCELLED") {
       return NextResponse.json(
-        { error: "This order has already been cancelled." },
+        { error: "This order has already been completely cancelled." },
         { status: 400 }
       );
     }
@@ -76,7 +74,8 @@ export async function POST(req: NextRequest) {
     if (
       currentStatus !== "ORDER_PLACED" &&
       currentStatus !== "PAYMENT_CAPTURED" &&
-      currentStatus !== "PENDING"
+      currentStatus !== "PENDING" &&
+      currentStatus !== "PARTIALLY_CANCELLED"
     ) {
       return NextResponse.json(
         {
@@ -101,9 +100,68 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const refundAmount = Number(order.total_retail || 0);
+    // 5. Parse items and determine Line-Item vs Whole-Order refund
+    let items: any[] = [];
+    if (typeof order.items_json === "string") {
+      try {
+        items = JSON.parse(order.items_json);
+      } catch {
+        items = [];
+      }
+    } else if (Array.isArray(order.items_json)) {
+      items = order.items_json;
+    }
 
-    // 5. PayPal API Automated Full Refund
+    const isItemSpecific =
+      typeof itemIndex === "number" &&
+      itemIndex >= 0 &&
+      itemIndex < items.length;
+
+    let targetItem: any = null;
+    let refundAmount = 0;
+
+    if (isItemSpecific) {
+      targetItem = items[itemIndex];
+      // Double check VID alignment if provided
+      if (itemVid && targetItem.vid && targetItem.vid !== itemVid) {
+        const found = items.find((it: any) => it.vid === itemVid);
+        if (found) targetItem = found;
+      }
+
+      if ((targetItem.status || "").toUpperCase() === "CANCELLED") {
+        return NextResponse.json(
+          { error: "This specific product has already been cancelled and refunded." },
+          { status: 400 }
+        );
+      }
+
+      const itPrice = Number(targetItem.price || targetItem.unit_price || 0);
+      const itQty = Number(targetItem.quantity || 1);
+      refundAmount = +(Number(targetItem.total_price) || (itPrice * itQty)).toFixed(2);
+    } else {
+      const activeItems = items.filter(
+        (it: any) => (it.status || "").toUpperCase() !== "CANCELLED"
+      );
+      if (items.length > 0 && activeItems.length === 0) {
+        return NextResponse.json(
+          { error: "All products in this order have already been cancelled." },
+          { status: 400 }
+        );
+      }
+
+      refundAmount = activeItems.reduce((sum: number, it: any) => {
+        const itPrice = Number(it.price || it.unit_price || 0);
+        const itQty = Number(it.quantity || 1);
+        return sum + (Number(it.total_price) || (itPrice * itQty));
+      }, 0);
+
+      if (refundAmount <= 0) {
+        refundAmount = Number(order.total_retail || 0);
+      }
+      refundAmount = +refundAmount.toFixed(2);
+    }
+
+    // 6. PayPal API Automated Refund (Full or Partial for the specific item)
     const clientId = process.env.PAYPAL_CLIENT_ID || process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
     const secret = process.env.PAYPAL_CLIENT_SECRET;
     const mode = (process.env.PAYPAL_MODE || "sandbox").toLowerCase();
@@ -156,35 +214,39 @@ export async function POST(req: NextRequest) {
           console.debug("[PayPal Refund] Capture ID pre-lookup passed:", lookupErr);
         }
 
-        // Step C: Trigger 100% Full Refund via PayPal Payments API
+        // Step C: Trigger Automated Refund via PayPal Payments API
+        const idempotencyKey = isItemSpecific
+          ? `refund-${order.internal_order_number}-item-${itemIndex}-${Date.now()}`
+          : `refund-${order.internal_order_number}-full-${Date.now()}`;
+
+        const note = isItemSpecific
+          ? `Partial refund for item "${targetItem.title || targetItem.product_title || "Item"}" in order ${order.internal_order_number}. Reason: ${reason || "Customer item cancellation during grace window."}`
+          : `Full refund for cancelled order ${order.internal_order_number}. Reason: ${reason || "Customer cancellation during grace window."}`;
+
         const refundRes = await fetch(`${baseUrl}/v2/payments/captures/${captureId}/refund`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${access_token}`,
             "Content-Type": "application/json",
-            "PayPal-Request-Id": `refund-${order.internal_order_number}`,
+            "PayPal-Request-Id": idempotencyKey,
           },
           body: JSON.stringify({
             amount: {
               value: refundAmount.toFixed(2),
               currency_code: "USD",
             },
-            note_to_payer: `Full refund for cancelled order ${order.internal_order_number}. Reason: ${
-              reason || "Customer cancellation during grace window."
-            }`,
+            note_to_payer: note,
           }),
         });
 
         if (!refundRes.ok) {
           const errBody = await refundRes.json().catch(() => ({}));
           const issue = errBody.details?.[0]?.issue || errBody.message || "";
-          // If already refunded, treat as idempotent success
           if (!issue.includes("CAPTURE_ALREADY_REFUNDED") && !issue.includes("ALREADY_REFUNDED")) {
             console.error("[PayPal Refund] Gateway rejected refund:", refundRes.status, errBody);
             return NextResponse.json(
               {
-                error:
-                  "Payment provider failed to process the automated refund. Please contact customer support.",
+                error: "Payment provider failed to process the refund. Please contact customer support.",
                 details: issue,
               },
               { status: 502 }
@@ -204,32 +266,62 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 6. Update order status atomically in Database
-    let itemsData = order.items_json;
-    if (typeof itemsData === "string") {
-      try {
-        itemsData = JSON.parse(itemsData);
-      } catch {
-        itemsData = [];
-      }
+    // 7. Update order status and items_json atomically in Database
+    if (isItemSpecific) {
+      targetItem.status = "CANCELLED";
+      targetItem.cancelled_at = new Date().toISOString();
+      targetItem.refund_amount = refundAmount;
+      targetItem.cancel_reason = reason || "Customer item cancellation";
+
+      const allCancelled = items.every(
+        (it: any) => (it.status || "").toUpperCase() === "CANCELLED"
+      );
+      const newOrderStatus = allCancelled ? "CANCELLED" : "PARTIALLY_CANCELLED";
+
+      await sql`
+        UPDATE orders SET
+          status = ${newOrderStatus},
+          items_json = ${JSON.stringify(items)},
+          updated_at = NOW()
+        WHERE id = ${order.id}
+      `;
+
+      return NextResponse.json({
+        success: true,
+        message: `Product cancelled successfully. A partial refund of $${refundAmount.toFixed(
+          2
+        )} USD has been issued to your original PayPal payment method.`,
+        orderNumber: order.internal_order_number,
+        itemIndex: itemIndex,
+        refundAmount: refundAmount,
+        orderStatus: newOrderStatus,
+        itemStatus: "CANCELLED",
+      });
+    } else {
+      items.forEach((it: any) => {
+        it.status = "CANCELLED";
+        it.cancelled_at = new Date().toISOString();
+        it.refund_amount = it.total_price || it.price || 0;
+      });
+
+      await sql`
+        UPDATE orders SET
+          status = 'CANCELLED',
+          items_json = ${JSON.stringify(items)},
+          updated_at = NOW()
+        WHERE id = ${order.id}
+      `;
+
+      return NextResponse.json({
+        success: true,
+        message: `Order cancelled successfully. A 100% full refund of $${refundAmount.toFixed(
+          2
+        )} USD has been issued to your original PayPal payment method.`,
+        orderNumber: order.internal_order_number,
+        refundAmount: refundAmount,
+        orderStatus: "CANCELLED",
+      });
     }
-
-    await sql`
-      UPDATE orders SET
-        status = 'CANCELLED',
-        updated_at = NOW()
-      WHERE id = ${order.id}
-    `;
-
-    return NextResponse.json({
-      success: true,
-      message: `Order cancelled successfully. A 100% full refund of $${refundAmount.toFixed(
-        2
-      )} USD has been issued to your original payment method.`,
-      orderNumber: order.internal_order_number,
-      refundAmount: refundAmount,
-      status: "CANCELLED",
-    });
   } catch (err: any) {
     console.error("[Order Cancel] Server exception:", err);
     return NextResponse.json(

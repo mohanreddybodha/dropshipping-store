@@ -511,6 +511,8 @@ export async function cancelCustomerOrder(payload: {
   orderNumber: string;
   customer_email?: string;
   reason?: string;
+  itemIndex?: number;
+  itemVid?: string;
 }): Promise<any> {
   const res = await fetch(`${getApiBaseUrl()}/orders/cancel`, {
     method: "POST",

@@ -416,6 +416,7 @@ export default function CartPage() {
 
             <Link
               href="/checkout"
+              prefetch={false}
               className="w-full py-3.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-600/25 transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 text-center"
             >
               <span>Proceed to Checkout</span>
