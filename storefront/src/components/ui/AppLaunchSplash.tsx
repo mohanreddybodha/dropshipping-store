@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 
 /**
  * Production-Grade Industry Launch Screen Animation.
@@ -27,6 +28,8 @@ export default function AppLaunchSplash() {
   // Start as true on initial render so the splash screen covers the DOM from frame 0
   const [showSplash, setShowSplash] = useState(true);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     try {
@@ -40,6 +43,19 @@ export default function AppLaunchSplash() {
       // Mark seen for this session
       sessionStorage.setItem(SESSION_KEY, "true");
       document.body.classList.add("splash-active");
+
+      // Initialize bespoke brand acoustic signature
+      try {
+        const audio = new Audio("/vastire-launch-sound.wav");
+        audio.volume = 0.35; // Luxurious, polite ambient listening volume
+        audioRef.current = audio;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            // Browser autoplay policy prevented instant playback; fails gracefully
+          });
+        }
+      } catch {}
 
       // Non-blocking background catalog prefetch during splash
       import("../../lib/api")
@@ -63,6 +79,10 @@ export default function AppLaunchSplash() {
         clearTimeout(fadeTimer);
         clearTimeout(unmountTimer);
         document.body.classList.remove("splash-active");
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
       };
     } catch {
       setShowSplash(false);
@@ -72,6 +92,9 @@ export default function AppLaunchSplash() {
   if (!showSplash) return null;
 
   const handleDismiss = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
     setIsFadingOut(true);
     setTimeout(() => {
       setShowSplash(false);
@@ -88,6 +111,32 @@ export default function AppLaunchSplash() {
       }`}
       aria-label="Vastire App Launch Screen"
     >
+      {/* ── Discreet Ambient Audio Toggle ── */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (audioRef.current) {
+            if (isMuted) {
+              audioRef.current.muted = false;
+              audioRef.current.play().catch(() => {});
+              setIsMuted(false);
+            } else {
+              audioRef.current.muted = true;
+              setIsMuted(true);
+            }
+          }
+        }}
+        className="absolute top-5 right-5 z-50 p-2.5 rounded-full bg-slate-100/80 hover:bg-slate-200/90 text-slate-500 hover:text-slate-800 transition-colors backdrop-blur-sm cursor-pointer"
+        aria-label={isMuted ? "Unmute launch sound" : "Mute launch sound"}
+      >
+        {isMuted ? (
+          <VolumeX className="w-4 h-4" />
+        ) : (
+          <Volume2 className="w-4 h-4" />
+        )}
+      </button>
+
       {/* ── Soft Ambient Radial Emerald Glow ── */}
       <div className="absolute w-[480px] h-[480px] rounded-full bg-emerald-50/80 blur-3xl pointer-events-none -translate-y-6" />
 
