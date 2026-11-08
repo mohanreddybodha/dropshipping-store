@@ -6,14 +6,16 @@ import React, { useState, useEffect } from "react";
  * Production-Grade Industry Launch Screen Animation.
  *
  * Smooth, Slow, Ease-in-Out Dragging & Rolling Choreography (Swiggy/Zomato quality):
- *   0.0s – 1.8s: Authentic cart parts assemble seamlessly (unbroken body, speed streaks, 2 wheels)
- *   1.8s – 3.8s: Assembled cart glides to the right while wheels rotate for 2 seconds
- *   2.8s – 5.2s: Brand wordmark, progress bar (0% -> 100%), and tagline rise
- *   5.5s – 6.2s: Cinematic dissolve transition reveals populated storefront
+ *   0.0s – 1.0s: Authentic cart parts assemble seamlessly (unified handle, black frame, 10 green accents)
+ *   0.8s – 5.0s: Wheels scroll/rotate continuously on stationary green base in place (center)
+ *   1.8s – 5.0s: Brand wordmark, horizontal progress bar (0% -> 100%), and tagline rise
+ *   5.5s – 6.2s: Cinematic dissolve transition reveals pre-populated storefront
  *
- * Session gate:
- *   Uses sessionStorage so that whenever the user closes the tab / closes the app
- *   and reopens it, the launch animation plays smoothly.
+ * Zero-Flash Architecture:
+ *   - Initial SSR state is `true` so the white screen + cart renders immediately on first paint
+ *   - Synchronous <head> script in layout.tsx sets `html.splash-dismissed` for returning tabs,
+ *     hiding the overlay instantly with zero flash
+ *   - Closing tab or closing the app clears sessionStorage, re-enabling the animation on next open
  */
 
 const SESSION_KEY = "vastire_launch_splash_seen";
@@ -22,19 +24,20 @@ const FADE_DURATION_MS = 700;
 const UNMOUNT_MS = FADE_START_MS + FADE_DURATION_MS;
 
 export default function AppLaunchSplash() {
-  const [showSplash, setShowSplash] = useState(false);
+  // Start as true on initial render so the splash screen covers the DOM from frame 0
+  const [showSplash, setShowSplash] = useState(true);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
     try {
       // Check if already seen in this tab / app session
-      // Closing tab or closing the app automatically clears sessionStorage
       const alreadySeen = sessionStorage.getItem(SESSION_KEY);
       if (alreadySeen) {
+        setShowSplash(false);
         return;
       }
 
-      setShowSplash(true);
+      // Mark seen for this session
       sessionStorage.setItem(SESSION_KEY, "true");
       document.body.classList.add("splash-active");
 
@@ -88,7 +91,7 @@ export default function AppLaunchSplash() {
       {/* ── Soft Ambient Radial Emerald Glow ── */}
       <div className="absolute w-[480px] h-[480px] rounded-full bg-emerald-50/80 blur-3xl pointer-events-none -translate-y-6" />
 
-      {/* ── Center Stage: Cart Assembly, Drive Right with Wheel Spin & Typography ── */}
+      {/* ── Center Stage: Cart Assembly, Continuous Wheel Rolling & Typography ── */}
       <div className="relative flex flex-col items-center justify-center">
 
         {/* Emblem Stage: All parts assemble at coordinate position and settle */}
@@ -96,8 +99,8 @@ export default function AppLaunchSplash() {
           {/* Ambient Breathing Halo Glow */}
           <div className="animate-ambient-halo absolute -inset-5 rounded-3xl bg-emerald-500/18 blur-xl pointer-events-none" />
 
-          {/* Cart Stage Container (512x512 Coordinate Frame) with 2-second Drive Right */}
-          <div className="animate-cart-drive-right relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center select-none pointer-events-none">
+          {/* Cart Stage Container (512x512 Coordinate Frame) - Centers in Place */}
+          <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center select-none pointer-events-none">
             {/* 1. Trailing Drag Streaks on the Left */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -108,17 +111,27 @@ export default function AppLaunchSplash() {
               className="animate-drag-streaks absolute inset-0 w-full h-full object-contain"
             />
 
-            {/* 2. Cart Body: Solid black basket frame with 10 green accents (unbroken) */}
+            {/* 2. Cart Body: Unified handle, black frame & 10 green accents (unbroken & defect-free) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/splash-part-body.png"
               alt=""
               loading="eager"
               decoding="sync"
-              className="animate-drag-cart-body absolute inset-0 w-full h-full object-contain"
+              className="animate-drag-cart-body animate-cart-rolling-vibe absolute inset-0 w-full h-full object-contain"
             />
 
-            {/* 3. Left Wheel: Combination of grey wheel & green base, rotates 2s around its axle */}
+            {/* 3. Stationary Green Ground below wheels - constant/fixed */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/splash-part-ground.png"
+              alt=""
+              loading="eager"
+              decoding="sync"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+            />
+
+            {/* 4. Left Wheel: Combination of grey wheel & green runner, rolls continuously on its axle */}
             <div className="animate-drag-wheels absolute inset-0 w-full h-full pointer-events-none">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -126,12 +139,12 @@ export default function AppLaunchSplash() {
                 alt=""
                 loading="eager"
                 decoding="sync"
-                className="animate-spin-wheel-left w-full h-full object-contain"
-                style={{ transformOrigin: "45.12% 75.39%" }}
+                className="animate-wheel-continuous-spin w-full h-full object-contain"
+                style={{ transformOrigin: "45.02% 75.39%" }}
               />
             </div>
 
-            {/* 4. Right Wheel: Combination of grey wheel & green base, rotates 2s around its axle */}
+            {/* 5. Right Wheel: Combination of grey wheel & green runner, rolls continuously on its axle */}
             <div className="animate-drag-wheels absolute inset-0 w-full h-full pointer-events-none">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -139,8 +152,8 @@ export default function AppLaunchSplash() {
                 alt=""
                 loading="eager"
                 decoding="sync"
-                className="animate-spin-wheel-right w-full h-full object-contain"
-                style={{ transformOrigin: "68.55% 75.39%" }}
+                className="animate-wheel-continuous-spin w-full h-full object-contain"
+                style={{ transformOrigin: "68.65% 75.39%" }}
               />
             </div>
           </div>
@@ -159,7 +172,7 @@ export default function AppLaunchSplash() {
             Vastire
           </span>
 
-          {/* Precision Horizontal Loading Progress Bar */}
+          {/* Precision Horizontal Loading Progress Bar - Charges while wheels rotate */}
           <div className="w-48 h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
             <div className="animate-loading-progress-smooth h-full bg-gradient-to-r from-emerald-600 via-teal-400 to-emerald-500 rounded-full" />
           </div>

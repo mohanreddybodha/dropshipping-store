@@ -1,3 +1,8 @@
+/* Zero-flash immediate dismiss for returning sessions (executed via <head> script) */
+html.splash-dismissed #vastire-splash {
+  display: none !important;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -174,10 +179,10 @@ body {
    PREMIUM PWA LAUNCH SCREEN — SLOW, SMOOTH, BRAND-BUILDING SPLASH
    Total choreography: 5.5s visible + 0.7s dissolve
 
-   0.0s – 1.8s: Cart parts assemble seamlessly (unbroken body, speed streaks, 2 wheels)
-   1.8s – 3.8s: Cart moves to the right & wheels rotate for 2.0s
-   2.8s – 5.2s: Wordmark & progress bar rise and sweep
-   5.5s – 6.2s: Smooth dissolve transition into storefront
+   0.0s – 1.0s: Cart parts assemble seamlessly (unified handle, black frame, 10 green accents)
+   0.8s – 5.0s: Wheels scroll/rotate continuously on stationary green base in place (center)
+   1.8s – 5.0s: Brand wordmark, horizontal progress bar (0% -> 100%), and tagline rise
+   5.5s – 6.2s: Smooth dissolve transition into pre-warmed storefront
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 /* Body scroll-lock during splash */
@@ -199,21 +204,18 @@ body.splash-active {
   transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 1. Cart Body: Drags in with physical inertia & tilt — 1.6s */
+/* 1. Cart Body: Drags in with physical inertia & tilt — 1.0s */
 @keyframes dragCartBody {
   0% {
     opacity: 0;
-    transform: translate3d(-110px, -6px, 0) scale(0.92) rotate(-4deg);
+    transform: translate3d(-90px, -5px, 0) scale(0.93) rotate(-3deg);
   }
-  35% {
+  40% {
     opacity: 0.85;
   }
-  75% {
+  80% {
     opacity: 1;
-    transform: translate3d(3px, -1px, 0) scale(1.01) rotate(0.8deg);
-  }
-  90% {
-    transform: translate3d(-1px, 0.5px, 0) scale(0.998) rotate(-0.2deg);
+    transform: translate3d(2px, -0.5px, 0) scale(1.008) rotate(0.5deg);
   }
   100% {
     opacity: 1;
@@ -221,19 +223,19 @@ body.splash-active {
   }
 }
 .animate-drag-cart-body {
-  animation: dragCartBody 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  animation: dragCartBody 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
-/* 2. Trailing Drag Streaks: Stretch & settle into the cart — 1.5s */
+/* 2. Trailing Drag Streaks: Stretch & settle into the cart — 1.0s */
 @keyframes dragStreaks {
   0% {
     opacity: 0;
-    transform: translate3d(-70px, 0, 0) scaleX(0.5);
+    transform: translate3d(-60px, 0, 0) scaleX(0.5);
   }
-  40% {
-    opacity: 0.75;
+  50% {
+    opacity: 0.8;
   }
-  80% {
+  85% {
     opacity: 0.95;
     transform: translate3d(2px, 0, 0) scaleX(1.02);
   }
@@ -243,21 +245,21 @@ body.splash-active {
   }
 }
 .animate-drag-streaks {
-  animation: dragStreaks 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+  animation: dragStreaks 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
 }
 
-/* 3. Wheels: Roll in smoothly under the cart — 1.5s */
+/* 3. Wheels Wrapper: Rolls in smoothly under the cart — 1.0s */
 @keyframes dragWheels {
   0% {
     opacity: 0;
-    transform: translate3d(80px, 16px, 0) scale(0.9);
+    transform: translate3d(60px, 12px, 0) scale(0.92);
   }
-  40% {
+  50% {
     opacity: 0.85;
   }
-  80% {
+  85% {
     opacity: 1;
-    transform: translate3d(-3px, -1px, 0) scale(1.01);
+    transform: translate3d(-2px, -0.5px, 0) scale(1.006);
   }
   100% {
     opacity: 1;
@@ -265,52 +267,40 @@ body.splash-active {
   }
 }
 .animate-drag-wheels {
-  animation: dragWheels 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+  animation: dragWheels 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
 }
 
-/* 4. Assembled Icon Settle: Locks the parts together at 1.75s */
+/* 4. Assembled Icon Settle: Locks the parts together at 0.95s */
 @keyframes iconAssembleSettle {
   0%   { transform: scale(1); }
-  50%  { transform: scale(1.03); }
+  50%  { transform: scale(1.025); }
   100% { transform: scale(1); }
 }
 .animate-icon-assemble-settle {
-  animation: iconAssembleSettle 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 1.75s both;
+  animation: iconAssembleSettle 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.95s both;
 }
 
-/* 5. Cart Moves Right for 2 seconds (1.8s – 3.8s) */
-@keyframes cartDriveRight {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  30% {
-    transform: translate3d(28px, -2px, 0);
-  }
-  65% {
-    transform: translate3d(32px, 0, 0);
-  }
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-}
-.animate-cart-drive-right {
-  animation: cartDriveRight 2s cubic-bezier(0.42, 0, 0.58, 1) 1.8s both;
-}
-
-/* 6. Wheels Rotate for 2 seconds (1.8s – 3.8s) around their respective axles */
-@keyframes spinWheel {
+/* 5. Continuous Wheel Rotation: Wheels scroll/rotate continuously on their axles
+      in place over the stationary green base until the progress bar ends (0.8s – 5.0s) */
+@keyframes wheelContinuousSpin {
   0% {
     transform: rotate(0deg);
   }
   100% {
-    transform: rotate(720deg);
+    transform: rotate(1440deg); /* 4 full 360-degree rotations, slowing to a gentle stop as progress bar completes */
   }
 }
-.animate-spin-wheel-left {
-  animation: spinWheel 2s cubic-bezier(0.42, 0, 0.58, 1) 1.8s both;
+.animate-wheel-continuous-spin {
+  animation: wheelContinuousSpin 4.2s cubic-bezier(0.2, 0.85, 0.35, 1) 0.8s both;
 }
-.animate-spin-wheel-right {
-  animation: spinWheel 2s cubic-bezier(0.42, 0, 0.58, 1) 1.8s both;
+
+/* 6. Subtle Cart Rolling Suspension Vibration while wheels scroll */
+@keyframes cartRollingVibe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.75px); }
+}
+.animate-cart-rolling-vibe {
+  animation: cartRollingVibe 0.35s ease-in-out 0.8s 12;
 }
 
 /* Luxury Ambient Halo Glow behind emblem */
@@ -323,16 +313,16 @@ body.splash-active {
   animation: ambientHaloGlow 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
 }
 
-/* 7. Brand wordmark "Vastire" rises up smoothly at 2.8s */
+/* 7. Brand wordmark "Vastire" rises up smoothly at 1.8s */
 @keyframes brandRiseSmooth {
-  0%   { opacity: 0; transform: translate3d(0, 20px, 0); }
+  0%   { opacity: 0; transform: translate3d(0, 18px, 0); }
   100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 .animate-brand-rise-smooth {
-  animation: brandRiseSmooth 0.8s cubic-bezier(0.16, 1, 0.3, 1) 2.8s both;
+  animation: brandRiseSmooth 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both;
 }
 
-/* 8. Progress bar sweeps 0→100% over 2.2s, starts at 3.0s */
+/* 8. Progress bar sweeps 0→100% while wheels rotate (1.8s – 5.0s = 3.2s) */
 @keyframes loadingProgressSmooth {
   0%   { width: 0%; }
   25%  { width: 22%; }
@@ -341,14 +331,14 @@ body.splash-active {
   100% { width: 100%; }
 }
 .animate-loading-progress-smooth {
-  animation: loadingProgressSmooth 2.2s cubic-bezier(0.42, 0, 0.58, 1) 3.0s both;
+  animation: loadingProgressSmooth 3.2s cubic-bezier(0.42, 0, 0.58, 1) 1.8s both;
 }
 
-/* 9. Tagline rise at 3.6s */
+/* 9. Tagline rise at 2.4s */
 @keyframes taglineRise {
   0%   { opacity: 0; transform: translateY(8px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 .animate-tagline-rise {
-  animation: taglineRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 3.6s both;
+  animation: taglineRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 2.4s both;
 }
