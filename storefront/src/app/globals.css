@@ -204,70 +204,123 @@ body.splash-active {
   transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 1. Cart Body: Drags in with physical inertia & tilt — 1.0s */
-@keyframes dragCartBody {
+/* ── Multi-Directional Icon Part Convergence (0.0s – 1.0s) ── */
+
+/* 1. Green House Roof: Arrives smoothly from top-right */
+@keyframes partRoof {
   0% {
     opacity: 0;
-    transform: translate3d(-90px, -5px, 0) scale(0.93) rotate(-3deg);
+    transform: translate3d(95px, -65px, 0) scale(0.88) rotate(6deg);
   }
-  40% {
-    opacity: 0.85;
-  }
-  80% {
+  60% {
     opacity: 1;
-    transform: translate3d(2px, -0.5px, 0) scale(1.008) rotate(0.5deg);
+    transform: translate3d(-3px, 2px, 0) scale(1.01) rotate(-0.5deg);
   }
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
   }
 }
-.animate-drag-cart-body {
-  animation: dragCartBody 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+.animate-part-roof {
+  animation: partRoof 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
 }
 
-/* 2. Trailing Drag Streaks: Stretch & settle into the cart — 1.0s */
-@keyframes dragStreaks {
+/* 2. Unified Black Handle: Arrives smoothly from top-left */
+@keyframes partHandle {
   0% {
     opacity: 0;
-    transform: translate3d(-60px, 0, 0) scaleX(0.5);
+    transform: translate3d(-85px, -55px, 0) scale(0.88) rotate(-6deg);
   }
-  50% {
-    opacity: 0.8;
+  60% {
+    opacity: 1;
+    transform: translate3d(2px, 1px, 0) scale(1.01) rotate(0.5deg);
   }
-  85% {
-    opacity: 0.95;
-    transform: translate3d(2px, 0, 0) scaleX(1.02);
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+}
+.animate-part-handle {
+  animation: partHandle 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+
+/* 3. Trailing Motion Streaks: Expands in from far left */
+@keyframes partStreaks {
+  0% {
+    opacity: 0;
+    transform: translate3d(-105px, 0, 0) scaleX(0.35);
+  }
+  60% {
+    opacity: 0.9;
+    transform: translate3d(3px, 0, 0) scaleX(1.03);
   }
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scaleX(1);
   }
 }
+.animate-part-streaks,
 .animate-drag-streaks {
-  animation: dragStreaks 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  animation: partStreaks 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
 }
 
-/* 3. Wheels Wrapper: Rolls in smoothly under the cart — 1.0s */
-@keyframes dragWheels {
+/* 4. Cart Basket Body & Accents: Sweeps in from bottom-left */
+@keyframes partBody {
   0% {
     opacity: 0;
-    transform: translate3d(60px, 12px, 0) scale(0.92);
+    transform: translate3d(-80px, 45px, 0) scale(0.9) rotate(-3.5deg);
   }
-  50% {
-    opacity: 0.85;
-  }
-  85% {
+  65% {
     opacity: 1;
-    transform: translate3d(-2px, -0.5px, 0) scale(1.006);
+    transform: translate3d(2px, -1px, 0) scale(1.008) rotate(0.4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+}
+.animate-part-body,
+.animate-drag-cart-body {
+  animation: partBody 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+/* 5. Stationary Green Ground below wheels: Rises from bottom and locks into place */
+@keyframes partGround {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 45px, 0) scaleX(0.85);
+  }
+  70% {
+    opacity: 1;
+    transform: translate3d(0, -1px, 0) scaleX(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scaleX(1);
+  }
+}
+.animate-part-ground {
+  animation: partGround 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+}
+
+/* 6. Wheels Wrapper: Rolls in from bottom-right */
+@keyframes partWheels {
+  0% {
+    opacity: 0;
+    transform: translate3d(75px, 40px, 0) scale(0.9);
+  }
+  65% {
+    opacity: 1;
+    transform: translate3d(-2px, -1px, 0) scale(1.006);
   }
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
   }
 }
+.animate-part-wheels,
 .animate-drag-wheels {
-  animation: dragWheels 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+  animation: partWheels 1.0s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
 }
 
 /* 4. Assembled Icon Settle: Locks the parts together at 0.95s */

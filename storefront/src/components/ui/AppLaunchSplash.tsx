@@ -101,38 +101,18 @@ export default function AppLaunchSplash() {
 
           {/* Cart Stage Container (512x512 Coordinate Frame) - Centers in Place */}
           <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center select-none pointer-events-none">
-            {/* 1. Trailing Drag Streaks on the Left */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/splash-part-streaks.png"
-              alt=""
-              loading="eager"
-              decoding="sync"
-              className="animate-drag-streaks absolute inset-0 w-full h-full object-contain"
-            />
-
-            {/* 2. Cart Body: Unified handle, black frame & 10 green accents (unbroken & defect-free) */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/splash-part-body.png"
-              alt=""
-              loading="eager"
-              decoding="sync"
-              className="animate-drag-cart-body animate-cart-rolling-vibe absolute inset-0 w-full h-full object-contain"
-            />
-
-            {/* 3. Stationary Green Ground below wheels - constant/fixed */}
+            {/* 1. Stationary Green Ground below wheels - constant/fixed base (never rotates) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/splash-part-ground.png"
               alt=""
               loading="eager"
               decoding="sync"
-              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+              className="animate-part-ground absolute inset-0 w-full h-full object-contain pointer-events-none"
             />
 
-            {/* 4. Left Wheel: Combination of grey wheel & green runner, rolls continuously on its axle */}
-            <div className="animate-drag-wheels absolute inset-0 w-full h-full pointer-events-none">
+            {/* 2. Left Wheel: Pure circular dark disc rotating on axle (46.39% X, 73.83% Y) in place */}
+            <div className="animate-part-wheels absolute inset-0 w-full h-full pointer-events-none">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/splash-part-wheel-left.png"
@@ -140,12 +120,12 @@ export default function AppLaunchSplash() {
                 loading="eager"
                 decoding="sync"
                 className="animate-wheel-continuous-spin w-full h-full object-contain"
-                style={{ transformOrigin: "45.02% 75.39%" }}
+                style={{ transformOrigin: "46.39% 73.83%" }}
               />
             </div>
 
-            {/* 5. Right Wheel: Combination of grey wheel & green runner, rolls continuously on its axle */}
-            <div className="animate-drag-wheels absolute inset-0 w-full h-full pointer-events-none">
+            {/* 3. Right Wheel: Pure circular dark disc rotating on axle (69.04% X, 73.83% Y) in place */}
+            <div className="animate-part-wheels absolute inset-0 w-full h-full pointer-events-none">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/splash-part-wheel-right.png"
@@ -153,9 +133,49 @@ export default function AppLaunchSplash() {
                 loading="eager"
                 decoding="sync"
                 className="animate-wheel-continuous-spin w-full h-full object-contain"
-                style={{ transformOrigin: "68.65% 75.39%" }}
+                style={{ transformOrigin: "69.04% 73.83%" }}
               />
             </div>
+
+            {/* 4. Cart Basket Body & Internal Green Accents: Sweeps in from bottom-left */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/splash-part-body.png"
+              alt=""
+              loading="eager"
+              decoding="sync"
+              className="animate-part-body animate-cart-rolling-vibe absolute inset-0 w-full h-full object-contain pointer-events-none"
+            />
+
+            {/* 5. Trailing Drag Motion Streaks: Glides in from far left */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/splash-part-streaks.png"
+              alt=""
+              loading="eager"
+              decoding="sync"
+              className="animate-part-streaks absolute inset-0 w-full h-full object-contain pointer-events-none"
+            />
+
+            {/* 6. Unified Black Handle: Glides down from top-left */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/splash-part-handle.png"
+              alt=""
+              loading="eager"
+              decoding="sync"
+              className="animate-part-handle absolute inset-0 w-full h-full object-contain pointer-events-none"
+            />
+
+            {/* 7. Green House Roof: Glides down from top-right */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/splash-part-roof.png"
+              alt=""
+              loading="eager"
+              decoding="sync"
+              className="animate-part-roof absolute inset-0 w-full h-full object-contain pointer-events-none"
+            />
           </div>
         </div>
 
