@@ -122,7 +122,7 @@ export default function AppLaunchSplash() {
                 loading="eager"
                 decoding="sync"
                 className="animate-wheel-continuous-spin w-full h-full object-contain pointer-events-none"
-                style={{ transformOrigin: "46.29% 74.22%" }}
+                style={{ transformOrigin: "46.29% 74.41%" }}
               />
             </div>
 
@@ -135,7 +135,7 @@ export default function AppLaunchSplash() {
                 loading="eager"
                 decoding="sync"
                 className="animate-wheel-continuous-spin w-full h-full object-contain pointer-events-none"
-                style={{ transformOrigin: "68.95% 74.22%" }}
+                style={{ transformOrigin: "69.04% 74.41%" }}
               />
             </div>
 
