@@ -12,16 +12,16 @@ interface VastireLogoProps {
 
 /**
  * High-Performance Brand Icon for Vastire.
- * Uses cached static asset /icon-512.png (zero JS bundle bloat, hardware accelerated).
+ * Uses cached static asset /brand-emblem.png (zero JS bundle bloat, transparent background, hardware accelerated).
  */
 export function VastireIcon({
-  size = 42,
+  size = 44,
   className = "",
 }: {
   size?: number | string;
   className?: string;
 }) {
-  const pixelSize = typeof size === "number" ? size : parseInt(String(size), 10) || 42;
+  const pixelSize = typeof size === "number" ? size : parseInt(String(size), 10) || 44;
 
   return (
     <div
@@ -34,7 +34,7 @@ export function VastireIcon({
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/icon-512.png"
+        src="/brand-emblem.png"
         alt="Vastire"
         width={pixelSize}
         height={pixelSize}
@@ -52,22 +52,22 @@ export default function VastireLogo({
 }: VastireLogoProps) {
   const sizePresets = {
     sm: {
-      iconSize: 34,
+      iconSize: 36,
       textSize: "text-lg sm:text-xl",
       gap: "gap-2.5",
     },
     md: {
-      iconSize: 42,
+      iconSize: 44,
       textSize: "text-xl sm:text-2xl",
       gap: "gap-3",
     },
     lg: {
-      iconSize: 52,
+      iconSize: 54,
       textSize: "text-2xl sm:text-3xl",
       gap: "gap-3.5",
     },
     xl: {
-      iconSize: 64,
+      iconSize: 66,
       textSize: "text-3xl sm:text-4xl",
       gap: "gap-4",
     },

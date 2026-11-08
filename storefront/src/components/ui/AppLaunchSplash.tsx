@@ -101,17 +101,19 @@ export default function AppLaunchSplash() {
 
           {/* Cart Stage Container (512x512 Coordinate Frame) - Centers in Place */}
           <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center select-none pointer-events-none">
-            {/* 1. Stationary Green Ground below wheels - constant/fixed base (never rotates) */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/splash-part-ground.png"
-              alt=""
-              loading="eager"
-              decoding="sync"
-              className="animate-part-ground absolute inset-0 w-full h-full object-contain pointer-events-none"
-            />
+            {/* 1. Stationary Green Ground below wheels - rises from bottom & locks into stationary track */}
+            <div className="animate-part-ground absolute inset-0 w-full h-full pointer-events-none">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/splash-part-ground.png"
+                alt=""
+                loading="eager"
+                decoding="sync"
+                className="w-full h-full object-contain pointer-events-none"
+              />
+            </div>
 
-            {/* 2. Left Wheel: Pure circular dark disc rotating on axle (46.39% X, 73.83% Y) in place */}
+            {/* 2. Left Wheel: Full circular disc rolls in from bottom-right and spins continuously on axle */}
             <div className="animate-part-wheels absolute inset-0 w-full h-full pointer-events-none">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -119,12 +121,12 @@ export default function AppLaunchSplash() {
                 alt=""
                 loading="eager"
                 decoding="sync"
-                className="animate-wheel-continuous-spin w-full h-full object-contain"
-                style={{ transformOrigin: "46.39% 73.83%" }}
+                className="animate-wheel-continuous-spin w-full h-full object-contain pointer-events-none"
+                style={{ transformOrigin: "46.29% 74.22%" }}
               />
             </div>
 
-            {/* 3. Right Wheel: Pure circular dark disc rotating on axle (69.04% X, 73.83% Y) in place */}
+            {/* 3. Right Wheel: Full circular disc rolls in from bottom-right and spins continuously on axle */}
             <div className="animate-part-wheels absolute inset-0 w-full h-full pointer-events-none">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -132,50 +134,58 @@ export default function AppLaunchSplash() {
                 alt=""
                 loading="eager"
                 decoding="sync"
-                className="animate-wheel-continuous-spin w-full h-full object-contain"
-                style={{ transformOrigin: "69.04% 73.83%" }}
+                className="animate-wheel-continuous-spin w-full h-full object-contain pointer-events-none"
+                style={{ transformOrigin: "68.95% 74.22%" }}
               />
             </div>
 
-            {/* 4. Cart Basket Body & Internal Green Accents: Sweeps in from bottom-left */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/splash-part-body.png"
-              alt=""
-              loading="eager"
-              decoding="sync"
-              className="animate-part-body animate-cart-rolling-vibe absolute inset-0 w-full h-full object-contain pointer-events-none"
-            />
+            {/* 4. Cart Basket Body & Accents: Sweeps in gracefully from bottom-left */}
+            <div className="animate-part-body absolute inset-0 w-full h-full pointer-events-none">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/splash-part-body.png"
+                alt=""
+                loading="eager"
+                decoding="sync"
+                className="animate-cart-rolling-vibe w-full h-full object-contain pointer-events-none"
+              />
+            </div>
 
-            {/* 5. Trailing Drag Motion Streaks: Glides in from far left */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/splash-part-streaks.png"
-              alt=""
-              loading="eager"
-              decoding="sync"
-              className="animate-part-streaks absolute inset-0 w-full h-full object-contain pointer-events-none"
-            />
+            {/* 5. Trailing Motion Drag Streaks: Glides in from far left */}
+            <div className="animate-part-streaks absolute inset-0 w-full h-full pointer-events-none">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/splash-part-streaks.png"
+                alt=""
+                loading="eager"
+                decoding="sync"
+                className="w-full h-full object-contain pointer-events-none"
+              />
+            </div>
 
-            {/* 6. Unified Black Handle: Glides down from top-left */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/splash-part-handle.png"
-              alt=""
-              loading="eager"
-              decoding="sync"
-              className="animate-part-handle absolute inset-0 w-full h-full object-contain pointer-events-none"
-            />
+            {/* 6. Unified Black Handle: Glides down from top-left as one solid part */}
+            <div className="animate-part-handle absolute inset-0 w-full h-full pointer-events-none">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/splash-part-handle.png"
+                alt=""
+                loading="eager"
+                decoding="sync"
+                className="w-full h-full object-contain pointer-events-none"
+              />
+            </div>
 
-            {/* 7. Green House Roof: Glides down from top-right */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/splash-part-roof.png"
-              alt=""
-              loading="eager"
-              decoding="sync"
-              className="animate-part-roof absolute inset-0 w-full h-full object-contain pointer-events-none"
-            />
+            {/* 7. Green House Roof: Glides down from top-right as one solid part */}
+            <div className="animate-part-roof absolute inset-0 w-full h-full pointer-events-none">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/splash-part-roof.png"
+                alt=""
+                loading="eager"
+                decoding="sync"
+                className="w-full h-full object-contain pointer-events-none"
+              />
+            </div>
           </div>
         </div>
 
