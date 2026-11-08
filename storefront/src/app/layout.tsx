@@ -65,7 +65,6 @@ export default function RootLayout({
         <link rel="preload" as="image" href="/splash-part-streaks.png" />
         <link rel="preload" as="image" href="/splash-part-handle.png" />
         <link rel="preload" as="image" href="/splash-part-roof.png" />
-        <link rel="preload" as="audio" href="/vastire-launch-sound.wav" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
