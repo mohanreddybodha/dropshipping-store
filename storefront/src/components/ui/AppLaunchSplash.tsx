@@ -5,32 +5,20 @@ import React, { useState, useEffect } from "react";
 /**
  * Production-Grade Industry Launch Screen Animation.
  *
- * PWA (installed app): Shows on every cold launch (uses localStorage).
- * Browser tab: Shows only on first visit per session (uses sessionStorage).
+ * Smooth, Slow, Ease-in-Out Dragging & Rolling Choreography (Swiggy/Zomato quality):
+ *   0.0s – 1.8s: Authentic cart parts assemble seamlessly (unbroken body, speed streaks, 2 wheels)
+ *   1.8s – 3.8s: Assembled cart glides to the right while wheels rotate for 2 seconds
+ *   2.8s – 5.2s: Brand wordmark, progress bar (0% -> 100%), and tagline rise
+ *   5.5s – 6.2s: Cinematic dissolve transition reveals populated storefront
  *
- * Smooth, Slow, Premium Choreography (Swiggy/Zomato quality):
- *   0ms    — Pure white canvas shields storefront from layout flash
- *   50ms   — 1. Ambient halo glow blooms in behind emblem
- *   300ms  — 2. Cart body drags in with physical inertia & tilt
- *   500ms  — 3. Wheels roll in from the right
- *   700ms  — 4. Green accents glide in from top-left
- *   900ms  — 5. Drag streaks stretch & settle
- *   2800ms — 6. All parts spring-settle into final brand icon
- *   3000ms — 7. Brand wordmark "Vastire" rises up
- *   3300ms — 8. Progress bar sweeps 0→100% over 2 seconds
- *   5300ms — 9. Tagline fully visible
- *   5500ms — 10. Cinematic dissolve (opacity 0, slight scale up)
- *   6200ms — 11. Component unmounts; home screen fully visible
+ * Session gate:
+ *   Uses sessionStorage so that whenever the user closes the tab / closes the app
+ *   and reopens it, the launch animation plays smoothly.
  */
 
-const PWA_KEY = "vastire_pwa_launched_v1";
-const BROWSER_KEY = "vastire_launch_splash_seen";
-
-/** Total visible animation before fade begins, in ms */
+const SESSION_KEY = "vastire_launch_splash_seen";
 const FADE_START_MS = 5500;
-/** Time for opacity-0 transition, in ms */
 const FADE_DURATION_MS = 700;
-/** Total time before DOM removal, in ms */
 const UNMOUNT_MS = FADE_START_MS + FADE_DURATION_MS;
 
 export default function AppLaunchSplash() {
@@ -39,40 +27,30 @@ export default function AppLaunchSplash() {
 
   useEffect(() => {
     try {
-      const isPWA =
-        typeof window !== "undefined" &&
-        window.matchMedia("(display-mode: standalone)").matches;
-
-      if (isPWA) {
-        // PWA: show once per install (localStorage persists across sessions)
-        const alreadyLaunched = localStorage.getItem(PWA_KEY);
-        if (alreadyLaunched) return;
-        localStorage.setItem(PWA_KEY, "true");
-      } else {
-        // Browser tab: show only on first visit this session
-        const alreadySeen = sessionStorage.getItem(BROWSER_KEY);
-        if (alreadySeen) return;
-        sessionStorage.setItem(BROWSER_KEY, "true");
+      // Check if already seen in this tab / app session
+      // Closing tab or closing the app automatically clears sessionStorage
+      const alreadySeen = sessionStorage.getItem(SESSION_KEY);
+      if (alreadySeen) {
+        return;
       }
 
-      // Show splash
       setShowSplash(true);
+      sessionStorage.setItem(SESSION_KEY, "true");
       document.body.classList.add("splash-active");
 
-      // Background data prefetch — warms the catalog in-memory cache
-      // so home page appears populated instantly after splash ends
+      // Non-blocking background catalog prefetch during splash
       import("../../lib/api")
         .then(({ getCatalog }) => {
           getCatalog({ limit: 200 }).catch(() => {});
         })
         .catch(() => {});
 
-      // Start fade-out
+      // Dissolve transition timer
       const fadeTimer = setTimeout(() => {
         setIsFadingOut(true);
       }, FADE_START_MS);
 
-      // Remove from DOM
+      // Clean DOM unmount
       const unmountTimer = setTimeout(() => {
         setShowSplash(false);
         document.body.classList.remove("splash-active");
@@ -103,25 +81,23 @@ export default function AppLaunchSplash() {
       id="vastire-splash"
       onClick={handleDismiss}
       className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-white select-none cursor-pointer ${
-        isFadingOut
-          ? "splash-fade-out"
-          : "splash-fade-in"
+        isFadingOut ? "splash-fade-out" : "splash-fade-in"
       }`}
       aria-label="Vastire App Launch Screen"
     >
       {/* ── Soft Ambient Radial Emerald Glow ── */}
       <div className="absolute w-[480px] h-[480px] rounded-full bg-emerald-50/80 blur-3xl pointer-events-none -translate-y-6" />
 
-      {/* ── Center Stage: Multi-Part Cart Assembly + Typography + Loading Bar ── */}
+      {/* ── Center Stage: Cart Assembly, Drive Right with Wheel Spin & Typography ── */}
       <div className="relative flex flex-col items-center justify-center">
 
-        {/* Emblem Stage: All parts assemble at the exact coordinate position */}
-        <div className="relative flex items-center justify-center w-36 h-36 animate-icon-assemble-settle">
+        {/* Emblem Stage: All parts assemble at coordinate position and settle */}
+        <div className="relative flex items-center justify-center w-36 h-36 sm:w-40 sm:h-40 animate-icon-assemble-settle">
           {/* Ambient Breathing Halo Glow */}
           <div className="animate-ambient-halo absolute -inset-5 rounded-3xl bg-emerald-500/18 blur-xl pointer-events-none" />
 
-          {/* Cart Stage Container (512×512 coordinate frame) */}
-          <div className="relative w-32 h-32 flex items-center justify-center select-none pointer-events-none">
+          {/* Cart Stage Container (512x512 Coordinate Frame) with 2-second Drive Right */}
+          <div className="animate-cart-drive-right relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center select-none pointer-events-none">
             {/* 1. Trailing Drag Streaks on the Left */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -132,7 +108,7 @@ export default function AppLaunchSplash() {
               className="animate-drag-streaks absolute inset-0 w-full h-full object-contain"
             />
 
-            {/* 2. Cart Body: Drags in with inertia, tilt, ease-in-out */}
+            {/* 2. Cart Body: Solid black basket frame with 10 green accents (unbroken) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/splash-part-body.png"
@@ -142,25 +118,31 @@ export default function AppLaunchSplash() {
               className="animate-drag-cart-body absolute inset-0 w-full h-full object-contain"
             />
 
-            {/* 3. Green Upper Frame & Accents: Glides into place */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/splash-part-accents.png"
-              alt=""
-              loading="eager"
-              decoding="sync"
-              className="animate-drag-accents absolute inset-0 w-full h-full object-contain"
-            />
+            {/* 3. Left Wheel: Combination of grey wheel & green base, rotates 2s around its axle */}
+            <div className="animate-drag-wheels absolute inset-0 w-full h-full pointer-events-none">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/splash-part-wheel-left.png"
+                alt=""
+                loading="eager"
+                decoding="sync"
+                className="animate-spin-wheel-left w-full h-full object-contain"
+                style={{ transformOrigin: "45.12% 75.39%" }}
+              />
+            </div>
 
-            {/* 4. Wheels (gray + green): Roll in from right, underneath */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/splash-part-wheels.png"
-              alt=""
-              loading="eager"
-              decoding="sync"
-              className="animate-drag-wheels absolute inset-0 w-full h-full object-contain"
-            />
+            {/* 4. Right Wheel: Combination of grey wheel & green base, rotates 2s around its axle */}
+            <div className="animate-drag-wheels absolute inset-0 w-full h-full pointer-events-none">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/splash-part-wheel-right.png"
+                alt=""
+                loading="eager"
+                decoding="sync"
+                className="animate-spin-wheel-right w-full h-full object-contain"
+                style={{ transformOrigin: "68.55% 75.39%" }}
+              />
+            </div>
           </div>
         </div>
 
