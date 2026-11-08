@@ -5,45 +5,83 @@ import React, { useState, useEffect } from "react";
 /**
  * Production-Grade Industry Launch Screen Animation.
  *
- * Smooth, Slow, Ease-in-Out Dragging Choreography:
- *   0ms   — Pure white canvas shields storefront from any layout flash
- *  50ms   — 1. Cart Body: Drags in with physical inertia, subtle tilt, and ease-in-out momentum
- * 200ms   — 2. Two Wheels: Combination of two gray and two green with gap, rolling in directly underneath
- * 270ms   — 3. Green Accents: Glides in smoothly from top-left to lock with the frame
- * 350ms   — 4. Drag Streaks: Trailing drag lines stretch and settle on the left
- * 1850ms  — 5. Convergence: All parts lock seamlessly into the authentic Vastire brand icon with gentle settle
- * 1850ms  — 6. Wordmark, Horizontal Loading Bar (filling 0% to 100% with ease-in-out), and Tagline rise smoothly
- * 3100ms  — 7. Cinematic dissolve transition (opacity: 1 -> 0, scale: 1 -> 1.015)
- * 3600ms  — 8. Component cleanly unmounts from DOM
+ * PWA (installed app): Shows on every cold launch (uses localStorage).
+ * Browser tab: Shows only on first visit per session (uses sessionStorage).
+ *
+ * Smooth, Slow, Premium Choreography (Swiggy/Zomato quality):
+ *   0ms    — Pure white canvas shields storefront from layout flash
+ *   50ms   — 1. Ambient halo glow blooms in behind emblem
+ *   300ms  — 2. Cart body drags in with physical inertia & tilt
+ *   500ms  — 3. Wheels roll in from the right
+ *   700ms  — 4. Green accents glide in from top-left
+ *   900ms  — 5. Drag streaks stretch & settle
+ *   2800ms — 6. All parts spring-settle into final brand icon
+ *   3000ms — 7. Brand wordmark "Vastire" rises up
+ *   3300ms — 8. Progress bar sweeps 0→100% over 2 seconds
+ *   5300ms — 9. Tagline fully visible
+ *   5500ms — 10. Cinematic dissolve (opacity 0, slight scale up)
+ *   6200ms — 11. Component unmounts; home screen fully visible
  */
+
+const PWA_KEY = "vastire_pwa_launched_v1";
+const BROWSER_KEY = "vastire_launch_splash_seen";
+
+/** Total visible animation before fade begins, in ms */
+const FADE_START_MS = 5500;
+/** Time for opacity-0 transition, in ms */
+const FADE_DURATION_MS = 700;
+/** Total time before DOM removal, in ms */
+const UNMOUNT_MS = FADE_START_MS + FADE_DURATION_MS;
+
 export default function AppLaunchSplash() {
   const [showSplash, setShowSplash] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
     try {
-      // Check if already shown in this browser session
-      const alreadySeen = sessionStorage.getItem("vastire_launch_splash_seen");
-      if (alreadySeen) {
-        return;
+      const isPWA =
+        typeof window !== "undefined" &&
+        window.matchMedia("(display-mode: standalone)").matches;
+
+      if (isPWA) {
+        // PWA: show once per install (localStorage persists across sessions)
+        const alreadyLaunched = localStorage.getItem(PWA_KEY);
+        if (alreadyLaunched) return;
+        localStorage.setItem(PWA_KEY, "true");
+      } else {
+        // Browser tab: show only on first visit this session
+        const alreadySeen = sessionStorage.getItem(BROWSER_KEY);
+        if (alreadySeen) return;
+        sessionStorage.setItem(BROWSER_KEY, "true");
       }
 
+      // Show splash
       setShowSplash(true);
-      sessionStorage.setItem("vastire_launch_splash_seen", "true");
+      document.body.classList.add("splash-active");
 
-      // Smooth dissolve transition
+      // Background data prefetch — warms the catalog in-memory cache
+      // so home page appears populated instantly after splash ends
+      import("../../lib/api")
+        .then(({ getCatalog }) => {
+          getCatalog({ limit: 200 }).catch(() => {});
+        })
+        .catch(() => {});
+
+      // Start fade-out
       const fadeTimer = setTimeout(() => {
         setIsFadingOut(true);
-      }, 700);
+      }, FADE_START_MS);
 
-      // Clean unmount from DOM
+      // Remove from DOM
       const unmountTimer = setTimeout(() => {
         setShowSplash(false);
-      }, 950);
+        document.body.classList.remove("splash-active");
+      }, UNMOUNT_MS);
 
       return () => {
         clearTimeout(fadeTimer);
         clearTimeout(unmountTimer);
+        document.body.classList.remove("splash-active");
       };
     } catch {
       setShowSplash(false);
@@ -54,48 +92,51 @@ export default function AppLaunchSplash() {
 
   const handleDismiss = () => {
     setIsFadingOut(true);
-    setTimeout(() => setShowSplash(false), 300);
+    setTimeout(() => {
+      setShowSplash(false);
+      document.body.classList.remove("splash-active");
+    }, 350);
   };
 
   return (
     <div
       id="vastire-splash"
       onClick={handleDismiss}
-      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-white select-none cursor-pointer transition-all duration-500 ease-in-out ${
+      className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-white select-none cursor-pointer ${
         isFadingOut
-          ? "opacity-0 pointer-events-none scale-[1.015]"
-          : "opacity-100 scale-100"
+          ? "splash-fade-out"
+          : "splash-fade-in"
       }`}
       aria-label="Vastire App Launch Screen"
     >
       {/* ── Soft Ambient Radial Emerald Glow ── */}
-      <div className="absolute w-[420px] h-[420px] rounded-full bg-emerald-50/70 blur-3xl pointer-events-none -translate-y-4" />
+      <div className="absolute w-[480px] h-[480px] rounded-full bg-emerald-50/80 blur-3xl pointer-events-none -translate-y-6" />
 
       {/* ── Center Stage: Multi-Part Cart Assembly + Typography + Loading Bar ── */}
       <div className="relative flex flex-col items-center justify-center">
 
         {/* Emblem Stage: All parts assemble at the exact coordinate position */}
-        <div className="relative flex items-center justify-center w-32 h-32 animate-icon-assemble-settle">
+        <div className="relative flex items-center justify-center w-36 h-36 animate-icon-assemble-settle">
           {/* Ambient Breathing Halo Glow */}
-          <div className="animate-ambient-halo absolute -inset-4 rounded-3xl bg-emerald-500/15 blur-lg pointer-events-none" />
+          <div className="animate-ambient-halo absolute -inset-5 rounded-3xl bg-emerald-500/18 blur-xl pointer-events-none" />
 
-          {/* Cart Stage Container (512x512 Coordinate Frame) */}
-          <div className="relative w-28 h-28 flex items-center justify-center select-none pointer-events-none">
+          {/* Cart Stage Container (512×512 coordinate frame) */}
+          <div className="relative w-32 h-32 flex items-center justify-center select-none pointer-events-none">
             {/* 1. Trailing Drag Streaks on the Left */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/splash-part-streaks.png"
-              alt="Vastire Cart Drag Streaks"
+              alt=""
               loading="eager"
               decoding="sync"
               className="animate-drag-streaks absolute inset-0 w-full h-full object-contain"
             />
 
-            {/* 2. Cart Body: Drags in with inertia, tilt, and ease-in-out */}
+            {/* 2. Cart Body: Drags in with inertia, tilt, ease-in-out */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/splash-part-body.png"
-              alt="Vastire Cart Body"
+              alt=""
               loading="eager"
               decoding="sync"
               className="animate-drag-cart-body absolute inset-0 w-full h-full object-contain"
@@ -105,17 +146,17 @@ export default function AppLaunchSplash() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/splash-part-accents.png"
-              alt="Vastire Cart Frame & Accents"
+              alt=""
               loading="eager"
               decoding="sync"
               className="animate-drag-accents absolute inset-0 w-full h-full object-contain"
             />
 
-            {/* 4. Two Wheels (Combination of two gray and two green with gap): Roll in directly underneath */}
+            {/* 4. Wheels (gray + green): Roll in from right, underneath */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/splash-part-wheels.png"
-              alt="Vastire Cart Wheels"
+              alt=""
               loading="eager"
               decoding="sync"
               className="animate-drag-wheels absolute inset-0 w-full h-full object-contain"
@@ -124,24 +165,24 @@ export default function AppLaunchSplash() {
         </div>
 
         {/* ── Brand Typography & Smooth Horizontal Progress Bar ── */}
-        <div className="animate-brand-rise-smooth text-center mt-6 flex flex-col items-center space-y-3.5 pointer-events-none">
+        <div className="animate-brand-rise-smooth text-center mt-7 flex flex-col items-center space-y-4 pointer-events-none">
           <span
-            className="block text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-none"
+            className="block text-[2.6rem] sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-none"
             style={{
               fontFamily:
                 "var(--font-poppins), 'VastireBrandFont', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-              letterSpacing: "-0.035em",
+              letterSpacing: "-0.038em",
             }}
           >
             Vastire
           </span>
 
-          {/* ── Precision Horizontal Loading Progress Bar ── */}
-          <div className="w-44 h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
+          {/* Precision Horizontal Loading Progress Bar */}
+          <div className="w-48 h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
             <div className="animate-loading-progress-smooth h-full bg-gradient-to-r from-emerald-600 via-teal-400 to-emerald-500 rounded-full" />
           </div>
 
-          <span className="block text-[11px] sm:text-xs font-bold uppercase tracking-[0.24em] text-emerald-700">
+          <span className="animate-tagline-rise block text-[11px] sm:text-xs font-bold uppercase tracking-[0.26em] text-emerald-700">
             Curated Home Essentials
           </span>
         </div>
