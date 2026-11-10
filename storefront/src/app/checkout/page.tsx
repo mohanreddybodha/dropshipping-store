@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "../../lib/cart";
 import {
-  createCheckoutOrder,
   getUserAuthState,
   getUserSavedAddresses,
   saveUserAddress,
@@ -106,7 +105,7 @@ const PHONE_CODE_OPTIONS: ThemedDropdownOption[] = [
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
-  const { items, totalAmount, totalSavings, clearCart, removeItem } = useCart();
+  const { items, isHydrated, totalAmount, totalSavings, clearCart, removeItem } = useCart();
 
   const isBuyNow = searchParams.get("buyNow") === "true";
   const buyNowVid = searchParams.get("vid");
@@ -139,19 +138,7 @@ function CheckoutContent() {
       ]
     : items.length > 0
     ? items
-    : [
-        {
-          product: { id: 1, pid: "def", slug: "item", title: "Living Essential", hero_image_url: "/placeholder.jpg", category: "Home", variants: [{ vid: "v1", title: "Default", retail_price_1x: 29.99 }] } as any,
-          variant: { vid: "v1", title: "Default", retail_price_1x: 29.99 } as any,
-          tier: "1x" as const,
-          quantity: 1,
-          unitPrice: 29.99,
-          totalPrice: 29.99,
-          savings: 0,
-          selectedSize: undefined,
-          selectedColor: undefined,
-        },
-      ];
+    : [];
 
   // Initial state has zero hardcoded dummy address values
   const [form, setForm] = useState({
@@ -183,6 +170,17 @@ function CheckoutContent() {
   const [isOffline, setIsOffline] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [checkoutOrderNumber] = useState<string>(() => {
+    const ts = Date.now().toString(36).toUpperCase();
+    let rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+    if (typeof window !== "undefined" && window.crypto?.getRandomValues) {
+      const buf = new Uint8Array(3);
+      window.crypto.getRandomValues(buf);
+      rand = Array.from(buf, (b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+    }
+    return `ORD-PP-${ts}-${rand}`;
+  });
+
   const [confirmedOrder, setConfirmedOrder] = useState<{
     orderNumber: string;
     amount: number;
@@ -622,7 +620,7 @@ function CheckoutContent() {
   };
 
   const handlePayPalSuccess = (capturedOrder: any) => {
-    const orderId = capturedOrder?.internal_order_number || `ORD-PP-${Date.now().toString().slice(-6)}`;
+    const orderId = capturedOrder?.internal_order_number || checkoutOrderNumber;
     const trackingNum = capturedOrder?.tracking_number || null;
 
     const customerEmail =
@@ -656,8 +654,8 @@ function CheckoutContent() {
         internal_order_number: orderId,
         customer_email: customerEmail,
         customer_phone: form.phone,
-        status: "ORDER_PLACED",
-        total_retail: finalAmount,
+        status: capturedOrder?.status || "ORDER_PLACED",
+        total_retail: Number(capturedOrder?.total_retail) || finalAmount,
         carrier_name: "USPS",
         tracking_number: trackingNum,
         shipping_name: customerName,
@@ -716,7 +714,7 @@ function CheckoutContent() {
 
     setConfirmedOrder({
       orderNumber: orderId,
-      amount: finalAmount,
+      amount: Number(capturedOrder?.total_retail) || finalAmount,
       shippingSla: "3–5 Business Days",
       items: checkoutItems,
     });
@@ -735,160 +733,34 @@ function CheckoutContent() {
     }
   };
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setErrorMessage(null);
+  if (!confirmedOrder && !isHydrated) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center gap-2 text-xs text-slate-500">
+        <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+        <span>Loading secure checkout...</span>
+      </div>
+    );
+  }
 
-    if (!validateDeliveryDetails()) {
-      return;
-    }
-
-    try {
-      const orderId = `ORD-STORE-${Date.now().toString().slice(-6)}`;
-
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const customerEmail =
-        form.email.trim().toLowerCase() ||
-        auth.currentUser?.email?.toLowerCase() ||
-        "";
-
-      const customerName =
-        form.name.trim() ||
-        auth.currentUser?.displayName ||
-        "Valued Customer";
-
-      const orderPayloadItems = checkoutItems.map((item) => ({
-        title: item.product.title,
-        product_title: item.product.title,
-        pid: item.product.pid,
-        sku: item.variant?.sku,
-        vid: item.variant?.vid,
-        variant_title: item.variant?.variant_name || item.selectedSize || "Standard",
-        variant_sku: item.variant?.sku || "",
-        slug: item.product.slug,
-        image_url: item.variant?.image_url || item.product.hero_image_url || item.product.images?.[0] || "",
-        quantity: item.quantity,
-        price: item.unitPrice,
-        unit_price: item.unitPrice,
-        size: item.selectedSize,
-        color: item.selectedColor,
-        status: "ORDER_PLACED",
-      }));
-
-      const trackingNumber: string | undefined = undefined;
-
-      // 1. Persist order to PostgreSQL / SQLite database for cross-device synchronization
-      await createCheckoutOrder({
-        internal_order_number: orderId,
-        customer_name: customerName,
-        customer_email: customerEmail,
-        customer_phone: form.phone,
-        shipping_address: form.address1,
-        shipping_city: form.city,
-        shipping_province: form.province,
-        shipping_county: form.county.trim() || undefined,
-        shipping_zip: form.zip_code,
-        shipping_country: "US",
-        total_retail: finalAmount,
-        carrier_name: "USPS",
-        tracking_number: trackingNumber,
-        items: orderPayloadItems,
-        firebase_uid: auth.currentUser?.uid,
-      });
-
-      // 2. Persist order locally for instant tracking in /profile with full product metadata
-      try {
-        const orderRecord = {
-          id: Date.now(),
-          internal_order_number: orderId,
-          customer_email: customerEmail,
-          customer_phone: form.phone,
-          status: "ORDER_PLACED",
-          total_retail: finalAmount,
-          carrier_name: "USPS",
-          tracking_number: trackingNumber,
-          shipping_name: customerName,
-          shipping_address: form.address1,
-          shipping_city: form.city,
-          shipping_province: form.province,
-          shipping_county: form.county.trim() || undefined,
-          shipping_zip: form.zip_code,
-          shipping_country: "US",
-          created_at: new Date().toISOString(),
-          items: orderPayloadItems,
-        };
-
-        const existingRaw = localStorage.getItem("customer_orders");
-        const existing = existingRaw ? JSON.parse(existingRaw) : [];
-        localStorage.setItem("customer_orders", JSON.stringify([orderRecord, ...existing]));
-        localStorage.setItem("customer_email", customerEmail);
-        localStorage.setItem("saved_shipping_address", JSON.stringify(form));
-        localStorage.removeItem("checkout_draft_address");
-      } catch {
-        // Storage write error ignored
-      }
-
-      if (customerEmail && form.address1.trim() && form.city.trim() && form.province && form.zip_code.trim()) {
-        if (selectedAddressId !== "new") {
-          const existing = savedAddresses.find((a) => a.id === selectedAddressId);
-          saveUserAddress({
-            id: Number(selectedAddressId),
-            email: customerEmail,
-            label: existing?.label || "Home",
-            recipient_name: customerName,
-            street_address: form.address1.trim(),
-            city: form.city.trim(),
-            province: form.province.trim(),
-            county: form.county.trim() || undefined,
-            zip_code: form.zip_code.trim(),
-            phone: form.phone.trim(),
-            is_default: existing?.is_default ?? false,
-          }).catch(() => {});
-        } else {
-          const finalLabel = getEffectiveLabelForNew(saveAddressLabel, customAddressLabel, savedAddresses);
-          saveUserAddress({
-            email: customerEmail,
-            label: finalLabel,
-            recipient_name: customerName,
-            street_address: form.address1.trim(),
-            city: form.city.trim(),
-            province: form.province.trim(),
-            county: form.county.trim() || undefined,
-            zip_code: form.zip_code.trim(),
-            phone: form.phone.trim(),
-            is_default: makeDefaultAddress,
-          }).catch(() => {});
-        }
-      }
-
-      setConfirmedOrder({
-        orderNumber: orderId,
-        amount: finalAmount,
-        shippingSla: "3–5 Business Days",
-        items: checkoutItems,
-      });
-      setCelebrationProgress(0);
-      setIsCelebrating(true);
-
-      if (singleCartItem) {
-        removeItem(
-          singleCartItem.variant.vid,
-          singleCartItem.tier,
-          singleCartItem.selectedSize,
-          singleCartItem.selectedColor
-        );
-      } else {
-        clearCart();
-      }
-    } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Checkout error occurred.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  if (!confirmedOrder && checkoutItems.length === 0) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-16 text-center space-y-4">
+        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto text-slate-400">
+          <Package className="w-7 h-7" />
+        </div>
+        <h1 className="text-xl font-black text-slate-900">Your checkout bag is empty</h1>
+        <p className="text-xs text-slate-500">
+          Add a product to your cart before proceeding to payment.
+        </p>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20 transition"
+        >
+          <ArrowLeft className="w-4 h-4" /> Browse Catalog
+        </Link>
+      </div>
+    );
+  }
 
   if (confirmedOrder && isCelebrating) {
     return (
@@ -1237,7 +1109,7 @@ function CheckoutContent() {
 
       {/* BOTTOM: SHIPPING ADDRESS & PAYMENT FORM */}
       <form
-        onSubmit={handlePlaceOrder}
+        onSubmit={(e) => e.preventDefault()}
         className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-6 space-y-5 shadow-sm"
       >
         <div className="flex items-center justify-between">
@@ -1735,7 +1607,7 @@ function CheckoutContent() {
 
             <PayPalButton
               amount={finalAmount}
-              internalOrderNumber={`ORD-PP-${Date.now().toString().slice(-6)}`}
+              internalOrderNumber={checkoutOrderNumber}
               customerDetails={{
                 name: form.name.trim() || auth.currentUser?.displayName || "Valued Customer",
                 email:

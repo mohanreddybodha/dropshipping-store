@@ -77,31 +77,52 @@ export default function PayPalButton({
     };
   });
 
-  // Fallback PayPal Client ID ensures zero checkout failure while server environment warms up
-  const DEFAULT_PAYPAL_CLIENT_ID =
-    "BAAqUm5t-QcIFl9Plo_ude3L64SWLKMv0w1la_Dms7mgTm4N9BzAfuPutC4bed1pPECJMRv-yAIsj6v6Ys";
+  // C1 + H4 FIX: clientId starts as null — SDK is NOT loaded until the server confirms the
+  // authoritative client ID via /api/orders/paypal/config. This prevents the race condition
+  // where the SDK script was previously injected with a hardcoded sandbox key before the
+  // config fetch resolved (making the sandbox key the effective SDK client on cold load).
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [configLoading, setConfigLoading] = useState(true);
 
-  const [clientId, setClientId] = useState<string>(
-    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || DEFAULT_PAYPAL_CLIENT_ID
-  );
-
-  // Dynamically resolve authoritative client ID from server-side configuration
+  // Step 0: Fetch authoritative client ID from server BEFORE loading SDK
   useEffect(() => {
+    let cancelled = false;
+    setConfigLoading(true);
+
     fetch("/api/orders/paypal/config")
-      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (!res.ok) throw new Error(`Config fetch failed: ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
-        if (data?.clientId && typeof data.clientId === "string" && data.clientId.trim().length > 0) {
+        if (cancelled) return;
+        if (data?.clientId && typeof data.clientId === "string" && data.clientId.trim().length > 10) {
           setClientId(data.clientId.trim());
           setLoadError(null);
+        } else {
+          setLoadError("Payment gateway is not available. Please contact support.");
+          onError("Payment gateway configuration unavailable.");
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) {
+          setLoadError("Failed to connect to payment gateway. Please refresh and retry.");
+          onError("Payment gateway configuration could not be loaded.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setConfigLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Step 1: Load SDK script once
+  // Step 1: Load SDK script once — only after clientId is confirmed from server
   useEffect(() => {
+    if (!clientId) return; // Wait for config fetch to complete
+
     let isMounted = true;
-    const activeId = clientId || DEFAULT_PAYPAL_CLIENT_ID;
 
     if (window.paypal) {
       setSdkReady(true);
@@ -114,15 +135,20 @@ export default function PayPalButton({
       existing.addEventListener("load", () => {
         if (isMounted) setSdkReady(true);
       });
+      // If already loaded but window.paypal not set yet, attach to onload
+      if (existing.getAttribute("data-loaded") === "true") {
+        if (isMounted) setSdkReady(true);
+      }
       return;
     }
 
     const script = document.createElement("script");
     script.id = scriptId;
-    script.src = `https://www.paypal.com/sdk/js?client-id=${activeId}&currency=USD&intent=capture&components=buttons`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=USD&intent=capture&components=buttons`;
     script.async = true;
 
     script.onload = () => {
+      script.setAttribute("data-loaded", "true");
       if (isMounted) setSdkReady(true);
     };
 
@@ -209,14 +235,19 @@ export default function PayPalButton({
             let captured = null;
             let lastError = null;
 
-            // Self-Healing Retry Loop (Resilient against momentary cellular/Wi-Fi drops)
+            // Self-Healing Retry Loop: retries transient network/5xx/429 glitches,
+            // but stops immediately on deterministic 4xx client/validation rejections.
             for (let attempt = 1; attempt <= 3; attempt++) {
               try {
                 captured = await capturePayPalOrder(capturePayload);
                 if (captured) break;
               } catch (err: any) {
                 lastError = err;
-                console.warn(`[PayPal Capture] Attempt ${attempt} failed:`, err.message);
+                const status = Number(err?.status || 0);
+                console.warn(`[PayPal Capture] Attempt ${attempt} failed (${status || "network"}):`, err.message);
+                if (status >= 400 && status < 500 && status !== 408 && status !== 429) {
+                  break;
+                }
                 if (attempt < 3) {
                   await new Promise((r) => setTimeout(r, 1200 * attempt));
                 }
@@ -271,9 +302,12 @@ export default function PayPalButton({
     );
   }
 
+  // Show loading state while config is being fetched — prevents SDK loading with wrong client ID
+  const isLoading = configLoading || !sdkReady;
+
   return (
     <div className="w-full space-y-2">
-      {!sdkReady && (
+      {isLoading && (
         <div className="py-6 flex items-center justify-center gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-xl">
           <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
           <span>Connecting securely to PayPal...</span>

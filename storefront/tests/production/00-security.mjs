@@ -45,7 +45,7 @@ export async function runSecurityTests(base = "http://localhost:3009") {
     assert(false, "P0-1: Direct checkout block exception", err.message);
   }
 
-  // TEST 2: P0-2 Server-Side Authoritative Pricing
+  // TEST 2: P0-2 Server-Side Authoritative Pricing & PayPal Hardening
   try {
     const res = await fetch(`${base}/api/orders/paypal/create`, {
       method: "POST",
@@ -63,6 +63,122 @@ export async function runSecurityTests(base = "http://localhost:3009") {
     );
   } catch (err) {
     assert(false, "P0-2: PayPal validation exception", err.message);
+  }
+
+  try {
+    const res = await fetch(`${base}/api/orders/paypal/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: 0.01,
+        items: [{ vid: "SPOOFED_FAKE_VID_99999", unit_price: 0.01, price: 0.01, quantity: 1 }],
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    assert(
+      res.status === 400 && Boolean(data.error),
+      "P0-2a: PayPal create rejects unknown variant & client unit_price spoofing (HTTP 400)",
+      `Status: ${res.status}, body: ${JSON.stringify(data)}`
+    );
+  } catch (err) {
+    assert(false, "P0-2a: Unknown VID rejection exception", err.message);
+  }
+
+  try {
+    const res = await fetch(`${base}/api/orders/paypal/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: [{ vid: "1902560845164343298", tier: "12x", quantity: 1.5 }],
+      }),
+    });
+    assert(
+      res.status === 400,
+      "P0-2b: PayPal create rejects float quantity and invalid bundle tier (HTTP 400)",
+      `Status: ${res.status}`
+    );
+  } catch (err) {
+    assert(false, "P0-2b: Float qty / tier validation exception", err.message);
+  }
+
+  try {
+    const res = await fetch(`${base}/api/orders/paypal/config`);
+    const cc = (res.headers.get("cache-control") || "").toLowerCase();
+    const data = await res.json().catch(() => ({}));
+    assert(
+      cc.includes("no-store") && !("secret" in data) && (res.status === 200 || res.status === 503),
+      "P0-2c: PayPal config disables CDN caching (no-store) and never returns secrets",
+      `Status: ${res.status}, Cache-Control: ${cc}`
+    );
+  } catch (err) {
+    assert(false, "P0-2c: PayPal config check exception", err.message);
+  }
+
+  try {
+    const res = await fetch(`${base}/api/orders/paypal/capture`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        paypal_order_id: "PAYPALORDER12345",
+        customer_name: "Test User",
+        customer_email: "test@example.com",
+        customer_phone: "(213) 555-0199",
+        shipping_address: "123 Main St",
+        shipping_city: "Los Angeles",
+        shipping_province: "CA",
+        shipping_zip: "90001",
+        shipping_country: "CA",
+        items: [{ vid: "1902560845164343298", quantity: 1 }],
+      }),
+    });
+    assert(
+      res.status === 400,
+      "P0-2d: PayPal capture blocks non-US shipping country BEFORE capture (HTTP 400)",
+      `Status: ${res.status}`
+    );
+  } catch (err) {
+    assert(false, "P0-2d: Capture shipping country gate exception", err.message);
+  }
+
+  try {
+    const res = await fetch(`${base}/api/orders/paypal/capture`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        paypal_order_id: "PAYPALORDER12345",
+        customer_name: "Test User",
+        customer_email: "test@example.com",
+        customer_phone: "(213) 555-0199",
+        shipping_address: "123 Main St",
+        shipping_city: "Los Angeles",
+        shipping_province: "CA",
+        shipping_zip: "90001",
+        shipping_country: "US",
+        items: [{ vid: "SPOOFED_FAKE_VID_99999", unit_price: 0.01, quantity: 1 }],
+      }),
+    });
+    assert(
+      res.status === 400,
+      "P0-2e: PayPal capture blocks spoofed/unknown cart items BEFORE capture (HTTP 400)",
+      `Status: ${res.status}`
+    );
+  } catch (err) {
+    assert(false, "P0-2e: Capture cart item validation exception", err.message);
+  }
+
+  try {
+    const res = await fetch(`${base}/api/orders/paypal/webhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event_type: "PAYMENT.CAPTURE.COMPLETED" }),
+    });
+    assert(
+      res.status === 401 || res.status === 503,
+      "P0-2f: PayPal webhook rejects unsigned/unconfigured requests (HTTP 401/503)",
+      `Status: ${res.status}`
+    );
+  } catch (err) {
+    assert(false, "P0-2f: PayPal webhook rejection exception", err.message);
   }
 
   // TEST 3: P0-3 PII Dump & Margin Protection

@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { verifyAdminApiKey } from "@/lib/adminAuth";
+import {
+  US_STATE_ZIP_PREFIXES,
+  validateUsStreetAddress,
+  validateUsCity,
+  validateUsZip,
+  validateUsPhone,
+} from "@/lib/usAddressValidation";
 
 export const dynamic = "force-dynamic";
 
 export async function PATCH(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+    }
+
     const {
       orderNumber,
       shipping_name,
@@ -25,13 +36,49 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Validate US Zip (5 digits)
-    const cleanZip = String(shipping_zip).trim();
-    if (!/^\d{5}(-\d{4})?$/.test(cleanZip)) {
+    const cleanProvince = String(shipping_province).trim().toUpperCase();
+    if (!US_STATE_ZIP_PREFIXES[cleanProvince] || cleanProvince === "AK" || cleanProvince === "HI") {
       return NextResponse.json(
-        { error: "Invalid US ZIP code. Must be a 5-digit postal code." },
+        { error: "Delivery state must be within the 48 Contiguous United States." },
         { status: 400 }
       );
+    }
+
+    const streetVal = validateUsStreetAddress(String(shipping_address));
+    if (!streetVal.isValid) {
+      return NextResponse.json(
+        { error: streetVal.error || "Invalid US street address." },
+        { status: 400 }
+      );
+    }
+
+    const cityVal = validateUsCity(String(shipping_city));
+    if (!cityVal.isValid) {
+      return NextResponse.json(
+        { error: cityVal.error || "Invalid US city." },
+        { status: 400 }
+      );
+    }
+
+    const zipVal = validateUsZip(String(shipping_zip), cleanProvince);
+    if (!zipVal.isValid || !zipVal.formatted) {
+      return NextResponse.json(
+        { error: zipVal.error || "Invalid US ZIP code matching the selected state." },
+        { status: 400 }
+      );
+    }
+    const cleanZip = zipVal.formatted;
+
+    let cleanPhone: string | null = null;
+    if (shipping_phone && String(shipping_phone).trim()) {
+      const phoneVal = validateUsPhone(String(shipping_phone));
+      if (!phoneVal.isValid || !phoneVal.formatted) {
+        return NextResponse.json(
+          { error: phoneVal.error || "Invalid 10-digit US phone number." },
+          { status: 400 }
+        );
+      }
+      cleanPhone = phoneVal.formatted;
     }
 
     // Fail-fast Zero-Trust Authorization check: Prevent BOLA / IDOR address hijacking
@@ -52,9 +99,9 @@ export async function PATCH(req: NextRequest) {
 
     // 1. Fetch order to verify existence and check server-authoritative 30-minute grace period
     const rows = await sql`
-      SELECT id, internal_order_number, status, created_at, customer_email
+      SELECT id, internal_order_number, cj_order_id, status, created_at, customer_email
       FROM orders
-      WHERE internal_order_number = ${orderNumber}
+      WHERE internal_order_number = ${String(orderNumber).trim()}
       LIMIT 1
     `;
 
@@ -69,7 +116,7 @@ export async function PATCH(req: NextRequest) {
     const orderCustomerEmail = (order.customer_email || "").trim().toLowerCase();
 
     if (!isAdmin) {
-      if (orderCustomerEmail && providedCustomerEmail !== orderCustomerEmail) {
+      if (!orderCustomerEmail || providedCustomerEmail !== orderCustomerEmail) {
         return NextResponse.json(
           {
             error: "FORBIDDEN",
@@ -80,11 +127,11 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // 2. Server-Side 30-Minute Grace Window Enforcement
+    // 2. Server-Side 30-Minute Grace Window Enforcement (fail-closed on NaN)
     const orderCreatedAt = new Date(order.created_at).getTime();
     const elapsedMinutes = (Date.now() - orderCreatedAt) / (1000 * 60);
 
-    if (elapsedMinutes > 30) {
+    if (!Number.isFinite(orderCreatedAt) || elapsedMinutes > 30) {
       return NextResponse.json(
         {
           error:
@@ -94,8 +141,8 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Disallow address changes once already in progress or shipped
-    if (order.status !== "ORDER_PLACED" && order.status !== "PAYMENT_CAPTURED") {
+    // Disallow address changes once dispatched to CJ or already in progress/shipped
+    if (order.cj_order_id || (order.status !== "ORDER_PLACED" && order.status !== "PAYMENT_CAPTURED")) {
       return NextResponse.json(
         {
           error: `Order cannot be modified in status "${order.status}". Address is locked.`,
@@ -108,11 +155,11 @@ export async function PATCH(req: NextRequest) {
     await sql`
       UPDATE orders SET
         shipping_name = ${shipping_name?.trim() || null},
-        shipping_address = ${shipping_address.trim()},
-        shipping_city = ${shipping_city.trim()},
-        shipping_province = ${shipping_province.trim().toUpperCase()},
+        shipping_address = ${String(shipping_address).trim()},
+        shipping_city = ${String(shipping_city).trim()},
+        shipping_province = ${cleanProvince},
         shipping_zip = ${cleanZip},
-        customer_phone = ${shipping_phone ? shipping_phone.trim() : null},
+        customer_phone = COALESCE(${cleanPhone}, customer_phone),
         updated_at = NOW()
       WHERE id = ${order.id}
     `;
@@ -121,9 +168,9 @@ export async function PATCH(req: NextRequest) {
       success: true,
       message: "Delivery address updated successfully.",
       orderNumber: order.internal_order_number,
-      shipping_address: shipping_address.trim(),
-      shipping_city: shipping_city.trim(),
-      shipping_province: shipping_province.trim().toUpperCase(),
+      shipping_address: String(shipping_address).trim(),
+      shipping_city: String(shipping_city).trim(),
+      shipping_province: cleanProvince,
       shipping_zip: cleanZip,
     });
   } catch (err: any) {

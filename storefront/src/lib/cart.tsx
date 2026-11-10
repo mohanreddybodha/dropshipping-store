@@ -249,10 +249,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           i.selectedSize === selectedSize &&
           i.selectedColor === selectedColor
         ) {
-          const newTotal = +(i.unitPrice * quantity).toFixed(2);
+          const price1x = Number(i.variant?.retail_price_1x) || i.unitPrice;
+          const bundle2 = Number(i.variant?.bundle_2_price || 0);
+          const bundle3 = Number(i.variant?.bundle_3_price || 0);
+
+          let unitPrice = +price1x.toFixed(2);
+          let newTotal = +(unitPrice * quantity).toFixed(2);
+
+          if (tier === "3x" && quantity >= 3 && bundle3 > 0) {
+            unitPrice = +(bundle3 / 3).toFixed(2);
+            newTotal = quantity === 3 ? +bundle3.toFixed(2) : +(unitPrice * quantity).toFixed(2);
+          } else if ((tier === "2x" || (tier === "3x" && quantity === 2)) && quantity >= 2 && bundle2 > 0) {
+            unitPrice = +(bundle2 / 2).toFixed(2);
+            newTotal = quantity === 2 ? +bundle2.toFixed(2) : +(unitPrice * quantity).toFixed(2);
+          }
+
           return {
             ...i,
             quantity,
+            unitPrice,
             totalPrice: newTotal,
           };
         }

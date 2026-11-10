@@ -396,6 +396,17 @@ export async function createCheckoutOrder(payload: {
   }
 }
 
+export class PayPalRequestError extends Error {
+  status: number;
+  code?: string;
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = "PayPalRequestError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
 export async function createPayPalOrder(
   amount: number,
   internalOrderNumber?: string,
@@ -414,7 +425,11 @@ export async function createPayPalOrder(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || err.error || "Failed to create PayPal payment order.");
+    throw new PayPalRequestError(
+      err.detail || err.error || "Failed to create PayPal payment order.",
+      res.status,
+      err.code
+    );
   }
   return await res.json();
 }
@@ -442,7 +457,11 @@ export async function capturePayPalOrder(payload: {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || err.error || "PayPal payment capture failed.");
+    throw new PayPalRequestError(
+      err.detail || err.error || "PayPal payment capture failed.",
+      res.status,
+      err.code
+    );
   }
   return await res.json();
 }
