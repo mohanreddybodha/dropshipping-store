@@ -36,6 +36,18 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/__/auth/:path*",
+        destination: "https://domesticlab-us-store.firebaseapp.com/__/auth/:path*",
+      },
+      {
+        source: "/__/firebase/:path*",
+        destination: "https://domesticlab-us-store.firebaseapp.com/__/firebase/:path*",
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

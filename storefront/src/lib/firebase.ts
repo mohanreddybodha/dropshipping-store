@@ -8,12 +8,30 @@ import {
   User as FirebaseUser,
 } from "firebase/auth";
 
+const DEFAULT_AUTH_DOMAIN = "domesticlab-us-store.firebaseapp.com";
+const CUSTOM_AUTH_HOSTS = new Set(["vastire.com", "www.vastire.com"]);
+
+/**
+ * Use the live custom domain on production so Google OAuth shows Vastire's own domain
+ * and keeps auth storage first-party via Next.js `/__/auth/*` rewrites, while keeping
+ * `firebaseapp.com` on localhost and Vercel preview deployments.
+ */
+function resolveAuthDomain(): string {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname.toLowerCase();
+    if (CUSTOM_AUTH_HOSTS.has(host)) {
+      return host;
+    }
+  }
+  return DEFAULT_AUTH_DOMAIN;
+}
+
 const firebaseConfig = {
   projectId: "domesticlab-us-store",
   appId: "1:880784030676:web:65e254e020faddbcf97441",
   storageBucket: "domesticlab-us-store.firebasestorage.app",
   apiKey: "AIzaSyAIqT64qFQ9rKSsEb0_oRO0jYWKspmS8Qo",
-  authDomain: "domesticlab-us-store.firebaseapp.com",
+  authDomain: resolveAuthDomain(),
   messagingSenderId: "880784030676",
   projectNumber: "880784030676",
 };
