@@ -609,7 +609,7 @@ function OrdersContent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-4 pb-32 sm:pb-16 space-y-4">
+    <div className="w-full max-w-5xl 2xl:max-w-6xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-4 pb-32 sm:pb-16 space-y-4">
       {/* ── HEADER (Back button before icon, no breadcrumbs, no description) ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <div className="flex items-center gap-2.5">

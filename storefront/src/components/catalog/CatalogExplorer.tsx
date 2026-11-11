@@ -435,7 +435,7 @@ export default function CatalogExplorer({
         </div>
       )}
 
-      {/* ── Product Grid: Zero empty space, direct and fast flow ── */}
+      {/* ── Product Grid: Dynamic responsive columns: 2 (mobile), 3 (tablet), 4 (desktop), 5 (2xl 1536px), 6 (ultra-wide 1920px) ── */}
       {visibleProducts.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-3">
           <p className="text-slate-500 text-sm font-medium">No products match your selected filters.</p>
@@ -447,7 +447,7 @@ export default function CatalogExplorer({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 min-[1920px]:grid-cols-6 gap-2.5 sm:gap-4 lg:gap-5">
           {visibleProducts.map((product) => (
             <ProductCard key={product.pid} product={product} />
           ))}

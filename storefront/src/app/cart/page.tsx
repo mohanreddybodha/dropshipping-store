@@ -100,7 +100,7 @@ export default function CartPage() {
 
   if (!mounted) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8 sm:py-12">
         <div className="h-8 w-48 bg-slate-200 rounded-xl animate-pulse mb-6" />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           <div className="lg:col-span-8 space-y-4">
@@ -116,7 +116,7 @@ export default function CartPage() {
   // ── EMPTY CART VIEW ──
   if (items.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5 sm:space-y-6">
+      <div className="w-full max-w-[1920px] mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5 sm:space-y-6">
 
 
         {/* Centered Empty Cart Card */}
@@ -129,7 +129,7 @@ export default function CartPage() {
               Your Cart is Empty
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
-              Discover domestic essentials dispatched directly from US warehouses with guaranteed 3–5 day delivery.
+              Discover domestic essentials dispatched directly from US warehouses with fast 3–5 day tracked delivery.
             </p>
           </div>
           <div className="pt-1">
@@ -176,7 +176,7 @@ export default function CartPage() {
 
   // ── ACTIVE CART VIEW ──
   return (
-    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5 sm:space-y-6">
+    <div className="w-full max-w-[1920px] mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5 sm:space-y-6">
       {/* Cart Title Bar */}
       <div className="flex items-center justify-between border-b border-slate-200 pb-3">
         <div>

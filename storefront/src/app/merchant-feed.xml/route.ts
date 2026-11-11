@@ -42,7 +42,8 @@ function buildItemDescription(product: Product): string {
     product.title
   );
   const overview = stripHtmlTags(cleanHtml)
-    .replace(/30-day money-back guarantee/gi, "30-day defect replacement & return support")
+    .replace(/30-day money-back guarantee/gi, "7-day defect replacement support")
+    .replace(/30-day/gi, "7-day")
     .trim();
 
   const featureBullets = (product.features || [])

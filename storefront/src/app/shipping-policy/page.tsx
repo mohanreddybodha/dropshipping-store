@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function ShippingPolicyPage() {
   return (
     <div className="min-h-screen bg-slate-50/50 py-6 sm:py-10 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-20 md:pb-10">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-8 space-y-6 sm:space-y-8">
+      <div className="w-full max-w-5xl 2xl:max-w-6xl mx-auto bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="border-b border-slate-100 pb-5">
           <NavigationBackButton label="Back" className="mb-3" />

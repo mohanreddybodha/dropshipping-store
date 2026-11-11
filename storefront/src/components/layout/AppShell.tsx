@@ -88,8 +88,8 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Global Toast Notifications */}
       <ToastContainer />
 
-      {/* Top Header: Rendered on home and collection pages */}
-      {isBrowseSurface && <Navbar />}
+      {/* Top Header: Always visible across all storefront pages (excluding distraction-free checkout) */}
+      <Navbar />
 
       {/* Main Content */}
       <main className="flex-1">{children}</main>

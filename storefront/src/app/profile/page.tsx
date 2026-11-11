@@ -410,7 +410,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 sm:pb-20 md:pb-10 space-y-4 sm:space-y-5">
+    <div className="w-full max-w-5xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 sm:pb-20 md:pb-10 space-y-4 sm:space-y-5">
       {/* ── TOP HEADER (Clean back navigation + title, zero top-right button) ── */}
       <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
         <NavigationBackButton />
@@ -916,7 +916,7 @@ export default function ProfilePage() {
                   <FaqAccordionItem
                     defaultOpen={false}
                     question="What is your return & refund policy?"
-                    answer="All purchases are backed by our 30-Day Customer Satisfaction Guarantee. If an item arrives damaged, defective, or not as described, you have 30 calendar days from delivery to receive a free replacement or a 100% refund."
+                    answer="We offer a 7-day return reporting window exclusively for items that arrive defective, damaged in transit, or mismatched from what you ordered. Because orders are fulfilled directly by domestic fulfillment centers, we do not accept returns or refunds for buyer remorse, change of mind, personal dissatisfaction, or customer sizing mistakes. Eligible claims must be submitted to support@vastire.com with photo evidence within 7 calendar days of delivery for supplier verification and replacement or refund."
                   />
                   <FaqAccordionItem
                     defaultOpen={false}
@@ -964,35 +964,42 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* 4. REFUND POLICY (Zero duplicate text or repeated cards) */}
+              {/* 4. REFUND POLICY */}
               {activeModal === "refund" && (
                 <div className="space-y-3.5 text-xs sm:text-sm">
-                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-1">
-                    <p className="font-bold text-sm sm:text-base text-emerald-900">30-Day Customer Satisfaction Guarantee</p>
-                    <p className="text-emerald-800 leading-relaxed">
-                      If your item arrives defective, damaged, or not as described, you have 30 calendar days from confirmed delivery to request a 100% refund or an immediate free replacement.
+                  <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-950 space-y-1">
+                    <p className="font-bold text-sm sm:text-base text-amber-900">7-Day Defective Item Return Policy</p>
+                    <p className="text-amber-800 leading-relaxed">
+                      We offer a 7-day reporting window from delivery strictly for defective, damaged, or incorrect items. We do not accept returns or refunds for buyer remorse, change of mind, or customer sizing mistakes.
                     </p>
                   </div>
 
                   <div className="space-y-2.5 text-slate-600">
                     <div>
-                      <h4 className="font-bold text-slate-900">Transit Damage Protection</h4>
+                      <h4 className="font-bold text-slate-900">Defective & Damaged Items Only</h4>
                       <p className="leading-relaxed">
-                        For items damaged during shipping, email <strong>support@vastire.com</strong> with 1–2 photos. You do not pay return shipping for transit defects.
+                        If an item arrives damaged, defective, or mismatched from what you ordered, email <strong>support@vastire.com</strong> within 7 calendar days of delivery with photos of the item and shipping label. Once verified with our supplier, a replacement or refund will be issued.
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-bold text-slate-900">No Returns for Sizing or Decision Changes</h4>
+                      <p className="leading-relaxed">
+                        Please review sizing charts and product details carefully before placing your order. We cannot accept returns, exchanges, or refunds for customer size selection errors or change of mind.
                       </p>
                     </div>
 
                     <div>
                       <h4 className="font-bold text-slate-900">30-Minute Cancellation Window</h4>
                       <p className="leading-relaxed">
-                        Cancellations made within 30 minutes of checkout receive an immediate 100% refund to the original payment method.
+                        Orders can be canceled directly from the Orders tab within 30 minutes of purchase for an instant 100% refund before warehouse processing begins.
                       </p>
                     </div>
 
                     <div>
                       <h4 className="font-bold text-slate-900">Refund Processing</h4>
                       <p className="leading-relaxed">
-                        Approved refunds are returned to your original payment method (PayPal / Card) within 3 to 5 business days.
+                        Approved refunds are returned to your original payment method (PayPal / Card) within 3 to 5 business days once approved by our supplier claims team.
                       </p>
                     </div>
                   </div>

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-slate-50/50 py-6 sm:py-10 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-20 md:pb-10">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-8 space-y-6 sm:space-y-8">
+      <div className="w-full max-w-5xl 2xl:max-w-6xl mx-auto bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 sm:p-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="border-b border-slate-100 pb-5">
           <NavigationBackButton label="Back" className="mb-3" />
@@ -72,9 +72,9 @@ export default function TermsOfServicePage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-bold text-slate-900">5. 30-Day Money-Back Guarantee & Returns</h2>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">5. Order Cancellations, Returns & Defective Item Policy</h2>
             <p>
-              All purchases are backed by our 30-Day Customer Satisfaction Guarantee. Returns must comply with our official Refund & Return Policy. Items arriving with transit damage or verified manufacturing defects are replaced or refunded at zero cost to the customer.
+              Customers may cancel an order for an immediate 100% refund within the 30-minute post-checkout grace window before warehouse fulfillment locks. Once dispatched, returns are accepted exclusively for verified manufacturing defects, carrier transit damage, or incorrect items delivered, reported with photo evidence within 7 calendar days of confirmed carrier delivery. Vastire does not accept returns, exchanges, or refunds for buyer remorse, change of mind, personal preference, or customer ordering mistakes (including incorrect size or variant selection). All claims are subject to verification under our supplier fulfillment claims protocol (CJ Dropshipping warehouse review). Approved claims receive a replacement or full refund to the original payment method.
             </p>
           </section>
 

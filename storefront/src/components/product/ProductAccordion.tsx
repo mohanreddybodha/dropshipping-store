@@ -209,15 +209,26 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
                 <div className="space-y-2">
                   {product.faq_schema
                     .filter((faq) => faq?.question && faq?.answer)
-                    .map((faq, idx) => (
-                      <div
-                        key={idx}
-                        className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-0.5"
-                      >
-                        <h4 className="text-[11px] font-bold text-slate-900">{faq.question}</h4>
-                        <p className="text-[11px] text-slate-600 leading-relaxed">{faq.answer}</p>
-                      </div>
-                    ))}
+                    .map((faq, idx) => {
+                      let answer = faq.answer;
+                      if (
+                        faq.question.toLowerCase().includes("return") ||
+                        answer.toLowerCase().includes("30 day") ||
+                        answer.toLowerCase().includes("money-back")
+                      ) {
+                        answer =
+                          "We offer a 7-day return reporting window exclusively for items that arrive defective, damaged in transit, or mismatched from what you ordered. Due to automated domestic warehouse fulfillment, we cannot accept returns or refunds for buyer remorse, change of mind, or customer sizing mistakes. Notice must be submitted with photo evidence to support@vastire.com within 7 calendar days of delivery for supplier verification and resolution.";
+                      }
+                      return (
+                        <div
+                          key={idx}
+                          className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-0.5"
+                        >
+                          <h4 className="text-[11px] font-bold text-slate-900">{faq.question}</h4>
+                          <p className="text-[11px] text-slate-600 leading-relaxed">{answer}</p>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             )}

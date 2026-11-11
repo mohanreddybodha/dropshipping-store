@@ -43,6 +43,7 @@ export default function Navbar() {
   const [watchlistCount, setWatchlistCount] = useState(0);
   const [mounted, setMounted] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
 
   // Client hydration guard & read initial search param + Watchlist count from localStorage
   useEffect(() => {
@@ -60,9 +61,30 @@ export default function Navbar() {
     }
   }, []);
 
-  // Lazy-load live extended catalog ONLY when search overlay is opened (zero initial network overhead)
+  // Listen to cross-component watchlist sync events
   useEffect(() => {
-    if (!isSearchExpanded) return;
+    const handleWatchlistUpdate = () => {
+      try {
+        const raw = localStorage.getItem("watchlist_items");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) setWatchlistCount(parsed.length);
+        } else {
+          setWatchlistCount(0);
+        }
+      } catch {}
+    };
+    window.addEventListener("watchlist_updated", handleWatchlistUpdate);
+    window.addEventListener("storage", handleWatchlistUpdate);
+    return () => {
+      window.removeEventListener("watchlist_updated", handleWatchlistUpdate);
+      window.removeEventListener("storage", handleWatchlistUpdate);
+    };
+  }, []);
+
+  // Lazy-load live extended catalog when search is active or focused (zero blocking network overhead on SSR)
+  useEffect(() => {
+    if (!isSearchExpanded && !searchQuery) return;
     let isMounted = true;
     const fetchCatalog = async () => {
       try {
@@ -78,16 +100,16 @@ export default function Navbar() {
     return () => {
       isMounted = false;
     };
-  }, [isSearchExpanded]);
+  }, [isSearchExpanded, searchQuery]);
 
-  // Auto-focus search input when expanded
+  // Auto-focus mobile search input when expanded
   useEffect(() => {
     if (isSearchExpanded && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [isSearchExpanded]);
 
-  // Lock background scroll when search overlay is open
+  // Lock background scroll when mobile search overlay is open
   useEffect(() => {
     if (isSearchExpanded) {
       const originalOverflow = document.body.style.overflow;
@@ -166,24 +188,24 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="h-16 flex items-center justify-between">
-            {/* ── Mode A: Full-Width Search Input Bar (When Active) ── */}
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-200/90 shadow-2xs">
+        <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-10">
+          <div className="h-16 flex items-center justify-between gap-3 sm:gap-6">
+            {/* ── Mode A: Full-Width Search Input Bar (When Active on Mobile) ── */}
             {isSearchExpanded ? (
               <form
                 onSubmit={handleSearchSubmit}
-                className="w-full flex items-center gap-2.5 sm:gap-3 animate-fade-in"
+                className="w-full flex items-center gap-2.5 sm:gap-3 animate-fade-in md:hidden"
               >
                 <div className="relative flex-1 flex items-center">
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 absolute left-3.5 sm:left-4 pointer-events-none" />
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
                   <input
                     ref={searchInputRef}
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Type product name (e.g. fans, clock, shelf)..."
-                    className="w-full bg-slate-100 hover:bg-slate-200/80 focus:bg-white text-slate-900 text-xs sm:text-sm rounded-full pl-10 sm:pl-11 pr-9 sm:pr-10 py-2.5 sm:py-3 border border-transparent focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition shadow-inner"
+                    className="w-full bg-slate-100 hover:bg-slate-200/80 focus:bg-white text-slate-900 text-xs rounded-full pl-10 pr-9 py-2.5 border border-transparent focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition shadow-inner"
                   />
                   {searchQuery && (
                     <button
@@ -200,90 +222,148 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={handleCloseSearch}
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 hover:text-slate-900 transition flex-shrink-0 active:scale-95"
+                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 hover:text-slate-900 transition flex-shrink-0 active:scale-95"
                   aria-label="Close search bar"
                 >
-                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </form>
-            ) : (
-              /* ── Mode B: Normal Header (Logo + Brand + Action Icons) ── */
-              <>
-                {/* Brand Logo & Name */}
-                <Link
-                  href="/"
-                  className="flex items-center flex-shrink-0 group focus:outline-none"
-                  aria-label="Vastire Home"
-                >
-                  <VastireLogo size="md" />
-                </Link>
+            ) : null}
 
-                {/* Right Action Icons: Filter, Search, Watchlist, Cart, Profile */}
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  {/* Sort & Filter Icon Button */}
+            {/* ── Mode B: Production Header (Logo + Desktop Centered Search + Desktop Nav Cluster + Mobile Controls) ── */}
+            <div className={`w-full flex items-center justify-between gap-4 lg:gap-8 ${isSearchExpanded ? "hidden md:flex" : "flex"}`}>
+              {/* Left: Brand Logo & Wordmark */}
+              <Link
+                href="/"
+                className="flex items-center flex-shrink-0 group focus:outline-none"
+                aria-label="Vastire Home"
+              >
+                <VastireLogo size="md" />
+              </Link>
+
+              {/* Center: Always-Visible Search Bar with Category Filter Trigger (Desktop/Tablet) */}
+              <div className="hidden md:flex flex-1 max-w-2xl xl:max-w-3xl items-center relative">
+                <form
+                  onSubmit={handleSearchSubmit}
+                  className="w-full flex items-center bg-slate-100 hover:bg-slate-200/70 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-500/25 focus-within:border-emerald-500 rounded-full border border-slate-200/80 transition-all shadow-inner overflow-hidden"
+                >
+                  {/* Category / Filter Trigger Pill */}
                   <button
                     type="button"
                     onClick={handleOpenFilter}
-                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 hover:text-slate-900 transition active:scale-95 shadow-xs"
-                    aria-label="Open Filter and Sort options"
-                    title="Filter & Sort"
+                    className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-200/60 hover:bg-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold border-r border-slate-200/80 transition flex-shrink-0 select-none cursor-pointer"
+                    title="Filter catalog by category, price, or sort order"
                   >
-                    <SlidersHorizontal className="w-4 h-4 text-slate-700" />
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-slate-600" />
+                    <span className="hidden lg:inline">Filters</span>
                   </button>
 
-                  {/* Search Icon Button */}
+                  {/* Desktop Search Input Field */}
+                  <div className="relative flex-1 flex items-center">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                    <input
+                      ref={desktopSearchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search across all categories (e.g. fans, clock, kitchen, shelf)..."
+                      className="w-full bg-transparent text-slate-900 text-xs lg:text-sm pl-10 pr-9 py-2.5 focus:outline-none"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-3 text-slate-400 hover:text-slate-600 transition p-1"
+                        aria-label="Clear input"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Search Submit Action Button */}
                   <button
-                    type="button"
-                    onClick={() => setIsSearchExpanded(true)}
-                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 hover:text-slate-900 transition active:scale-95 shadow-xs"
-                    aria-label="Open search bar"
-                    title="Search products"
+                    type="submit"
+                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center transition flex-shrink-0 active:scale-95"
+                    aria-label="Submit search"
                   >
-                    <Search className="w-4 h-4 text-slate-700" />
+                    <Search className="w-4 h-4" />
                   </button>
+                </form>
+              </div>
 
-                  {/* Watchlist Link (Desktop & Tablet) */}
-                  <Link
-                    href="/watchlist"
-                    className="hidden sm:flex relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 items-center justify-center text-slate-700 hover:text-slate-900 transition active:scale-95 shadow-xs"
-                    aria-label="Watchlist"
-                    title="Saved Watchlist"
-                  >
-                    <Heart className="w-4 h-4 text-slate-700" />
+              {/* Right Action Icons: Filter, Search (Mobile), Watchlist, Cart, Profile */}
+              <div className="flex items-center gap-1.5 sm:gap-2 xl:gap-3 flex-shrink-0">
+                {/* Mobile Sort & Filter Button */}
+                <button
+                  type="button"
+                  onClick={handleOpenFilter}
+                  className="md:hidden w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 hover:text-slate-900 transition active:scale-95 shadow-xs"
+                  aria-label="Open Filter and Sort options"
+                  title="Filter & Sort"
+                >
+                  <SlidersHorizontal className="w-4 h-4 text-slate-700" />
+                </button>
+
+                {/* Mobile Search Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsSearchExpanded(true)}
+                  className="md:hidden w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 hover:text-slate-900 transition active:scale-95 shadow-xs"
+                  aria-label="Open search bar"
+                  title="Search products"
+                >
+                  <Search className="w-4 h-4 text-slate-700" />
+                </button>
+
+                {/* Watchlist Link (Desktop & Tablet) */}
+                <Link
+                  href="/watchlist"
+                  className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative"
+                  aria-label="Watchlist"
+                  title="Saved Watchlist"
+                >
+                  <div className="relative flex items-center justify-center">
+                    <Heart className="w-4 h-4 text-slate-700 group-hover:text-rose-600 transition" />
                     {mounted && watchlistCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                      <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                         {watchlistCount}
                       </span>
                     )}
-                  </Link>
+                  </div>
+                  <span className="hidden xl:inline text-xs font-bold text-slate-800">Watchlist</span>
+                </Link>
 
-                  {/* Cart Link (Desktop & Tablet) */}
-                  <Link
-                    href="/cart"
-                    className="hidden sm:flex relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 items-center justify-center text-slate-700 hover:text-slate-900 transition active:scale-95 shadow-xs"
-                    aria-label="Shopping Cart"
-                    title="Shopping Cart"
-                  >
-                    <ShoppingBag className="w-4 h-4 text-slate-700" />
+                {/* Cart Link (Desktop & Tablet) */}
+                <Link
+                  href="/cart"
+                  className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative"
+                  aria-label="Shopping Cart"
+                  title="Shopping Cart"
+                >
+                  <div className="relative flex items-center justify-center">
+                    <ShoppingBag className="w-4 h-4 text-slate-700 group-hover:text-emerald-600 transition" />
                     {mounted && itemCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                      <span className="absolute -top-2 -right-2 bg-emerald-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                         {itemCount}
                       </span>
                     )}
-                  </Link>
+                  </div>
+                  <span className="hidden xl:inline text-xs font-bold text-slate-800">Cart</span>
+                </Link>
 
-                  {/* Profile Link (Desktop & Tablet) */}
-                  <Link
-                    href="/profile"
-                    className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 hover:bg-slate-200 items-center justify-center text-slate-700 hover:text-slate-900 transition active:scale-95 shadow-xs"
-                    aria-label="Account & Orders"
-                    title="Account & Orders"
-                  >
-                    <User className="w-4 h-4 text-slate-700" />
-                  </Link>
-                </div>
-              </>
-            )}
+                {/* Profile / Account Link (Desktop & Tablet) */}
+                <Link
+                  href="/profile"
+                  className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group"
+                  aria-label="Account & Orders"
+                  title="Account & Orders"
+                >
+                  <User className="w-4 h-4 text-slate-700 group-hover:text-emerald-600 transition" />
+                  <span className="hidden xl:inline text-xs font-bold text-slate-800">Account</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </header>

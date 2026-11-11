@@ -165,7 +165,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
   const productSchema = buildProductJsonLdGraph(product, primaryVariant);
 
   return (
-    <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-24 sm:pb-28 md:pb-10 space-y-5 sm:space-y-8">
+    <div className="w-full max-w-[1920px] mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-24 sm:pb-28 md:pb-10 space-y-5 sm:space-y-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
