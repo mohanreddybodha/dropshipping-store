@@ -1039,7 +1039,7 @@ function CheckoutContent() {
               >
                 <Link
                   href={`/products/${item.product.slug}`}
-                  prefetch={false}
+                  prefetch={true}
                   className="flex gap-3 items-center flex-1 min-w-0 group cursor-pointer"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}

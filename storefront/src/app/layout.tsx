@@ -92,6 +92,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preload" as="image" href="/brand-emblem.webp" type="image/webp" />
         <link rel="preload" as="image" href="/splash-part-ground.png" />
         <link rel="preload" as="image" href="/splash-part-wheel-left.png" />
         <link rel="preload" as="image" href="/splash-part-wheel-right.png" />

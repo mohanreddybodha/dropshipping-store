@@ -224,7 +224,7 @@ export default function CartPage() {
                   {/* Clean, Non-distorted Image Container (Compact on mobile) */}
                   <Link
                     href={`/products/${item.product.slug}`}
-                    prefetch={false}
+                    prefetch={true}
                     className="w-14 h-14 sm:w-20 sm:h-20 min-w-[3.5rem] min-h-[3.5rem] sm:min-w-[5rem] sm:min-h-[5rem] rounded-lg sm:rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 p-1 flex items-center justify-center flex-shrink-0 group block"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -240,7 +240,7 @@ export default function CartPage() {
                     <div className="flex items-start justify-between gap-2">
                       <Link
                         href={`/products/${item.product.slug}`}
-                        prefetch={false}
+                        prefetch={true}
                         className="text-xs sm:text-sm font-bold text-slate-900 hover:text-emerald-700 transition line-clamp-2 leading-snug"
                       >
                         {item.product.title}
@@ -386,7 +386,7 @@ export default function CartPage() {
 
             <Link
               href="/checkout"
-              prefetch={false}
+              prefetch={true}
               className="w-full py-3.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-600/25 transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 text-center"
             >
               <span>Proceed to Checkout</span>

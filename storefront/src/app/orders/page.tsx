@@ -781,7 +781,7 @@ function OrdersContent() {
             {activeItemModal.itemSlug ? (
               <Link
                 href={activeItemModal.itemSlug}
-                prefetch={false}
+                prefetch={true}
                 className="group flex items-center justify-between gap-3 pr-8 border-b border-slate-100 pb-3 hover:bg-slate-50/80 -m-1 p-2 rounded-xl transition cursor-pointer"
                 title="Click to view product details"
               >

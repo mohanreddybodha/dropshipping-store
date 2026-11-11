@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../ui/Toast";
@@ -39,7 +40,9 @@ function getWatchlistSlugs(): Set<string> {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const router = useRouter();
   const [isSaved, setIsSaved] = useState(false);
+  const productHref = `/products/${product.slug}`;
 
   useEffect(() => {
     const syncState = () => {
@@ -51,6 +54,14 @@ export default function ProductCard({ product }: ProductCardProps) {
       watchlistListeners.delete(syncState);
     };
   }, [product.slug]);
+
+  const prefetchProduct = () => {
+    try {
+      router.prefetch(productHref);
+    } catch {
+      // Ignore prefetch errors
+    }
+  };
 
   const toggleWatchlist = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -97,11 +108,15 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [imgSrc, setImgSrc] = useState(heroImage);
 
   return (
-    <div className="group relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between">
+    <div
+      onMouseEnter={prefetchProduct}
+      onPointerDown={prefetchProduct}
+      className="group relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between active:scale-[0.985] transition-transform duration-100"
+    >
       {/* Clickable Card Body */}
       <Link
-        href={`/products/${product.slug}`}
-        prefetch={false}
+        href={productHref}
+        prefetch={true}
         className="block space-y-2.5 sm:space-y-3"
       >
         {/* 1:1 Aspect Ratio Image Stage */}
@@ -143,8 +158,8 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* Price & Discount Row */}
       <Link
-        href={`/products/${product.slug}`}
-        prefetch={false}
+        href={productHref}
+        prefetch={true}
         className="pt-2 sm:pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between block"
       >
         <div className="flex items-baseline gap-1.5 min-w-0">
