@@ -6,7 +6,15 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/products/", "/privacy", "/terms", "/shipping-policy", "/refund-policy"],
+        allow: [
+          "/",
+          "/products/",
+          "/merchant-feed.xml",
+          "/privacy",
+          "/terms",
+          "/shipping-policy",
+          "/refund-policy",
+        ],
         disallow: [
           "/api/",
           "/admin/",

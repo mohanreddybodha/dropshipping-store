@@ -144,7 +144,13 @@ function truncateAtWord(text: string, maxLen: number): string {
 
 export function normalizeBrandName(rawBrand?: string | null): string {
   const clean = (rawBrand || "").trim();
-  if (!clean || clean.toLowerCase() === "vastire curated") {
+  const lower = clean.toLowerCase();
+  if (
+    !clean ||
+    lower === "vastire curated" ||
+    lower === "domestic lab" ||
+    lower === "domesticlab"
+  ) {
     return SITE_NAME;
   }
   return clean;

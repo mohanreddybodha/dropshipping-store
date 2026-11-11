@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { getDb } from "@/lib/db";
 import { FALLBACK_PRODUCTS } from "@/lib/api";
+import { getAuthoritativeCatalog } from "@/lib/catalogServer";
 import { SITE_URL, toAbsoluteUrl } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -41,25 +41,10 @@ async function getSitemapProducts(): Promise<SitemapProductRecord[]> {
     }
   }
 
-  if (process.env.DATABASE_URL) {
-    try {
-      const sql = getDb();
-      const dbPromise = sql`
-        SELECT slug, hero_image_url, images_json
-        FROM products
-        WHERE is_active = true
-        ORDER BY id ASC
-        LIMIT 500
-      `;
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Sitemap DB timeout")), 2500)
-      );
-      const rows = (await Promise.race([dbPromise, timeoutPromise])) as any[];
-      for (const r of rows) {
-        register(r.slug, r.hero_image_url, r.images_json);
-      }
-    } catch {
-      // Fallback catalog already populated above
+  const liveProducts = await getAuthoritativeCatalog(2500);
+  for (const p of liveProducts) {
+    if (p.is_active !== false) {
+      register(p.slug, p.hero_image_url, p.images);
     }
   }
 
