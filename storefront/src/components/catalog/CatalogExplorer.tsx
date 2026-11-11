@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { X, Check } from "lucide-react";
 import { Product } from "../../lib/types";
@@ -244,35 +243,10 @@ export default function CatalogExplorer({
   const seoProfile = getCategorySeoProfile(activeCategory);
 
   return (
-    <div id="catalog-section" className="space-y-2.5 sm:space-y-3">
-      {/* Compact Semantic Storefront Header + Crawlable Internal Category Hubs */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-1">
-        <h1 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight truncate">
-          {activeSearch
-            ? `Results for "${activeSearch}"`
-            : seoProfile.headline}
-        </h1>
-        <nav aria-label="Product Categories" className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-          {CATEGORIES.map((cat) => {
-            const isSelected = activeCategory.toLowerCase() === cat.toLowerCase();
-            const href = cat === "All Products" ? "/" : `/?category=${encodeURIComponent(cat)}`;
-            return (
-              <Link
-                key={cat}
-                href={href}
-                prefetch={false}
-                className={`whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-bold transition border ${
-                  isSelected
-                    ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-emerald-400 hover:text-emerald-700"
-                }`}
-              >
-                {cat}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+    <div id="catalog-section" className="space-y-3">
+      <h1 className="sr-only">
+        {activeSearch ? `Results for "${activeSearch}"` : seoProfile.headline}
+      </h1>
 
       {/* Active Filter Chips Bar (Shown cleanly only when filters are active) */}
       {hasActiveFilters && (
