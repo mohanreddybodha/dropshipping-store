@@ -17,6 +17,7 @@ import HorizontalProductRow from "../../../components/catalog/HorizontalProductR
 import {
   buildProductSeoMeta,
   buildProductJsonLdGraph,
+  getCollectionSlugForCategory,
   SITE_NAME,
 } from "../../../lib/seo";
 import { Truck, ShieldCheck, ChevronRight } from "lucide-react";
@@ -192,7 +193,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
               </Link>
               <ChevronRight className="w-3 h-3 text-slate-400" />
               <Link
-                href={`/?category=${encodeURIComponent(categoryName)}`}
+                href={`/collections/${getCollectionSlugForCategory(categoryName)}`}
                 className="text-emerald-700 hover:underline truncate"
               >
                 {categoryName}
@@ -258,7 +259,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       {sameCategoryProducts.length > 0 && (
         <HorizontalProductRow
           title={`More in ${categoryName}`}
-          viewAllHref={`/?category=${encodeURIComponent(categoryName)}`}
+          viewAllHref={`/collections/${getCollectionSlugForCategory(categoryName)}`}
           viewAllText="View All"
           products={sameCategoryProducts.slice(0, 10)}
         />

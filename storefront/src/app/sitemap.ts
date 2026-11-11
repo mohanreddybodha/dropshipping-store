@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { FALLBACK_PRODUCTS } from "@/lib/api";
 import { getAuthoritativeCatalog } from "@/lib/catalogServer";
-import { SITE_URL, toAbsoluteUrl } from "@/lib/seo";
+import { SITE_URL, COLLECTION_DEFINITIONS, toAbsoluteUrl } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -62,6 +62,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1.0,
     },
+    ...COLLECTION_DEFINITIONS.map((col) => ({
+      url: `${SITE_URL}/collections/${col.slug}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.85,
+    })),
     {
       url: `${SITE_URL}/shipping-policy`,
       lastModified: now,

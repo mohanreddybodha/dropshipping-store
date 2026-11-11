@@ -45,6 +45,7 @@ export interface Product {
   title: string;
   brand_title?: string;
   slug: string;
+  legacy_slug?: string;
   category?: string;
   rating?: number;
   review_count?: number;

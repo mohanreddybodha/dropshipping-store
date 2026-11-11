@@ -1,3 +1,6 @@
+const { normalizeCatalogSlugs } = require("./src/lib/slugUtils");
+const seedCatalog = require("./src/lib/seedCatalog.json");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -35,6 +38,16 @@ const nextConfig = {
         hostname: "**",
       },
     ],
+  },
+  async redirects() {
+    const normalized = normalizeCatalogSlugs(seedCatalog);
+    return normalized
+      .filter((p) => p.legacy_slug && p.slug && p.legacy_slug !== p.slug)
+      .map((p) => ({
+        source: `/products/${p.legacy_slug}`,
+        destination: `/products/${p.slug}`,
+        statusCode: 301,
+      }));
   },
   async rewrites() {
     return [

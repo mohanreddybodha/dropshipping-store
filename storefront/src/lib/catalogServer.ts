@@ -1,6 +1,7 @@
 import { getDb } from "./db";
 import seedData from "./seedCatalog.json";
 import { Product } from "./types";
+import { normalizeCatalogSlugs } from "./seo";
 
 let cachedDbItems: Product[] | null = null;
 let lastDbFetchTime = 0;
@@ -121,7 +122,7 @@ export async function getAuthoritativeCatalog(timeoutMs = 1500): Promise<Product
       const rows = await Promise.race([dbPromise, timeout]);
 
       if (Array.isArray(rows) && rows.length > 0) {
-        const items = rows.map(mapDbRowToProduct);
+        const items = normalizeCatalogSlugs(rows.map(mapDbRowToProduct));
         cachedDbItems = items;
         lastDbFetchTime = now;
         return items;
@@ -131,5 +132,7 @@ export async function getAuthoritativeCatalog(timeoutMs = 1500): Promise<Product
     }
   }
 
-  return [...(seedData as unknown as Product[])].filter((p) => p.is_active !== false);
+  return normalizeCatalogSlugs(
+    (seedData as unknown as Product[]).filter((p) => p.is_active !== false)
+  );
 }

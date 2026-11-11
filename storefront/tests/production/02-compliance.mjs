@@ -51,15 +51,23 @@ export async function runComplianceTests(base = "http://localhost:3009") {
     assert(false, "P2-1: Catalog API exception", err.message);
   }
 
-  // TEST 2: Product Detail by Slug API (GET /api/catalog/[slug])
+  // TEST 2: Product Detail by Slug API (GET /api/catalog/[slug]) + Clean Slug & Legacy Redirect Compatibility
   try {
-    const res = await fetch(`${base}/api/catalog/new-for-keeping-turbo-fans-for-with-9002by`);
-    assert(res.status === 200, "P2-2: GET /api/catalog/[slug] returns HTTP 200 for valid slug", `Status: ${res.status}`);
-    const product = await res.json();
+    const cleanRes = await fetch(`${base}/api/catalog/portable-high-velocity-usb-turbo-desk-fan`);
+    assert(cleanRes.status === 200, "P2-2: GET /api/catalog/[slug] returns HTTP 200 for clean SEO slug", `Status: ${cleanRes.status}`);
+    const cleanProduct = await cleanRes.json();
     assert(
-      product.title && product.slug === "new-for-keeping-turbo-fans-for-with-9002by",
-      "P2-2: Product detail matches requested slug",
-      `Slug: ${product.slug}`
+      cleanProduct.title && cleanProduct.slug === "portable-high-velocity-usb-turbo-desk-fan",
+      "P2-2: Product detail matches clean keyword slug",
+      `Slug: ${cleanProduct.slug}`
+    );
+
+    const legacyApiRes = await fetch(`${base}/api/catalog/new-for-keeping-turbo-fans-for-with-9002by`);
+    const legacyProduct = await legacyApiRes.json();
+    assert(
+      legacyApiRes.status === 200 && legacyProduct.slug === "portable-high-velocity-usb-turbo-desk-fan",
+      "P2-2b: Legacy supplier slug continues resolving to canonical clean slug",
+      `Status: ${legacyApiRes.status}, Slug: ${legacyProduct.slug}`
     );
   } catch (err) {
     assert(false, "P2-2: Product Detail API exception", err.message);

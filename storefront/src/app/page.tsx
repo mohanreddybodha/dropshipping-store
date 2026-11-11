@@ -10,13 +10,14 @@ import {
 } from "../lib/seo";
 
 interface HomePageProps {
-  searchParams?: Promise<{ category?: string; search?: string }>;
+  searchParams?: Promise<{ category?: string; search?: string; page?: string }>;
 }
 
 export async function generateMetadata({ searchParams }: HomePageProps): Promise<Metadata> {
   const sp = searchParams ? await searchParams : {};
   const category = sp.category?.trim();
   const search = sp.search?.trim();
+  const pageNum = Math.max(1, parseInt(sp.page || "1", 10) || 1);
 
   if (search) {
     return {
@@ -28,20 +29,17 @@ export async function generateMetadata({ searchParams }: HomePageProps): Promise
   }
 
   const profile = getCategorySeoProfile(category);
-  const canonicalUrl =
-    category && category !== "All Products"
-      ? `${SITE_URL}/?category=${encodeURIComponent(category)}`
-      : SITE_URL;
 
   return {
-    title: profile.title,
+    title: pageNum > 1 ? `${profile.title} — Page ${pageNum}` : profile.title,
     description: profile.description,
     keywords: profile.keywords,
-    alternates: { canonical: canonicalUrl },
+    alternates: { canonical: SITE_URL },
+    ...(pageNum > 1 ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       title: profile.title,
       description: profile.description,
-      url: canonicalUrl,
+      url: SITE_URL,
       siteName: SITE_NAME,
       type: "website",
       images: [{ url: "/icon-512.png", width: 512, height: 512, alt: profile.headline }],
@@ -59,6 +57,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const sp = searchParams ? await searchParams : {};
   const initialCategory = sp.category?.trim() || "All Products";
   const initialSearch = sp.search?.trim() || "";
+  const initialPage = Math.max(1, parseInt(sp.page || "1", 10) || 1);
 
   const products = await getCatalog({
     limit: 200,
@@ -66,7 +65,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     ...(initialSearch ? { search: initialSearch } : {}),
   });
 
-  // Always pass full catalog when unfiltered or allow seamless switching
   const allProducts =
     initialCategory !== "All Products" || initialSearch
       ? await getCatalog({ limit: 200 })
@@ -74,7 +72,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   const itemListSchema = buildCatalogItemListJsonLd(
     products,
-    initialCategory !== "All Products" ? initialCategory : undefined
+    initialCategory !== "All Products" ? initialCategory : undefined,
+    SITE_URL
   );
 
   return (
@@ -87,6 +86,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         initialProducts={allProducts}
         initialCategory={initialCategory}
         initialSearch={initialSearch}
+        initialPage={initialPage}
       />
     </div>
   );

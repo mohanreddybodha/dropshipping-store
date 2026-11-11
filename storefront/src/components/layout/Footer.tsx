@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import VastireLogo from "../ui/VastireLogo";
+import { COLLECTION_DEFINITIONS } from "../../lib/seo";
 import { ShieldCheck, Truck, RotateCcw, Lock } from "lucide-react";
 
 export default function Footer() {
@@ -72,6 +73,20 @@ export default function Footer() {
               Contact Support
             </a>
           </div>
+        </div>
+
+        {/* ── Collection Hubs (Internal Crawlability) ── */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500 pt-2">
+          <span className="font-bold text-slate-700">Collections:</span>
+          {COLLECTION_DEFINITIONS.map((col) => (
+            <Link
+              key={col.slug}
+              href={`/collections/${col.slug}`}
+              className="hover:text-emerald-700 font-medium transition-colors"
+            >
+              {col.category}
+            </Link>
+          ))}
         </div>
 
         {/* ── Bottom Legal & Copyright ── */}

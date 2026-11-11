@@ -1,4 +1,7 @@
 import { Product, Variant } from "./types";
+import { toSeoProductSlug, normalizeCatalogSlugs } from "./slugUtils";
+
+export { toSeoProductSlug, normalizeCatalogSlugs };
 
 export const SITE_URL = "https://vastire.com";
 export const SITE_NAME = "Vastire";
@@ -11,6 +14,61 @@ export const STORE_CATEGORIES = [
   "Outdoor & Patio",
   "Everyday Carry & Auto",
 ] as const;
+
+export interface CollectionDefinition {
+  slug: string;
+  category: string;
+  shortDesc: string;
+}
+
+export const COLLECTION_DEFINITIONS: readonly CollectionDefinition[] = [
+  {
+    slug: "home-and-kitchen",
+    category: "Home & Kitchen",
+    shortDesc:
+      "Kitchen prep tools, bathroom organizers, cabinet pulls, and everyday living upgrades shipped free within 3–5 US business days.",
+  },
+  {
+    slug: "workspace-and-tech",
+    category: "Workspace & Tech",
+    shortDesc:
+      "Ergonomic desk accessories, high-velocity cooling fans, hubs, and charging essentials built for focused work.",
+  },
+  {
+    slug: "smart-lighting",
+    category: "Smart Lighting",
+    shortDesc:
+      "Flicker-free bedside lamps, digital backlit clocks, and ambient USB LED lights for modern US homes.",
+  },
+  {
+    slug: "outdoor-and-patio",
+    category: "Outdoor & Patio",
+    shortDesc:
+      "Weather-ready backyard gear, camping lighting, and portable travel essentials stocked in US centers.",
+  },
+  {
+    slug: "everyday-carry-and-auto",
+    category: "Everyday Carry & Auto",
+    shortDesc:
+      "Automotive care sprays, compact utility gear, and everyday carry accessories with tracked domestic delivery.",
+  },
+];
+
+export function getCollectionBySlug(slug?: string | null): CollectionDefinition | null {
+  if (!slug) return null;
+  const clean = decodeURIComponent(slug).trim().toLowerCase();
+  return COLLECTION_DEFINITIONS.find((c) => c.slug === clean) || null;
+}
+
+export function getCollectionSlugForCategory(category?: string | null): string {
+  if (!category) return "home-and-kitchen";
+  const lower = category.trim().toLowerCase();
+  const exact = COLLECTION_DEFINITIONS.find(
+    (c) => c.category.toLowerCase() === lower || c.category.toLowerCase().includes(lower)
+  );
+  if (exact) return exact.slug;
+  return toSeoProductSlug(category, "home-and-kitchen");
+}
 
 export interface CategorySeoProfile {
   headline: string;
@@ -399,13 +457,15 @@ export function buildGlobalOrganizationGraph(): Record<string, unknown> {
 
 export function buildCatalogItemListJsonLd(
   products: Product[],
-  category?: string
+  category?: string,
+  canonicalPageUrl?: string
 ): Record<string, unknown> {
   const profile = getCategorySeoProfile(category);
   const pageUrl =
-    category && category !== "All Products"
-      ? `${SITE_URL}/?category=${encodeURIComponent(category)}`
-      : SITE_URL;
+    canonicalPageUrl ||
+    (category && category !== "All Products"
+      ? `${SITE_URL}/collections/${getCollectionSlugForCategory(category)}`
+      : SITE_URL);
 
   const listItems = products.slice(0, 36).map((p, idx) => {
     const price = p.variants?.[0]?.retail_price_1x || 24.99;
@@ -539,7 +599,7 @@ export function buildProductJsonLdGraph(
           "@type": "ListItem",
           position: 2,
           name: categoryName,
-          item: `${SITE_URL}/?category=${encodeURIComponent(categoryName)}`,
+          item: `${SITE_URL}/collections/${getCollectionSlugForCategory(categoryName)}`,
         },
         {
           "@type": "ListItem",

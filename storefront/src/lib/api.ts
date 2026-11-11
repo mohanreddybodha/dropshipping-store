@@ -1,5 +1,6 @@
 import { CustomerOrder, PaginatedCatalogResponse, Product } from "./types";
 import seedData from "./seedCatalog.json";
+import { normalizeCatalogSlugs } from "./seo";
 
 export function getApiBaseUrl(): string {
   // 1. If explicit API_URL is configured
@@ -21,7 +22,9 @@ export function getApiBaseUrl(): string {
   return `http://localhost:${process.env.PORT || 3000}/api`;
 }
 
-export const FALLBACK_PRODUCTS: Product[] = seedData as unknown as Product[];
+export const FALLBACK_PRODUCTS: Product[] = normalizeCatalogSlugs(
+  seedData as unknown as Product[]
+);
 
 export interface CatalogQueryOptions {
   category?: string;
@@ -211,21 +214,35 @@ export async function getPaginatedCatalog(options?: CatalogQueryOptions): Promis
   }
 }
 
+export function matchesProductIdentifier(product: Product, rawIdentifier: string): boolean {
+  const decoded = decodeURIComponent(rawIdentifier || "").trim().toLowerCase();
+  if (!decoded) return false;
+  const normalizedHyphen = decoded.replace(/\s+/g, "-");
+  const candidates = [product.slug, product.legacy_slug]
+    .filter((s): s is string => Boolean(s))
+    .map((s) => s.toLowerCase());
+
+  if (
+    candidates.some(
+      (c) =>
+        c === decoded ||
+        c === normalizedHyphen ||
+        c.replace(/-/g, " ") === decoded ||
+        decoded.replace(/-/g, " ") === c.replace(/-/g, " ")
+    )
+  ) {
+    return true;
+  }
+
+  return String(product.id) === decoded || String(product.pid) === decoded;
+}
+
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const decoded = decodeURIComponent(slug || "").trim().toLowerCase();
   const normalizedHyphenSlug = decoded.replace(/\s+/g, "-");
 
   // In-memory catalog lookup (0ms latency, eliminates 404 console errors)
-  const localMatch = FALLBACK_PRODUCTS.find((p) => {
-    const pSlug = (p.slug || "").toLowerCase();
-    return (
-      pSlug === decoded ||
-      pSlug === normalizedHyphenSlug ||
-      pSlug.replace(/-/g, " ") === decoded ||
-      decoded.replace(/-/g, " ") === pSlug.replace(/-/g, " ") ||
-      String(p.id) === decoded
-    );
-  });
+  const localMatch = FALLBACK_PRODUCTS.find((p) => matchesProductIdentifier(p, decoded));
   if (localMatch) return localMatch;
 
   try {

@@ -17,7 +17,7 @@ interface AppShellProps {
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isCheckout = pathname === "/checkout";
-  const isHome = pathname === "/";
+  const isBrowseSurface = pathname === "/" || pathname.startsWith("/collections/");
   const isProduct = pathname.startsWith("/products/");
 
   // Automatic stale deployment chunk reload handler (client-side only, zero SSR DOM mutation)
@@ -88,14 +88,14 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Global Toast Notifications */}
       <ToastContainer />
 
-      {/* Top Header: Rendered ONLY on the home page */}
-      {isHome && <Navbar />}
+      {/* Top Header: Rendered on home and collection pages */}
+      {isBrowseSurface && <Navbar />}
 
       {/* Main Content */}
       <main className="flex-1">{children}</main>
 
-      {/* Retail Trust Pillars & Footer on Home (Shown on both mobile & desktop with safe clearance above nav) */}
-      {isHome && <Footer />}
+      {/* Retail Trust Pillars & Footer on Home and Collections */}
+      {isBrowseSurface && <Footer />}
 
       {/* Native App-Style Mobile Bottom Navigation Bar: Hidden on product pages and checkout */}
       {!isProduct && <MobileBottomNav />}

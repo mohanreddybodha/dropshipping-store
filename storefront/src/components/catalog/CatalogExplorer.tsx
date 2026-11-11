@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { X, Check } from "lucide-react";
 import { Product } from "../../lib/types";
@@ -14,6 +15,9 @@ interface CatalogExplorerProps {
   totalCount?: number;
   initialCategory?: string;
   initialSearch?: string;
+  initialPage?: number;
+  initialPageSize?: number;
+  isCollectionPage?: boolean;
 }
 
 const PRICE_RANGES = [
@@ -45,8 +49,13 @@ export default function CatalogExplorer({
   initialProducts,
   initialCategory = "All Products",
   initialSearch = "",
+  initialPage = 1,
+  initialPageSize = PAGE_SIZE,
+  isCollectionPage = false,
 }: CatalogExplorerProps) {
   const router = useRouter();
+  const pageSize = Math.max(1, initialPageSize || PAGE_SIZE);
+  const currentPage = Math.max(1, initialPage || 1);
 
   // Dynamic Product State with Client Hydration Fallback
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -134,7 +143,7 @@ export default function CatalogExplorer({
   }, [isFilterModalOpen]);
 
   // Infinite scroll state
-  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  const [visibleCount, setVisibleCount] = useState<number>(pageSize);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Filter & Sort Pipeline
@@ -186,15 +195,22 @@ export default function CatalogExplorer({
     return result;
   }, [products, activeCategory, activeSearch, selectedPriceRange, sortBy]);
 
-  // Reset visible count when filters change
+  const totalItems = filteredProducts.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startOffset = (safePage - 1) * pageSize;
+
+  // Reset visible count when filters or route page change
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [activeCategory, activeSearch, selectedPriceRange, sortBy]);
+    setVisibleCount(pageSize);
+  }, [activeCategory, activeSearch, selectedPriceRange, sortBy, pageSize, safePage]);
 
   // Infinite scroll via IntersectionObserver
   const loadMore = useCallback(() => {
-    setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredProducts.length));
-  }, [filteredProducts.length]);
+    setVisibleCount((prev) =>
+      Math.min(prev + pageSize, Math.max(0, filteredProducts.length - startOffset))
+    );
+  }, [filteredProducts.length, pageSize, startOffset]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -209,9 +225,8 @@ export default function CatalogExplorer({
     return () => observer.disconnect();
   }, [loadMore]);
 
-  const visibleProducts = filteredProducts.slice(0, visibleCount);
-  const totalItems = filteredProducts.length;
-  const hasMore = visibleCount < totalItems;
+  const visibleProducts = filteredProducts.slice(startOffset, startOffset + visibleCount);
+  const hasMore = startOffset + visibleCount < totalItems;
 
   // Apply filters ONLY when the user clicks the "Apply Filters" button in the modal!
   const handleApplyFilters = () => {
@@ -238,15 +253,20 @@ export default function CatalogExplorer({
   };
 
   const hasActiveFilters =
-    activeCategory !== "All Products" || activeSearch || selectedPriceRange !== 0 || sortBy !== "featured";
+    (!isCollectionPage && activeCategory !== "All Products") ||
+    Boolean(activeSearch) ||
+    selectedPriceRange !== 0 ||
+    sortBy !== "featured";
 
   const seoProfile = getCategorySeoProfile(activeCategory);
 
   return (
     <div id="catalog-section" className="space-y-3">
-      <h1 className="sr-only">
-        {activeSearch ? `Results for "${activeSearch}"` : seoProfile.headline}
-      </h1>
+      {!isCollectionPage && (
+        <h1 className="sr-only">
+          {activeSearch ? `Results for "${activeSearch}"` : seoProfile.headline}
+        </h1>
+      )}
 
       {/* Active Filter Chips Bar (Shown cleanly only when filters are active) */}
       {hasActiveFilters && (
@@ -452,6 +472,34 @@ export default function CatalogExplorer({
             Loading more products…
           </div>
         </div>
+      )}
+
+      {/* Clean Bottom Crawler & Keyboard Pagination (Gives search engines direct SSR links to all products 25–91+) */}
+      {!isCollectionPage && !hasActiveFilters && totalPages > 1 && (
+        <nav
+          aria-label="Catalog pagination"
+          className="flex items-center justify-center gap-1.5 pt-2 pb-1 text-xs text-slate-500"
+        >
+          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((pageNum) => {
+            const href = pageNum === 1 ? "/" : `/?page=${pageNum}`;
+            const isCurrent = pageNum === safePage;
+            return (
+              <Link
+                key={pageNum}
+                href={href}
+                prefetch={false}
+                aria-current={isCurrent ? "page" : undefined}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition border ${
+                  isCurrent
+                    ? "bg-slate-900 text-white border-slate-900"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-emerald-400 hover:text-emerald-700"
+                }`}
+              >
+                {pageNum}
+              </Link>
+            );
+          })}
+        </nav>
       )}
     </div>
   );
