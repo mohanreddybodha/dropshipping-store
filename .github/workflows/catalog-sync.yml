@@ -29,17 +29,19 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Live CJ US Stock Sync & Rules Enforcement
-        if: ${{ secrets.DATABASE_URL != '' && secrets.CJ_API_KEY != '' }}
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CJ_API_KEY: ${{ secrets.CJ_API_KEY }}
           ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
           TARGET_COUNTRY_CODE: "US"
+        if: ${{ env.DATABASE_URL != '' && env.CJ_API_KEY != '' }}
         run: |
           python ops_sync.py --sync-stock
 
       - name: Revalidate Storefront Feed & Sitemap
-        if: ${{ secrets.ADMIN_API_KEY != '' }}
+        env:
+          ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+        if: ${{ env.ADMIN_API_KEY != '' }}
         run: |
           curl -fsSL -X POST "https://vastire.com/api/cron/sync-cj?mode=revalidate" \
-            -H "Authorization: Bearer ${{ secrets.ADMIN_API_KEY }}"
+            -H "Authorization: Bearer $ADMIN_API_KEY"
