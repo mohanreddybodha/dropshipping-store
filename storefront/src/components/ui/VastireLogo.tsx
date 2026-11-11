@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { getCachedBrandEmblem, VASTIRE_BRAND_EMBLEM_DATA_URI } from "./brandEmblemCache";
+import React, { useEffect } from "react";
 
 interface VastireLogoProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -13,8 +12,8 @@ interface VastireLogoProps {
 
 /**
  * High-Performance Brand Icon for Vastire.
- * Uses instantaneous zero-latency in-memory / localStorage Data URI cache,
- * ensuring 0.00ms paint with zero blank flashes on route transitions or slow networks.
+ * Uses the authentic static brand asset /brand-emblem.png with natural aspect ratio (388:310).
+ * Contained in an exact square viewport with object-contain to guarantee zero vertical distortion.
  */
 export function VastireIcon({
   size = 44,
@@ -24,42 +23,32 @@ export function VastireIcon({
   className?: string;
 }) {
   const pixelSize = typeof size === "number" ? size : parseInt(String(size), 10) || 44;
-  const width = Math.round(pixelSize * 1.25);
-  const [src, setSrc] = useState<string>(VASTIRE_BRAND_EMBLEM_DATA_URI);
 
   useEffect(() => {
     try {
-      const cached = getCachedBrandEmblem();
-      if (cached && cached !== src) {
-        setSrc(cached);
-      }
+      localStorage.removeItem("vastire_brand_emblem_uri");
     } catch {
-      // Keep initial data URI
+      // Storage access safety
     }
-  }, [src]);
+  }, []);
 
   return (
     <div
       className={`inline-flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${className}`}
       style={{
-        width: `${width}px`,
+        width: `${pixelSize}px`,
         height: `${pixelSize}px`,
       }}
       aria-label="Vastire Brand Icon"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src="/brand-emblem.png"
         alt="Vastire"
-        width={width}
+        width={pixelSize}
         height={pixelSize}
-        decoding="sync"
         loading="eager"
-        onError={() => {
-          if (src !== "/brand-emblem.webp") {
-            setSrc("/brand-emblem.webp");
-          }
-        }}
+        decoding="sync"
         className="w-full h-full object-contain select-none pointer-events-none drop-shadow-2xs"
       />
     </div>

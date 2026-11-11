@@ -79,38 +79,30 @@ const SPLASH_INNER_HTML = `
 </div>
 <script>
 (function() {
-  var SESSION_KEY = 'vastire_launch_splash_seen';
   var splash = document.getElementById('vastire-splash');
   if (!splash) return;
 
-  try {
-    if (sessionStorage.getItem(SESSION_KEY)) {
-      splash.style.display = 'none';
-      if (splash.parentNode) splash.parentNode.removeChild(splash);
-      return;
-    }
-  } catch(e) {}
+  document.body.classList.add('splash-active');
 
   var dismissed = false;
-  function dismissSplash(fast) {
+  function dismissSplash() {
     if (dismissed) return;
     dismissed = true;
-    try { sessionStorage.setItem(SESSION_KEY, 'true'); } catch(e) {}
     splash.classList.remove('splash-fade-in');
     splash.classList.add('splash-fade-out');
+    document.body.classList.remove('splash-active');
     setTimeout(function() {
       if (splash && splash.parentNode) {
         splash.parentNode.removeChild(splash);
       }
-    }, fast ? 150 : 350);
+    }, 700);
   }
 
-  splash.addEventListener('click', function() { dismissSplash(true); });
-  splash.addEventListener('touchstart', function() { dismissSplash(true); }, { passive: true });
+  splash.addEventListener('click', function() { dismissSplash(); });
 
   setTimeout(function() {
-    dismissSplash(false);
-  }, 2200);
+    dismissSplash();
+  }, 5500);
 })();
 </script>
 `;
