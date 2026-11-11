@@ -105,7 +105,9 @@ export default function RootLayout({
             __html: `
               try {
                 localStorage.removeItem('vastire_brand_emblem_uri');
-                sessionStorage.removeItem('vastire_launch_splash_seen');
+                if (sessionStorage.getItem('vastire_launch_splash_seen')) {
+                  document.documentElement.classList.add('splash-dismissed');
+                }
               } catch (e) {}
             `,
           }}

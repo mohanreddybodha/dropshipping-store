@@ -79,8 +79,18 @@ const SPLASH_INNER_HTML = `
 </div>
 <script>
 (function() {
+  var SESSION_KEY = 'vastire_launch_splash_seen';
   var splash = document.getElementById('vastire-splash');
   if (!splash) return;
+
+  try {
+    if (sessionStorage.getItem(SESSION_KEY)) {
+      splash.style.display = 'none';
+      if (splash.parentNode) splash.parentNode.removeChild(splash);
+      return;
+    }
+    sessionStorage.setItem(SESSION_KEY, 'true');
+  } catch(e) {}
 
   document.body.classList.add('splash-active');
 

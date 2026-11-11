@@ -1,3 +1,11 @@
+/* Zero-flash immediate dismiss for active/returning sessions (executed via <head> script) */
+html.splash-dismissed #vastire-splash,
+html.splash-dismissed #vastire-splash-wrapper {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
