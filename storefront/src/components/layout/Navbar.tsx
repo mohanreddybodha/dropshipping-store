@@ -358,7 +358,7 @@ export default function Navbar() {
                             product.hero_image_url ||
                             product.images?.[0] ||
                             "/placeholder.jpg";
-                          const price = product.variants?.[0]?.retail_price_1x || 24.99;
+                          const price = product.variants?.[0]?.retail_price_1x || 0;
                           const rating = product.rating || 4.8;
 
                           return (
@@ -408,7 +408,7 @@ export default function Navbar() {
                         product.hero_image_url ||
                         product.images?.[0] ||
                         "/placeholder.jpg";
-                      const price = product.variants?.[0]?.retail_price_1x || 24.99;
+                      const price = product.variants?.[0]?.retail_price_1x || 0;
                       const rating = product.rating || 4.8;
 
                       return (
@@ -463,7 +463,7 @@ export default function Navbar() {
                       product.hero_image_url ||
                       product.images?.[0] ||
                       "/placeholder.jpg";
-                    const price = product.variants?.[0]?.retail_price_1x || 24.99;
+                    const price = product.variants?.[0]?.retail_price_1x || 0;
 
                     return (
                       <Link

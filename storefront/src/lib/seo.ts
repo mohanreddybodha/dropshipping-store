@@ -275,7 +275,7 @@ function getPriceBounds(product: Product): { minPrice: number; maxPrice: number;
     .map((v) => Number(v.retail_price_1x))
     .filter((n) => Number.isFinite(n) && n > 0);
 
-  const minPrice = pricePool.length > 0 ? Math.min(...pricePool) : 24.99;
+  const minPrice = pricePool.length > 0 ? Math.min(...pricePool) : 0;
   const maxPrice = pricePool.length > 0 ? Math.max(...pricePool) : minPrice;
   const inStock =
     variants.length === 0 ||
@@ -476,7 +476,7 @@ export function buildCatalogItemListJsonLd(
       : SITE_URL);
 
   const listItems = products.slice(0, 36).map((p, idx) => {
-    const price = p.variants?.[0]?.retail_price_1x || 24.99;
+    const price = p.variants?.[0]?.retail_price_1x || 0;
     return {
       "@type": "ListItem",
       position: idx + 1,

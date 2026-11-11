@@ -1,9 +1,93 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { BundleTier, CartItem, Product, Variant } from "./types";
 import { auth, onAuthStateChanged } from "./firebase";
-import { saveUserCart, getUserAuthState } from "./api";
+import { saveUserCart, getUserAuthState, getCatalog, FALLBACK_PRODUCTS } from "./api";
+import {
+  computeBundlePricing,
+  normalizeCartItemPricing,
+  summarizeCartTotals,
+} from "./bundlePricing";
+
+function findCatalogEntryByVid(
+  vid: string,
+  catalogList: Product[] = FALLBACK_PRODUCTS
+): { product: Product; variant: Variant } | null {
+  if (!vid) return null;
+  for (const p of catalogList) {
+    for (const v of p.variants || []) {
+      if (v.vid === vid) {
+        return { product: p, variant: v };
+      }
+    }
+  }
+  return null;
+}
+
+function getStockCap(variant?: Variant | null): number {
+  const stock = Number(variant?.us_warehouse_stock || 0);
+  return stock > 0 ? Math.min(99, stock) : 99;
+}
+
+function isSameCartLine(
+  item: CartItem,
+  vid: string,
+  selectedSize?: string,
+  selectedColor?: string
+): boolean {
+  return (
+    item.variant?.vid === vid &&
+    (item.selectedSize || "") === (selectedSize || "") &&
+    (item.selectedColor || "") === (selectedColor || "")
+  );
+}
+
+function consolidateAndNormalizeCart(
+  rawItems: CartItem[],
+  catalogList: Product[] = FALLBACK_PRODUCTS
+): CartItem[] {
+  const merged: CartItem[] = [];
+
+  for (const raw of rawItems) {
+    if (!raw || !raw.product || !raw.variant || !raw.variant.vid) continue;
+    const match = findCatalogEntryByVid(raw.variant.vid, catalogList);
+    const product = match ? match.product : raw.product;
+    const variant = match ? match.variant : raw.variant;
+
+    const candidate: CartItem = {
+      ...raw,
+      product,
+      variant,
+    };
+
+    const existingIdx = merged.findIndex((m) =>
+      isSameCartLine(m, variant.vid, raw.selectedSize, raw.selectedColor)
+    );
+
+    if (existingIdx > -1) {
+      const combinedQty = Math.min(
+        getStockCap(variant),
+        Math.max(1, (merged[existingIdx].quantity || 1) + (raw.quantity || 1))
+      );
+      merged[existingIdx] = normalizeCartItemPricing(
+        { ...merged[existingIdx], product, variant },
+        combinedQty
+      );
+    } else {
+      const safeQty = Math.min(
+        getStockCap(variant),
+        Math.max(1, Math.floor(Number(raw.quantity) || 1))
+      );
+      const normalized = normalizeCartItemPricing(candidate, safeQty);
+      if (normalized.unitPrice > 0) {
+        merged.push(normalized);
+      }
+    }
+  }
+
+  return merged;
+}
 
 interface CartContextType {
   items: CartItem[];
@@ -42,32 +126,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const didCatalogReconcileRef = useRef(false);
 
-  // Load cart from localStorage on client mount (Hydration-safe with self-healing migration)
+  // Load cart from localStorage on client mount (Hydration-safe with authoritative pricing normalization)
   useEffect(() => {
     try {
       const saved = localStorage.getItem(CART_STORAGE_KEY);
       if (saved) {
         const parsed: CartItem[] = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          // Normalize and defensively repair any stale fields from previous builds
-          const sanitized: CartItem[] = parsed
-            .filter((item) => item && item.product && item.variant)
-            .map((item) => {
-              const retail = Number(item.variant?.retail_price_1x) || 24.99;
-              const unitPrice = Number(item.unitPrice) || retail;
-              const tierMultiplier = item.tier === "2x" ? 2 : item.tier === "3x" ? 3 : 1;
-              const totalPrice = Number(item.totalPrice) || +(unitPrice * tierMultiplier).toFixed(2);
-              const quantity = Number(item.quantity) || tierMultiplier;
-              return {
-                ...item,
-                unitPrice,
-                totalPrice,
-                quantity,
-                savings: Number(item.savings) || 0,
-              };
-            });
-          setItems(sanitized);
+          setItems(consolidateAndNormalizeCart(parsed, FALLBACK_PRODUCTS));
         }
       }
       localStorage.setItem(CART_VERSION_KEY, CURRENT_CART_VERSION);
@@ -78,70 +146,126 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Reconcile hydrated localStorage items once against live /api/catalog pricing
+  useEffect(() => {
+    if (!isHydrated || didCatalogReconcileRef.current || items.length === 0) return;
+    didCatalogReconcileRef.current = true;
+    let cancelled = false;
+
+    getCatalog({ limit: 500 })
+      .then((liveCatalog) => {
+        if (cancelled || !Array.isArray(liveCatalog) || liveCatalog.length === 0) return;
+        setItems((prev) => consolidateAndNormalizeCart(prev, liveCatalog));
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isHydrated, items.length]);
+
   // Cross-device cloud sync: fetch & merge database cart on user authentication
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
-        const remoteState = await getUserAuthState(
-          user.uid,
-          user.email,
-          user.phoneNumber
-        );
+        const [remoteState, liveCatalog] = await Promise.all([
+          getUserAuthState(user.uid, user.email, user.phoneNumber),
+          getCatalog({ limit: 500 }).catch(() => FALLBACK_PRODUCTS),
+        ]);
+        const catalogList =
+          Array.isArray(liveCatalog) && liveCatalog.length > 0
+            ? liveCatalog
+            : FALLBACK_PRODUCTS;
+
         if (remoteState?.cart && Array.isArray(remoteState.cart) && remoteState.cart.length > 0) {
           setItems((localPrev) => {
-            const merged = [...localPrev];
+            const incomingItems: CartItem[] = [...localPrev];
             for (const rc of remoteState.cart) {
-              const unitPrice = Number(rc.unit_price) || 24.99;
-              const matchedProduct: Product = {
+              const catalogMatch = findCatalogEntryByVid(rc.variant_vid, catalogList);
+              const live1x = Number(rc.retail_price_1x || 0);
+              const rawSavedUnit = Number(rc.unit_price || 0);
+              const inferred1x =
+                live1x > 0
+                  ? live1x
+                  : rc.tier === 3 && rawSavedUnit > 0
+                  ? +(rawSavedUnit / 0.82).toFixed(2)
+                  : rc.tier === 2 && rawSavedUnit > 0
+                  ? +(rawSavedUnit / 0.88).toFixed(2)
+                  : rawSavedUnit;
+
+              const matchedVariant: Variant = catalogMatch?.variant || {
+                id: 0,
+                vid: rc.variant_vid,
+                sku: rc.sku || rc.variant_vid,
+                variant_name: rc.variant_name || undefined,
+                display_name: rc.display_name || undefined,
+                title: rc.title || "Default",
+                image_url: rc.image_url || undefined,
+                wholesale_cost: Number(rc.wholesale_cost || 0),
+                shipping_cost: Number(rc.shipping_cost || 0),
+                retail_price_1x: inferred1x,
+                bundle_2_price: Number(rc.bundle_2_price || 0),
+                bundle_3_price: Number(rc.bundle_3_price || 0),
+                us_warehouse_stock: Number(rc.us_warehouse_stock ?? 100),
+                carrier_name: "USPS",
+                delivery_sla: "3-5 Days",
+                is_available: true,
+              };
+
+              if (!matchedVariant.retail_price_1x || matchedVariant.retail_price_1x <= 0) {
+                continue;
+              }
+
+              const matchedProduct: Product = catalogMatch?.product || {
                 id: 0,
                 pid: rc.product_pid,
-                slug: rc.product_pid || "item",
+                slug: rc.slug || rc.product_pid || "item",
                 title: rc.title || "Selected Item",
                 hero_image_url: rc.image_url || "/placeholder.jpg",
-                category: "General",
-                variants: [
-                  {
-                    vid: rc.variant_vid,
-                    title: rc.title || "Default",
-                    retail_price_1x: unitPrice,
-                    retail_price_2x: +(unitPrice * 0.88).toFixed(2),
-                    retail_price_3x: +(unitPrice * 0.82).toFixed(2),
-                  } as unknown as Variant,
-                ],
-              } as Product;
+                category: rc.category || "General",
+                is_active: true,
+                variants: [matchedVariant],
+              };
 
-              const matchedVariant = matchedProduct.variants[0];
-
-              const tierStr: BundleTier = rc.tier === 2 ? "2x" : rc.tier === 3 ? "3x" : "1x";
-              const existingIdx = merged.findIndex(
-                (item) =>
-                  item.variant?.vid === rc.variant_vid &&
-                  item.tier === tierStr &&
-                  (item.selectedSize || "") === (rc.selected_size || "")
+              const existingIdx = incomingItems.findIndex((item) =>
+                isSameCartLine(item, matchedVariant.vid, rc.selected_size || undefined)
               );
 
               if (existingIdx > -1) {
-                merged[existingIdx] = {
-                  ...merged[existingIdx],
-                  quantity: Math.max(merged[existingIdx].quantity, rc.quantity || 1),
-                };
-              } else if (matchedProduct && matchedVariant) {
-                const retail = matchedVariant.retail_price_1x || 24.99;
-                const unitPrice = rc.unit_price || retail;
-                merged.push({
+                const mergedQty = Math.max(
+                  incomingItems[existingIdx].quantity || 1,
+                  Number(rc.quantity) || 1
+                );
+                incomingItems[existingIdx] = normalizeCartItemPricing(
+                  {
+                    ...incomingItems[existingIdx],
+                    product: matchedProduct,
+                    variant: matchedVariant,
+                  },
+                  mergedQty
+                );
+              } else {
+                const qty = Number(rc.quantity) || 1;
+                const pricing = computeBundlePricing(matchedVariant, qty);
+                incomingItems.push({
                   product: matchedProduct,
-                  variant: matchedVariant,
+                  variant: {
+                    ...matchedVariant,
+                    retail_price_1x: pricing.price1x,
+                    bundle_2_price: pricing.price2x,
+                    bundle_3_price: pricing.price3x,
+                  },
                   selectedSize: rc.selected_size || undefined,
-                  tier: tierStr,
-                  quantity: rc.quantity || 1,
-                  unitPrice,
-                  totalPrice: +(unitPrice * (rc.quantity || 1)).toFixed(2),
-                  savings: 0,
+                  tier: pricing.tier,
+                  quantity: pricing.quantity,
+                  unitPrice: pricing.unitPrice,
+                  totalPrice: pricing.totalPrice,
+                  savings: pricing.savings,
                 });
               }
             }
-            return merged;
+            return consolidateAndNormalizeCart(incomingItems, catalogList);
           });
         }
       } catch (err) {
@@ -188,41 +312,44 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     selectedSize?: string,
     selectedColor?: string
   ) => {
-    const qty = tier === "1x" ? 1 : tier === "2x" ? 2 : 3;
-    let totalPrice = variant.retail_price_1x;
-    let savings = 0;
-
-    if (tier === "2x") {
-      totalPrice = variant.bundle_2_price;
-      savings = +(variant.retail_price_1x * 2 - variant.bundle_2_price).toFixed(2);
-    } else if (tier === "3x") {
-      totalPrice = variant.bundle_3_price;
-      savings = +(variant.retail_price_1x * 3 - variant.bundle_3_price).toFixed(2);
-    }
+    const addQty = tier === "3x" ? 3 : tier === "2x" ? 2 : 1;
 
     setItems((prev) => {
-      const existingIdx = prev.findIndex(
-        (i) =>
-          i.variant.vid === variant.vid &&
-          i.tier === tier &&
-          i.selectedSize === selectedSize &&
-          i.selectedColor === selectedColor
+      const existingIdx = prev.findIndex((i) =>
+        isSameCartLine(i, variant.vid, selectedSize, selectedColor)
       );
       if (existingIdx > -1) {
-        return prev;
+        const existing = prev[existingIdx];
+        if (existing.tier === tier) {
+          return prev;
+        }
+        const nextQty = Math.min(getStockCap(variant), existing.quantity + addQty);
+        const updated = [...prev];
+        updated[existingIdx] = normalizeCartItemPricing(
+          { ...existing, product, variant },
+          nextQty
+        );
+        return updated;
       }
+
+      const pricing = computeBundlePricing(variant, addQty);
       return [
         ...prev,
         {
           product,
-          variant,
+          variant: {
+            ...variant,
+            retail_price_1x: pricing.price1x || variant.retail_price_1x,
+            bundle_2_price: pricing.price2x || variant.bundle_2_price,
+            bundle_3_price: pricing.price3x || variant.bundle_3_price,
+          },
           selectedSize,
           selectedColor,
-          tier,
-          quantity: qty,
-          unitPrice: +(totalPrice / qty).toFixed(2),
-          totalPrice,
-          savings,
+          tier: pricing.tier,
+          quantity: pricing.quantity,
+          unitPrice: pricing.unitPrice,
+          totalPrice: pricing.totalPrice,
+          savings: pricing.savings,
         },
       ];
     });
@@ -243,33 +370,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     setItems((prev) =>
       prev.map((i) => {
-        if (
-          i.variant.vid === vid &&
-          i.tier === tier &&
-          i.selectedSize === selectedSize &&
-          i.selectedColor === selectedColor
-        ) {
-          const price1x = Number(i.variant?.retail_price_1x) || i.unitPrice;
-          const bundle2 = Number(i.variant?.bundle_2_price || 0);
-          const bundle3 = Number(i.variant?.bundle_3_price || 0);
-
-          let unitPrice = +price1x.toFixed(2);
-          let newTotal = +(unitPrice * quantity).toFixed(2);
-
-          if (tier === "3x" && quantity >= 3 && bundle3 > 0) {
-            unitPrice = +(bundle3 / 3).toFixed(2);
-            newTotal = quantity === 3 ? +bundle3.toFixed(2) : +(unitPrice * quantity).toFixed(2);
-          } else if ((tier === "2x" || (tier === "3x" && quantity === 2)) && quantity >= 2 && bundle2 > 0) {
-            unitPrice = +(bundle2 / 2).toFixed(2);
-            newTotal = quantity === 2 ? +bundle2.toFixed(2) : +(unitPrice * quantity).toFixed(2);
-          }
-
-          return {
-            ...i,
-            quantity,
-            unitPrice,
-            totalPrice: newTotal,
-          };
+        if (isSameCartLine(i, vid, selectedSize, selectedColor)) {
+          const cappedQty = Math.min(
+            getStockCap(i.variant),
+            Math.max(1, Math.floor(quantity))
+          );
+          return normalizeCartItemPricing(i, cappedQty);
         }
         return i;
       })
@@ -278,28 +384,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeItem = (
     vid: string,
-    tier: BundleTier,
+    _tier: BundleTier,
     selectedSize?: string,
     selectedColor?: string
   ) => {
     setItems((prev) =>
-      prev.filter(
-        (i) =>
-          !(
-            i.variant.vid === vid &&
-            i.tier === tier &&
-            i.selectedSize === selectedSize &&
-            i.selectedColor === selectedColor
-          )
-      )
+      prev.filter((i) => !isSameCartLine(i, vid, selectedSize, selectedColor))
     );
   };
 
   const clearCart = () => setItems([]);
 
-  const totalAmount = +items.reduce((acc, curr) => acc + curr.totalPrice, 0).toFixed(2);
-  const totalSavings = +items.reduce((acc, curr) => acc + curr.savings, 0).toFixed(2);
-  const itemCount = items.reduce((acc, curr) => acc + curr.quantity, 0);
+  const { totalAmount, totalSavings, itemCount } = summarizeCartTotals(items);
 
   return (
     <CartContext.Provider

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ShoppingBag, ArrowRight, Check } from "lucide-react";
 import { BundleTier, Product, Variant } from "../../lib/types";
 import { useCart } from "../../lib/cart";
+import { getVariantBundlePrices } from "../../lib/bundlePricing";
 import { showToast } from "../ui/Toast";
 
 interface MobileStickyBuyBarProps {
@@ -17,7 +18,9 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
   const { addItem, items } = useCart();
   const [currentVariant, setCurrentVariant] = useState<Variant | undefined>(variant);
   const [currentTier, setCurrentTier] = useState<BundleTier>("1x");
-  const [currentPrice, setCurrentPrice] = useState<number>(variant?.retail_price_1x || 24.99);
+  const [currentPrice, setCurrentPrice] = useState<number>(
+    getVariantBundlePrices(variant).price1x
+  );
   const [currentSize, setCurrentSize] = useState<string>("");
   const [currentColor, setCurrentColor] = useState<string>("");
   const [isAdded, setIsAdded] = useState(false);
@@ -25,9 +28,7 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
   useEffect(() => {
     if (variant) {
       setCurrentVariant(variant);
-      if (variant.retail_price_1x) {
-        setCurrentPrice(variant.retail_price_1x);
-      }
+      setCurrentPrice(getVariantBundlePrices(variant).price1x);
     }
   }, [variant]);
 
@@ -45,7 +46,7 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
       ).detail;
       if (detail) {
         if (detail.tier) setCurrentTier(detail.tier);
-        if (detail.price) setCurrentPrice(detail.price);
+        if (detail.price !== undefined) setCurrentPrice(detail.price);
         if (detail.size !== undefined) setCurrentSize(detail.size);
         if (detail.color !== undefined) setCurrentColor(detail.color);
         if (detail.variant) setCurrentVariant(detail.variant);
@@ -57,6 +58,7 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
   }, []);
 
   const activeVariant = currentVariant || variant;
+  const effectiveSize = currentSize || activeVariant?.variant_name || "";
 
   // Check if configuration already exists in cart
   useEffect(() => {
@@ -65,13 +67,11 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
       (item) =>
         item.variant.vid === activeVariant.vid &&
         item.tier === currentTier &&
-        (item.selectedSize || "") === (currentSize || "") &&
+        (item.selectedSize || "") === effectiveSize &&
         (item.selectedColor || "") === (currentColor || "")
     );
-    if (existing) {
-      setIsAdded(true);
-    }
-  }, [items, activeVariant, currentTier, currentSize, currentColor]);
+    setIsAdded(existing);
+  }, [items, activeVariant, currentTier, effectiveSize, currentColor]);
 
   if (!activeVariant) return null;
 
@@ -82,7 +82,7 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
       return;
     }
 
-    addItem(product, activeVariant, currentTier, currentSize || undefined, currentColor || undefined);
+    addItem(product, activeVariant, currentTier, effectiveSize || undefined, currentColor || undefined);
     setIsAdded(true);
     showToast("Added to Cart", "cart-add");
   };

@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "../../lib/cart";
 import {
+  normalizeCartItemPricing,
+  summarizeCartTotals,
+} from "../../lib/bundlePricing";
+import {
   getUserAuthState,
   getUserSavedAddresses,
   saveUserAddress,
@@ -31,6 +35,7 @@ import {
   Loader2,
   Check,
   Plus,
+  Minus,
   Bookmark,
   Clock,
   Send,
@@ -105,12 +110,12 @@ const PHONE_CODE_OPTIONS: ThemedDropdownOption[] = [
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
-  const { items, isHydrated, totalAmount, totalSavings, clearCart, removeItem } = useCart();
+  const { items, isHydrated, updateQuantity, clearCart, removeItem } = useCart();
 
   const isBuyNow = searchParams.get("buyNow") === "true";
   const buyNowVid = searchParams.get("vid");
   const buyNowTier = searchParams.get("tier");
-  const buyNowQty = parseInt(searchParams.get("qty") || "1", 10);
+  const buyNowQtyParam = parseInt(searchParams.get("qty") || "1", 10);
   const buyNowSize = searchParams.get("size") || undefined;
   const buyNowColor = searchParams.get("color") || undefined;
 
@@ -125,19 +130,17 @@ function CheckoutContent() {
       ) || items.find((i) => i.variant.vid === buyNowVid)
     : null;
 
+  const initialBuyNowQty = Math.max(1, buyNowQtyParam || singleCartItem?.quantity || 1);
+  const [buyNowQty, setBuyNowQty] = useState<number>(initialBuyNowQty);
+
+  useEffect(() => {
+    setBuyNowQty(Math.max(1, buyNowQtyParam || singleCartItem?.quantity || 1));
+  }, [buyNowVid, buyNowQtyParam, singleCartItem?.quantity]);
+
   const checkoutItems = singleCartItem
-    ? [
-        {
-          ...singleCartItem,
-          quantity: buyNowQty || singleCartItem.quantity || 1,
-          totalPrice: +(
-            Number(singleCartItem.unitPrice || singleCartItem.variant?.retail_price_1x || 24.99) *
-            (buyNowQty || singleCartItem.quantity || 1)
-          ).toFixed(2),
-        },
-      ]
+    ? [normalizeCartItemPricing(singleCartItem, buyNowQty)]
     : items.length > 0
-    ? items
+    ? items.map((item) => normalizeCartItemPricing(item))
     : [];
 
   // Initial state has zero hardcoded dummy address values
@@ -424,18 +427,8 @@ function CheckoutContent() {
     }
   };
 
-  const finalAmount = checkoutItems.reduce(
-    (acc, curr) => acc + (Number(curr.totalPrice) || 0),
-    0
-  );
-  const calculatedSavings = checkoutItems.reduce((acc, curr) => {
-    if (curr.savings && Number(curr.savings) > 0) return acc + Number(curr.savings);
-    const unit = Number(curr.unitPrice || curr.variant?.retail_price_1x || 24.99);
-    const qty = Number(curr.quantity) || 1;
-    if (qty >= 2) return acc + +(unit * qty * 0.15).toFixed(2);
-    return acc + +(unit * 0.15).toFixed(2);
-  }, 0);
-  const finalSavings = calculatedSavings > 0 ? calculatedSavings : 8.50;
+  const { totalAmount: finalAmount, totalSavings: finalSavings } =
+    summarizeCartTotals(checkoutItems);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -1031,11 +1024,31 @@ function CheckoutContent() {
               item.product.hero_image_url ||
               item.product.images?.[0] ||
               "/placeholder.jpg";
+            const maxStock =
+              item.variant?.us_warehouse_stock && item.variant.us_warehouse_stock > 0
+                ? Math.min(99, item.variant.us_warehouse_stock)
+                : 99;
+
+            const adjustItemQty = (delta: number) => {
+              const nextQty = Math.min(maxStock, Math.max(1, item.quantity + delta));
+              if (nextQty === item.quantity) return;
+              if (singleCartItem) {
+                setBuyNowQty(nextQty);
+              } else {
+                updateQuantity(
+                  item.variant.vid,
+                  item.tier,
+                  nextQty,
+                  item.selectedSize,
+                  item.selectedColor
+                );
+              }
+            };
 
             return (
               <div
-                key={idx}
-                className="flex gap-3 items-center text-xs text-slate-800 pb-3 border-b border-slate-100 last:border-b-0 last:pb-0"
+                key={`${item.variant?.vid || idx}-${item.selectedSize || "default"}-${item.selectedColor || "default"}`}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-slate-800 pb-3 border-b border-slate-100 last:border-b-0 last:pb-0"
               >
                 <Link
                   href={`/products/${item.product.slug}`}
@@ -1057,10 +1070,15 @@ function CheckoutContent() {
                     {hasCustomSpec ? (
                       <>
                         {/* Line 2: Specification Badge (dedicated line for long spec text) */}
-                        <div className="text-[11px] text-emerald-800 font-semibold line-clamp-1">
+                        <div className="text-[11px] text-emerald-800 font-semibold line-clamp-1 flex items-center gap-1.5 flex-wrap">
                           <span className="bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] inline-block font-bold">
                             {specText}
                           </span>
+                          {item.savings > 0 && (
+                            <span className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                              {item.tier === "2x" ? "2x Bundle (-12%)" : "3x Bundle (-18%)"} • Save ${item.savings.toFixed(2)}
+                            </span>
+                          )}
                         </div>
                         {/* Line 3: Selected Units and Price per unit */}
                         <div className="text-[11px] text-slate-500 font-medium">
@@ -1071,19 +1089,51 @@ function CheckoutContent() {
                       </>
                     ) : (
                       /* If user didn't select custom specification: Standard + units + price in second line */
-                      <div className="text-[11px] text-slate-500 font-medium">
+                      <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 flex-wrap">
                         <span className="text-slate-600 font-semibold">Standard</span>
-                        <span className="mx-1.5">•</span>
+                        <span>•</span>
                         <span>{item.quantity} {item.quantity === 1 ? "Unit" : "Units"}</span>
-                        <span className="mx-1.5">•</span>
+                        <span>•</span>
                         <span>${item.unitPrice.toFixed(2)}/Unit</span>
+                        {item.savings > 0 && (
+                          <span className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                            {item.tier === "2x" ? "2x Bundle (-12%)" : "3x Bundle (-18%)"} • Save ${item.savings.toFixed(2)}
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
                 </Link>
-                <span className="font-black text-sm text-slate-900 whitespace-nowrap flex-shrink-0 self-center">
-                  ${item.totalPrice.toFixed(2)}
-                </span>
+
+                <div className="flex items-center justify-between sm:justify-end gap-3 pl-15 sm:pl-0 flex-shrink-0">
+                  <div className="flex items-center border border-slate-200 rounded-lg bg-slate-50 overflow-hidden shadow-inner">
+                    <button
+                      type="button"
+                      disabled={item.quantity <= 1}
+                      onClick={() => adjustItemQty(-1)}
+                      className="w-7 h-7 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      aria-label="Decrease checkout quantity"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <span className="px-2.5 py-1 text-xs font-black text-slate-900 bg-white min-w-[1.75rem] text-center">
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={item.quantity >= maxStock}
+                      onClick={() => adjustItemQty(1)}
+                      className="w-7 h-7 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      aria-label="Increase checkout quantity"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  <span className="font-black text-sm text-slate-900 whitespace-nowrap min-w-[4.5rem] text-right">
+                    ${item.totalPrice.toFixed(2)}
+                  </span>
+                </div>
               </div>
             );
           })}

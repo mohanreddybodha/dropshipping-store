@@ -1,5 +1,6 @@
 import seedData from "@/lib/seedCatalog.json";
 import { getDb } from "@/lib/db";
+import { computeBundlePricing } from "@/lib/bundlePricing";
 import { Product, Variant } from "@/lib/types";
 
 export interface OrderItemInput {
@@ -275,7 +276,8 @@ export async function resolveAuthoritativeCart(
     }
 
     const qty = parseStrictQuantity(rawItem.quantity ?? 1);
-    const requestedTier = parseStrictTier(rawItem.tier);
+    // Validate tier input strictly so malformed/spoofed tier strings still fail closed (HTTP 400)
+    parseStrictTier(rawItem.tier);
     const rawVid = typeof rawItem.vid === "string" ? rawItem.vid.trim() : "";
     const rawPid = typeof rawItem.pid === "string" ? rawItem.pid.trim() : "";
 
@@ -313,27 +315,14 @@ export async function resolveAuthoritativeCart(
       );
     }
 
-    const bundle2 = Number(matched.variant.bundle_2_price || 0);
-    const bundle3 = Number(matched.variant.bundle_3_price || 0);
-
-    // Enforce minimum quantity threshold for bundle discounts so tier="3x", qty=1 cannot exploit discounts
-    let effectiveTier: "1x" | "2x" | "3x" = "1x";
-    let unitPrice = +price1x.toFixed(2);
-    let lineTotal = +(unitPrice * qty).toFixed(2);
-
-    if (requestedTier === 3 && qty >= 3 && bundle3 > 0) {
-      effectiveTier = "3x";
-      unitPrice = +(bundle3 / 3).toFixed(2);
-      lineTotal = qty === 3 ? +bundle3.toFixed(2) : +(unitPrice * qty).toFixed(2);
-    } else if (
-      (requestedTier === 2 || (requestedTier === 3 && qty === 2)) &&
-      qty >= 2 &&
-      bundle2 > 0
-    ) {
-      effectiveTier = "2x";
-      unitPrice = +(bundle2 / 2).toFixed(2);
-      lineTotal = qty === 2 ? +bundle2.toFixed(2) : +(unitPrice * qty).toFixed(2);
-    }
+    // Quantity governs bundle pricing monotonically:
+    // qty === 1 -> 1x full retail (zero discount, even if tier="3x" is tampered)
+    // qty === 2 -> 2x Value Bundle (12% off)
+    // qty >= 3  -> 3x Pro Bundle (18% off)
+    const computed = computeBundlePricing(matched.variant, qty);
+    const effectiveTier = computed.tier;
+    const unitPrice = computed.unitPrice;
+    const lineTotal = computed.totalPrice;
 
     const unitWholesale =
       matched.variant.wholesale_cost > 0

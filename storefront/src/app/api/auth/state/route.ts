@@ -39,8 +39,32 @@ export async function GET(req: NextRequest) {
 
     const [cartRows, watchRows, orderRows] = await Promise.all([
       user?.id
-        ? (sql`SELECT * FROM user_carts WHERE user_id = ${user.id} ORDER BY updated_at DESC` as unknown as Promise<DbCartItem[]>)
-        : Promise.resolve([] as DbCartItem[]),
+        ? (sql`
+            SELECT
+              uc.*,
+              pv.retail_price AS live_retail_price,
+              pv.bundle_2_price AS live_bundle_2_price,
+              pv.bundle_3_price AS live_bundle_3_price,
+              pv.us_warehouse_stock AS live_stock,
+              pv.wholesale_cost AS live_wholesale_cost,
+              pv.shipping_cost AS live_shipping_cost,
+              pv.variant_name AS live_variant_name,
+              pv.display_name AS live_display_name,
+              pv.size AS live_size,
+              pv.color AS live_color,
+              pv.sku AS live_sku,
+              pv.image_url AS live_variant_image,
+              p.slug AS live_slug,
+              p.title AS live_title,
+              p.category AS live_category,
+              p.hero_image_url AS live_hero_image
+            FROM user_carts uc
+            LEFT JOIN product_variants pv ON pv.vid = uc.variant_vid
+            LEFT JOIN products p ON p.id = pv.product_id
+            WHERE uc.user_id = ${user.id}
+            ORDER BY uc.updated_at DESC
+          ` as unknown as Promise<Array<DbCartItem & Record<string, any>>>)
+        : Promise.resolve([] as Array<DbCartItem & Record<string, any>>),
       user?.id
         ? (sql`SELECT product_pid FROM user_watchlists WHERE user_id = ${user.id} ORDER BY created_at DESC` as unknown as Promise<{ product_pid: string }[]>)
         : Promise.resolve([] as { product_pid: string }[]),
@@ -72,12 +96,23 @@ export async function GET(req: NextRequest) {
     const cart = cartRows.map((c) => ({
       product_pid: c.product_pid,
       variant_vid: c.variant_vid,
-      title: c.title,
-      image_url: c.image_url,
+      title: c.live_title || c.title,
+      image_url: c.live_variant_image || c.image_url || c.live_hero_image,
+      slug: c.live_slug || null,
+      category: c.live_category || "General",
       tier: c.tier,
       selected_size: c.selected_size,
       quantity: c.quantity,
       unit_price: c.unit_price,
+      retail_price_1x: c.live_retail_price != null ? Number(c.live_retail_price) : null,
+      bundle_2_price: c.live_bundle_2_price != null ? Number(c.live_bundle_2_price) : null,
+      bundle_3_price: c.live_bundle_3_price != null ? Number(c.live_bundle_3_price) : null,
+      us_warehouse_stock: c.live_stock != null ? Number(c.live_stock) : null,
+      wholesale_cost: c.live_wholesale_cost != null ? Number(c.live_wholesale_cost) : null,
+      shipping_cost: c.live_shipping_cost != null ? Number(c.live_shipping_cost) : null,
+      variant_name: c.live_variant_name || null,
+      display_name: c.live_display_name || null,
+      sku: c.live_sku || null,
     }));
 
     const watchlist = watchRows.map((w) => w.product_pid);

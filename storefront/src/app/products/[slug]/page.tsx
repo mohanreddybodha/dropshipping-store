@@ -121,7 +121,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       {
         vid: p.variants?.[0]?.vid || "default",
         title: p.variants?.[0]?.title || "Default",
-        retail_price_1x: p.variants?.[0]?.retail_price_1x || 24.99,
+        retail_price_1x: p.variants?.[0]?.retail_price_1x || 0,
       } as any,
     ],
   } as typeof product);

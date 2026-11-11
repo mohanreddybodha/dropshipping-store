@@ -12,7 +12,7 @@ import HorizontalProductRow from "../../components/catalog/HorizontalProductRow"
 /** Watchlist card: clean card with delete icon replacing heart, rating in bottom-right of image, and consistent 2-line title */
 function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () => void }) {
   const primaryVariant = product.variants[0];
-  const retailPrice = primaryVariant?.retail_price_1x || 24.99;
+  const retailPrice = primaryVariant?.retail_price_1x || 0;
   const comparePrice = +(retailPrice * 1.25).toFixed(2);
   const heroImage = product.hero_image_url || product.images?.[0] || "/placeholder.jpg";
 

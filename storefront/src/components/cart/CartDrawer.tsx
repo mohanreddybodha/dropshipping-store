@@ -2,11 +2,11 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { X, Trash2, ArrowRight, Truck } from "lucide-react";
+import { X, Trash2, ArrowRight, Truck, Plus, Minus } from "lucide-react";
 import { useCart } from "../../lib/cart";
 
 export default function CartDrawer() {
-  const { items, isOpen, closeCart, removeItem, totalAmount, totalSavings } = useCart();
+  const { items, isOpen, closeCart, removeItem, updateQuantity, totalAmount, totalSavings } = useCart();
 
   // Prevent background scroll when cart drawer is active
   useEffect(() => {
@@ -69,9 +69,14 @@ export default function CartDrawer() {
                 </button>
               </div>
             ) : (
-              items.map((item) => (
+              items.map((item) => {
+                const maxStock =
+                  item.variant?.us_warehouse_stock && item.variant.us_warehouse_stock > 0
+                    ? Math.min(99, item.variant.us_warehouse_stock)
+                    : 99;
+                return (
                 <div
-                  key={`${item.variant.vid}-${item.tier}-${item.selectedSize || "default"}`}
+                  key={`${item.variant.vid}-${item.selectedSize || "default"}-${item.selectedColor || "default"}`}
                   className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col gap-2 relative"
                 >
                   <div className="flex justify-between items-start gap-3">
@@ -93,10 +98,15 @@ export default function CartDrawer() {
                         <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-1">
                           {item.product.title}
                         </h4>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center flex-wrap gap-1.5 mt-1">
                           {item.selectedSize && (
                             <span className="text-[11px] font-bold bg-slate-200 text-slate-800 px-2 py-0.5 rounded">
                               Size: {item.selectedSize}
+                            </span>
+                          )}
+                          {item.selectedColor && (
+                            <span className="text-[11px] font-bold bg-slate-200 text-slate-800 px-2 py-0.5 rounded">
+                              Color: {item.selectedColor}
                             </span>
                           )}
                           <span className="text-xs text-emerald-600 font-semibold">
@@ -107,7 +117,7 @@ export default function CartDrawer() {
                     </Link>
 
                     <button
-                      onClick={() => removeItem(item.variant.vid, item.tier, item.selectedSize)}
+                      onClick={() => removeItem(item.variant.vid, item.tier, item.selectedSize, item.selectedColor)}
                       className="text-slate-400 hover:text-rose-600 transition p-1"
                       title="Remove item"
                     >
@@ -115,10 +125,50 @@ export default function CartDrawer() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200/60">
-                    <span className="text-xs bg-slate-200/80 text-slate-800 px-2 py-0.5 rounded font-medium">
-                      Bundle: {item.tier.toUpperCase()} ({item.quantity} {item.quantity === 1 ? "unit" : "units"})
-                    </span>
+                  <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-200/60">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center border border-slate-200 rounded-lg bg-white overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateQuantity(
+                              item.variant.vid,
+                              item.tier,
+                              item.quantity - 1,
+                              item.selectedSize,
+                              item.selectedColor
+                            )
+                          }
+                          className="w-6 h-6 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center justify-center cursor-pointer"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="px-2 text-xs font-bold text-slate-900 min-w-[1.5rem] text-center">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={item.quantity >= maxStock}
+                          onClick={() =>
+                            updateQuantity(
+                              item.variant.vid,
+                              item.tier,
+                              item.quantity + 1,
+                              item.selectedSize,
+                              item.selectedColor
+                            )
+                          }
+                          className="w-6 h-6 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <span className="text-[11px] bg-slate-200/80 text-slate-800 px-2 py-0.5 rounded font-medium">
+                        {item.tier === "1x" ? "1x Standard" : `Bundle: ${item.tier.toUpperCase()}`}
+                      </span>
+                    </div>
                     <div className="text-right">
                       <span className="text-base font-bold text-slate-900">
                         ${item.totalPrice.toFixed(2)}
@@ -131,7 +181,8 @@ export default function CartDrawer() {
                     </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
 

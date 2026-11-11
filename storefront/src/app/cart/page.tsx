@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../lib/cart";
+import { normalizeCartItemPricing } from "../../lib/bundlePricing";
 import {
   Trash2,
   Plus,
@@ -207,16 +208,21 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         {/* Left Column: Cart Items List (Mobile-Optimized Flipkart Card Layout) */}
         <div className="lg:col-span-8 space-y-3.5">
-          {items.map((item) => {
+          {items.map((rawItem) => {
+            const item = normalizeCartItemPricing(rawItem);
             const heroImg =
               item.variant?.image_url ||
               item.product.hero_image_url ||
               item.product.images?.[0] ||
               "/placeholder.jpg";
+            const maxStock =
+              item.variant?.us_warehouse_stock && item.variant.us_warehouse_stock > 0
+                ? Math.min(99, item.variant.us_warehouse_stock)
+                : 99;
 
             return (
               <div
-                key={`${item.variant.vid}-${item.tier}-${item.selectedSize || ""}-${item.selectedColor || ""}`}
+                key={`${item.variant.vid}-${item.selectedSize || ""}-${item.selectedColor || ""}`}
                 className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-5 shadow-xs transition hover:border-slate-300 space-y-3"
               >
                 {/* Top Section: High-Fidelity Thumbnail + Product Details & Pricing */}
@@ -246,7 +252,7 @@ export default function CartPage() {
                         {item.product.title}
                       </Link>
                       <span className="text-sm sm:text-base font-black text-slate-900 flex-shrink-0">
-                        ${(Number(item.totalPrice) || Number(item.variant?.retail_price_1x) || 24.99).toFixed(2)}
+                        ${item.totalPrice.toFixed(2)}
                       </span>
                     </div>
 
@@ -267,8 +273,13 @@ export default function CartPage() {
                         {getUnitText(item.quantity, item.tier)}
                       </span>
                       <span className="text-slate-400">
-                        (${(Number(item.unitPrice) || Number(item.variant?.retail_price_1x) || 24.99).toFixed(2)}/unit)
+                        (${item.unitPrice.toFixed(2)}/unit)
                       </span>
+                      {item.savings > 0 && (
+                        <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-bold">
+                          Save ${item.savings.toFixed(2)}
+                        </span>
+                      )}
                     </div>
 
 
@@ -300,6 +311,7 @@ export default function CartPage() {
                     </span>
                     <button
                       type="button"
+                      disabled={item.quantity >= maxStock}
                       onClick={() =>
                         updateQuantity(
                           item.variant.vid,
@@ -309,7 +321,7 @@ export default function CartPage() {
                           item.selectedColor
                         )
                       }
-                      className="w-8 h-7 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition text-xs font-bold active:scale-90 flex items-center justify-center cursor-pointer"
+                      className="w-8 h-7 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition text-xs font-bold active:scale-90 flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       aria-label="Increase quantity"
                     >
                       <Plus className="w-3 h-3" />

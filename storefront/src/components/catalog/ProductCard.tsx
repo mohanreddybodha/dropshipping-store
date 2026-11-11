@@ -100,7 +100,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const variantPrices = (product.variants || [])
     .map((v) => v.retail_price_1x)
     .filter((p) => typeof p === "number" && p > 0);
-  const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : (primaryVariant?.retail_price_1x || 24.99);
+  const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : (primaryVariant?.retail_price_1x || 0);
 
   const comparePrice = +(minPrice * 1.25).toFixed(2);
   const heroImage = product.hero_image_url || product.images?.[0] || "/placeholder.jpg";

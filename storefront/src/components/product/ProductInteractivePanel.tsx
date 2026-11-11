@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BundleTier, Product, Variant } from "../../lib/types";
 import { useCart } from "../../lib/cart";
+import { getVariantBundlePrices } from "../../lib/bundlePricing";
 import { ShoppingBag, ArrowRight, Check } from "lucide-react";
 import SizeSelector, { parseApparelVariant } from "./SizeSelector";
 import { showToast } from "../ui/Toast";
@@ -62,23 +63,21 @@ export default function ProductInteractivePanel({
     }
   }, [initialVariant]);
 
+  const effectiveSize = selectedSize || selectedVariant.variant_name || "";
+
   // Check if current configuration is already in cart
   useEffect(() => {
     const existing = items.some(
       (item) =>
         item.variant.vid === selectedVariant.vid &&
         item.tier === selectedTier &&
-        (item.selectedSize || "") === (selectedSize || "") &&
+        (item.selectedSize || "") === effectiveSize &&
         (item.selectedColor || "") === (selectedColor || "")
     );
-    if (existing) {
-      setIsAdded(true);
-    }
-  }, [items, selectedVariant.vid, selectedTier, selectedSize, selectedColor]);
+    setIsAdded(existing);
+  }, [items, selectedVariant.vid, selectedTier, effectiveSize, selectedColor]);
 
-  const price1x = selectedVariant.retail_price_1x;
-  const price2x = selectedVariant.bundle_2_price;
-  const price3x = selectedVariant.bundle_3_price;
+  const { price1x, price2x, price3x } = getVariantBundlePrices(selectedVariant);
 
   const currentPrice =
     selectedTier === "1x" ? price1x : selectedTier === "2x" ? price2x : price3x;
@@ -88,9 +87,9 @@ export default function ProductInteractivePanel({
 
   const savings =
     selectedTier === "2x"
-      ? +(price1x * 2 - price2x).toFixed(2)
+      ? Math.max(0, +(price1x * 2 - price2x).toFixed(2))
       : selectedTier === "3x"
-      ? +(price1x * 3 - price3x).toFixed(2)
+      ? Math.max(0, +(price1x * 3 - price3x).toFixed(2))
       : 0;
 
   // Reactively broadcast tier, price, size, and color updates to the mobile sticky buy bar

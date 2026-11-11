@@ -4,6 +4,7 @@
 import { runSecurityTests } from "./00-security.mjs";
 import { runFulfillmentTests } from "./01-fulfillment.mjs";
 import { runComplianceTests } from "./02-compliance.mjs";
+import { runPricingConsistencyTests } from "./03-pricing-consistency.mjs";
 
 const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3009";
 
@@ -16,9 +17,10 @@ async function main() {
   const t0 = await runSecurityTests(BASE_URL);
   const t1 = await runFulfillmentTests(BASE_URL);
   const t2 = await runComplianceTests(BASE_URL);
+  const t3 = await runPricingConsistencyTests(BASE_URL);
 
-  const totalPassed = t0.passed + t1.passed + t2.passed;
-  const totalFailed = t0.failed + t1.failed + t2.failed;
+  const totalPassed = t0.passed + t1.passed + t2.passed + t3.passed;
+  const totalFailed = t0.failed + t1.failed + t2.failed + t3.failed;
 
   console.log("\n==================================================================");
   console.log(` PRODUCTION BATTERY SUMMARY: ${totalPassed} PASSED, ${totalFailed} FAILED`);
