@@ -6,8 +6,11 @@ import { auth, onAuthStateChanged } from "./firebase";
 import { saveUserCart, getUserAuthState, getCatalog, FALLBACK_PRODUCTS } from "./api";
 import {
   computeBundlePricing,
+  getStockCap,
+  isSameCartVariant,
   normalizeCartItemPricing,
   summarizeCartTotals,
+  upsertMergedCartItem,
 } from "./bundlePricing";
 
 function findCatalogEntryByVid(
@@ -23,24 +26,6 @@ function findCatalogEntryByVid(
     }
   }
   return null;
-}
-
-function getStockCap(variant?: Variant | null): number {
-  const stock = Number(variant?.us_warehouse_stock || 0);
-  return stock > 0 ? Math.min(99, stock) : 99;
-}
-
-function isSameCartLine(
-  item: CartItem,
-  vid: string,
-  selectedSize?: string,
-  selectedColor?: string
-): boolean {
-  return (
-    item.variant?.vid === vid &&
-    (item.selectedSize || "") === (selectedSize || "") &&
-    (item.selectedColor || "") === (selectedColor || "")
-  );
 }
 
 function consolidateAndNormalizeCart(
@@ -62,7 +47,7 @@ function consolidateAndNormalizeCart(
     };
 
     const existingIdx = merged.findIndex((m) =>
-      isSameCartLine(m, variant.vid, raw.selectedSize, raw.selectedColor)
+      isSameCartVariant(m, variant.vid, raw.selectedSize, raw.selectedColor)
     );
 
     if (existingIdx > -1) {
@@ -71,7 +56,13 @@ function consolidateAndNormalizeCart(
         Math.max(1, (merged[existingIdx].quantity || 1) + (raw.quantity || 1))
       );
       merged[existingIdx] = normalizeCartItemPricing(
-        { ...merged[existingIdx], product, variant },
+        {
+          ...merged[existingIdx],
+          product,
+          variant,
+          selectedSize: merged[existingIdx].selectedSize || raw.selectedSize,
+          selectedColor: merged[existingIdx].selectedColor || raw.selectedColor,
+        },
         combinedQty
       );
     } else {
@@ -229,7 +220,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               };
 
               const existingIdx = incomingItems.findIndex((item) =>
-                isSameCartLine(item, matchedVariant.vid, rc.selected_size || undefined)
+                isSameCartVariant(item, matchedVariant.vid, rc.selected_size || undefined)
               );
 
               if (existingIdx > -1) {
@@ -312,47 +303,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     selectedSize?: string,
     selectedColor?: string
   ) => {
-    const addQty = tier === "3x" ? 3 : tier === "2x" ? 2 : 1;
-
-    setItems((prev) => {
-      const existingIdx = prev.findIndex((i) =>
-        isSameCartLine(i, variant.vid, selectedSize, selectedColor)
-      );
-      if (existingIdx > -1) {
-        const existing = prev[existingIdx];
-        if (existing.tier === tier) {
-          return prev;
-        }
-        const nextQty = Math.min(getStockCap(variant), existing.quantity + addQty);
-        const updated = [...prev];
-        updated[existingIdx] = normalizeCartItemPricing(
-          { ...existing, product, variant },
-          nextQty
-        );
-        return updated;
-      }
-
-      const pricing = computeBundlePricing(variant, addQty);
-      return [
-        ...prev,
-        {
-          product,
-          variant: {
-            ...variant,
-            retail_price_1x: pricing.price1x || variant.retail_price_1x,
-            bundle_2_price: pricing.price2x || variant.bundle_2_price,
-            bundle_3_price: pricing.price3x || variant.bundle_3_price,
-          },
-          selectedSize,
-          selectedColor,
-          tier: pricing.tier,
-          quantity: pricing.quantity,
-          unitPrice: pricing.unitPrice,
-          totalPrice: pricing.totalPrice,
-          savings: pricing.savings,
-        },
-      ];
-    });
+    setItems((prev) =>
+      upsertMergedCartItem(prev, {
+        product,
+        variant,
+        tier,
+        selectedSize,
+        selectedColor,
+      })
+    );
 
     setIsOpen(true);
   };
@@ -370,7 +329,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     setItems((prev) =>
       prev.map((i) => {
-        if (isSameCartLine(i, vid, selectedSize, selectedColor)) {
+        if (isSameCartVariant(i, vid, selectedSize, selectedColor)) {
           const cappedQty = Math.min(
             getStockCap(i.variant),
             Math.max(1, Math.floor(quantity))
@@ -389,7 +348,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     selectedColor?: string
   ) => {
     setItems((prev) =>
-      prev.filter((i) => !isSameCartLine(i, vid, selectedSize, selectedColor))
+      prev.filter((i) => !isSameCartVariant(i, vid, selectedSize, selectedColor))
     );
   };
 

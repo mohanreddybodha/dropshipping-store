@@ -49,7 +49,7 @@ export async function runPricingConsistencyTests(base = "http://localhost:3009")
   let sampleProduct = null;
   let sampleVariant = null;
   try {
-    const res = await fetch(`${base}/api/catalog?limit=500`);
+    const res = await fetch(`${base}/api/catalog?limit=500`, { signal: AbortSignal.timeout(25000) });
     const data = await res.json();
     const items = data.items || [];
     assert(res.status === 200 && items.length >= 70, "P3-1: Full active catalog loaded for pricing audit");
@@ -151,6 +151,56 @@ export async function runPricingConsistencyTests(base = "http://localhost:3009")
       singleSummary.totalAmount === p1.totalPrice && singleSummary.totalSavings === 0,
       "P3-2f: Summary totals for single-unit cart never emit hardcoded $8.50 or phantom savings",
       JSON.stringify(singleSummary)
+    );
+
+    // Consolidation guarantees: 1x + 1x (even across raw vs display label) merges into ONE 2x line item,
+    // and 1x + 2x merges into ONE 3x line item; distinct VIDs stay separate.
+    const testProd = sampleProduct || { pid: "p1", title: "Test", slug: "test", is_active: true, variants: [v] };
+    let mergedCart = bp.upsertMergedCartItem([], {
+      product: testProd,
+      variant: v,
+      tier: "1x",
+      selectedSize: "1PC",
+    });
+    mergedCart = bp.upsertMergedCartItem(mergedCart, {
+      product: testProd,
+      variant: v,
+      tier: "1x",
+      selectedSize: "Standard Edition",
+    });
+    assert(
+      mergedCart.length === 1 &&
+        mergedCart[0].quantity === 2 &&
+        mergedCart[0].tier === "2x" &&
+        mergedCart[0].totalPrice === +v.bundle_2_price.toFixed(2),
+      "P3-2g: Adding 1x twice across revisits consolidates into 1 cart item with 2x bundle discount",
+      JSON.stringify(mergedCart)
+    );
+
+    const plusTwoCart = bp.upsertMergedCartItem(
+      bp.upsertMergedCartItem([], { product: testProd, variant: v, tier: "1x", selectedSize: "1PC" }),
+      { product: testProd, variant: v, tier: "2x", selectedSize: "Standard Edition" }
+    );
+    assert(
+      plusTwoCart.length === 1 &&
+        plusTwoCart[0].quantity === 3 &&
+        plusTwoCart[0].tier === "3x" &&
+        plusTwoCart[0].totalPrice === +v.bundle_3_price.toFixed(2),
+      "P3-2h: Adding 1x then 2x of the same variant merges into 1 cart item with 3x bundle discount",
+      JSON.stringify(plusTwoCart)
+    );
+
+    const otherVariant = { ...v, vid: `${v.vid}_ALT` };
+    const twoVariantCart = bp.upsertMergedCartItem(mergedCart, {
+      product: testProd,
+      variant: otherVariant,
+      tier: "1x",
+      selectedSize: "Large",
+    });
+    assert(
+      twoVariantCart.length === 2,
+      "P3-2i: Different variant specifications stay distinct line items in cart",
+      `len=${twoVariantCart.length}`
     );
   } catch (err) {
     assert(false, "P3-2: Client pricing helper exception", err.message);

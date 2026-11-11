@@ -15,7 +15,7 @@ interface MobileStickyBuyBarProps {
 
 export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuyBarProps) {
   const router = useRouter();
-  const { addItem, items } = useCart();
+  const { addItem } = useCart();
   const [currentVariant, setCurrentVariant] = useState<Variant | undefined>(variant);
   const [currentTier, setCurrentTier] = useState<BundleTier>("1x");
   const [currentPrice, setCurrentPrice] = useState<number>(
@@ -32,9 +32,9 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
     }
   }, [variant]);
 
-  // Synchronize reactively with bundle tier selections in ProductInteractivePanel
+  // Synchronize reactively with bundle tier & in-page add state in ProductInteractivePanel
   useEffect(() => {
-    const handler = (e: Event) => {
+    const tierHandler = (e: Event) => {
       const detail = (
         e as CustomEvent<{
           tier: BundleTier;
@@ -50,40 +50,39 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
         if (detail.size !== undefined) setCurrentSize(detail.size);
         if (detail.color !== undefined) setCurrentColor(detail.color);
         if (detail.variant) setCurrentVariant(detail.variant);
-        setIsAdded(false);
       }
     };
-    window.addEventListener("product:tier_change", handler);
-    return () => window.removeEventListener("product:tier_change", handler);
+    const addedHandler = (e: Event) => {
+      const detail = (e as CustomEvent<{ isAdded?: boolean }>).detail;
+      if (detail && typeof detail.isAdded === "boolean") {
+        setIsAdded(detail.isAdded);
+      }
+    };
+    window.addEventListener("product:tier_change", tierHandler);
+    window.addEventListener("product:cart_added", addedHandler);
+    return () => {
+      window.removeEventListener("product:tier_change", tierHandler);
+      window.removeEventListener("product:cart_added", addedHandler);
+    };
   }, []);
 
   const activeVariant = currentVariant || variant;
-  const effectiveSize = currentSize || activeVariant?.variant_name || "";
-
-  // Check if configuration already exists in cart
-  useEffect(() => {
-    if (!activeVariant) return;
-    const existing = items.some(
-      (item) =>
-        item.variant.vid === activeVariant.vid &&
-        item.tier === currentTier &&
-        (item.selectedSize || "") === effectiveSize &&
-        (item.selectedColor || "") === (currentColor || "")
-    );
-    setIsAdded(existing);
-  }, [items, activeVariant, currentTier, effectiveSize, currentColor]);
 
   if (!activeVariant) return null;
 
   const handleButtonClick = () => {
     if (isAdded) {
-      // AJIO Style: Morph into View Cart -> instant navigation
       router.push("/cart");
       return;
     }
 
-    addItem(product, activeVariant, currentTier, effectiveSize || undefined, currentColor || undefined);
+    const effectiveSize =
+      currentSize || activeVariant.display_name || activeVariant.variant_name || undefined;
+    addItem(product, activeVariant, currentTier, effectiveSize, currentColor || undefined);
     setIsAdded(true);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("product:cart_added", { detail: { isAdded: true } }));
+    }
     showToast("Added to Cart", "cart-add");
   };
 

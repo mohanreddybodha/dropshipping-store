@@ -23,7 +23,7 @@ export default function ProductInteractivePanel({
   initialColor,
 }: ProductInteractivePanelProps) {
   const router = useRouter();
-  const { addItem, items } = useCart();
+  const { addItem } = useCart();
   const initialVariant = variant || product.variants[0];
   const [selectedVariant, setSelectedVariant] = useState<Variant>(initialVariant);
   // Default to 1x Single Unit
@@ -63,19 +63,18 @@ export default function ProductInteractivePanel({
     }
   }, [initialVariant]);
 
-  const effectiveSize = selectedSize || selectedVariant.variant_name || "";
-
-  // Check if current configuration is already in cart
+  // Sync in-page Add -> View Cart morphing ONLY for this active visit (fresh visits always start as Add to Cart)
   useEffect(() => {
-    const existing = items.some(
-      (item) =>
-        item.variant.vid === selectedVariant.vid &&
-        item.tier === selectedTier &&
-        (item.selectedSize || "") === effectiveSize &&
-        (item.selectedColor || "") === (selectedColor || "")
-    );
-    setIsAdded(existing);
-  }, [items, selectedVariant.vid, selectedTier, effectiveSize, selectedColor]);
+    if (typeof window === "undefined") return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ isAdded?: boolean }>).detail;
+      if (detail && typeof detail.isAdded === "boolean") {
+        setIsAdded(detail.isAdded);
+      }
+    };
+    window.addEventListener("product:cart_added", handler);
+    return () => window.removeEventListener("product:cart_added", handler);
+  }, []);
 
   const { price1x, price2x, price3x } = getVariantBundlePrices(selectedVariant);
 
@@ -113,21 +112,30 @@ export default function ProductInteractivePanel({
     setSelectedSize(size);
     setSelectedVariant(v);
     setIsAdded(false);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("product:cart_added", { detail: { isAdded: false } }));
+    }
   };
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
     setIsAdded(false);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("product:cart_added", { detail: { isAdded: false } }));
+    }
   };
 
   const handleTierChange = (tier: BundleTier) => {
     setSelectedTier(tier);
     setIsAdded(false);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("product:cart_added", { detail: { isAdded: false } }));
+    }
   };
 
   const handleButtonClick = () => {
     if (isAdded) {
-      // AJIO Style: Morph into View Cart -> navigate immediately
+      // Morph back to View Cart navigation only on the active visit after adding
       router.push("/cart");
       return;
     }
@@ -136,10 +144,13 @@ export default function ProductInteractivePanel({
       product,
       selectedVariant,
       selectedTier,
-      selectedSize || selectedVariant.variant_name || undefined,
+      selectedSize || selectedVariant.display_name || selectedVariant.variant_name || undefined,
       selectedColor || undefined
     );
     setIsAdded(true);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("product:cart_added", { detail: { isAdded: true } }));
+    }
     showToast("Added to Cart", "cart-add");
   };
 

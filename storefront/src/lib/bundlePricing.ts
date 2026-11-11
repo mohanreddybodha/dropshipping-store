@@ -1,4 +1,4 @@
-import type { BundleTier, CartItem, Variant } from "./types";
+import type { BundleTier, CartItem, Product, Variant } from "./types";
 
 export interface VariantBundlePrices {
   price1x: number;
@@ -203,4 +203,95 @@ export function summarizeCartTotals(items: Array<Pick<CartItem, "totalPrice" | "
     totalSavings: roundCents(totalSavings),
     itemCount,
   };
+}
+
+/** Max purchasable quantity per cart line capped at US stock (or 99). */
+export function getStockCap(variant?: Partial<Variant> | null): number {
+  const stock = Number(variant?.us_warehouse_stock || 0);
+  return stock > 0 ? Math.min(99, stock) : 99;
+}
+
+/**
+ * Determine whether two cart entries represent the same purchasable variant.
+ * Every distinct size/color/specification in the catalog has a unique `variant.vid`,
+ * so matching by non-empty `vid` avoids duplicating identical variants whose display
+ * vs raw label (`display_name` vs `variant_name`) differs across views.
+ */
+export function isSameCartVariant(
+  item: Pick<CartItem, "variant" | "selectedSize" | "selectedColor">,
+  vid: string,
+  selectedSize?: string,
+  selectedColor?: string
+): boolean {
+  const itemVid = String(item.variant?.vid || "").trim();
+  const targetVid = String(vid || "").trim();
+  if (itemVid && targetVid) {
+    return itemVid === targetVid;
+  }
+  return (
+    itemVid === targetVid &&
+    (item.selectedSize || "") === (selectedSize || "") &&
+    (item.selectedColor || "") === (selectedColor || "")
+  );
+}
+
+/**
+ * Merge or append a variant addition into an existing cart list.
+ * Re-adding the same variant (whether the same or a different 1x/2x/3x pack tier)
+ * increments its unit count in one consolidated line item and recalculates bundle pricing.
+ */
+export function upsertMergedCartItem(
+  prev: CartItem[],
+  addition: {
+    product: Product;
+    variant: Variant;
+    tier: BundleTier;
+    selectedSize?: string;
+    selectedColor?: string;
+  }
+): CartItem[] {
+  const { product, variant, tier, selectedSize, selectedColor } = addition;
+  const addQty = tier === "3x" ? 3 : tier === "2x" ? 2 : 1;
+  const stockCap = getStockCap(variant);
+  const existingIdx = prev.findIndex((i) =>
+    isSameCartVariant(i, variant.vid, selectedSize, selectedColor)
+  );
+
+  if (existingIdx > -1) {
+    const existing = prev[existingIdx];
+    const nextQty = Math.min(stockCap, (existing.quantity || 1) + addQty);
+    const updated = [...prev];
+    updated[existingIdx] = normalizeCartItemPricing(
+      {
+        ...existing,
+        product,
+        variant,
+        selectedSize: selectedSize || existing.selectedSize,
+        selectedColor: selectedColor || existing.selectedColor,
+      },
+      nextQty
+    );
+    return updated;
+  }
+
+  const pricing = computeBundlePricing(variant, Math.min(stockCap, addQty));
+  return [
+    ...prev,
+    {
+      product,
+      variant: {
+        ...variant,
+        retail_price_1x: pricing.price1x || variant.retail_price_1x,
+        bundle_2_price: pricing.price2x || variant.bundle_2_price,
+        bundle_3_price: pricing.price3x || variant.bundle_3_price,
+      },
+      selectedSize,
+      selectedColor,
+      tier: pricing.tier,
+      quantity: pricing.quantity,
+      unitPrice: pricing.unitPrice,
+      totalPrice: pricing.totalPrice,
+      savings: pricing.savings,
+    },
+  ];
 }
