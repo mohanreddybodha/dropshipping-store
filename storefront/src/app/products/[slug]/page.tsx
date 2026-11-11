@@ -185,24 +185,9 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
         {/* Left Column: Visual Showcase (7 cols) */}
         <div className="lg:col-span-7 space-y-3">
-          {/* Semantic Breadcrumb + Title */}
-          <div>
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 mb-1">
-              <Link href="/" className="hover:text-emerald-700 transition-colors">
-                Home
-              </Link>
-              <ChevronRight className="w-3 h-3 text-slate-400" />
-              <Link
-                href={`/collections/${getCollectionSlugForCategory(categoryName)}`}
-                className="text-emerald-700 hover:underline truncate"
-              >
-                {categoryName}
-              </Link>
-            </nav>
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-              {product.title}
-            </h1>
-          </div>
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-snug">
+            {product.title}
+          </h1>
 
           {/* Interactive Product Gallery with All Variant Images */}
           {(() => {

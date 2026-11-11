@@ -94,9 +94,6 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Main Content */}
       <main className="flex-1">{children}</main>
 
-      {/* Retail Trust Pillars & Footer on Home and Collections */}
-      {isBrowseSurface && <Footer />}
-
       {/* Native App-Style Mobile Bottom Navigation Bar: Hidden on product pages and checkout */}
       {!isProduct && <MobileBottomNav />}
     </div>

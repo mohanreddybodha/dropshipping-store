@@ -87,6 +87,21 @@ body {
 .fade-up-delay-3 { animation-delay: 180ms; }
 .fade-up-delay-4 { animation-delay: 240ms; }
 
+/* ── Modal Bottom Sheet Slide-Up Animation ── */
+@keyframes sheetSlideUp {
+  from {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0.6;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+.animate-sheet-slide-up {
+  animation: sheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 /* ── Category promo card shimmer ── */
 @keyframes shimmer {
   0%   { background-position: -400px 0; }

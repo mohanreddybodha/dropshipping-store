@@ -297,10 +297,10 @@ export async function queryVariantUsStockByVid(
     let usStock = 0;
     for (const rec of records) {
       const country = String(rec?.countryCode || "").toUpperCase();
-      const areaId = Number(rec?.areaId || 0);
-      const warehouseName = String(rec?.warehouseName || "").toUpperCase();
-      const qty = Number(rec?.storageNum ?? rec?.inventoryNum ?? 0);
-      if (country === "US" || areaId === 2 || warehouseName.includes("US")) {
+      const areaId = String(rec?.areaId ?? "").trim();
+      const warehouseName = `${rec?.warehouseName || ""} ${rec?.areaEn || ""}`.toUpperCase();
+      const qty = Number(rec?.storageNum ?? rec?.cjInventoryNum ?? rec?.inventoryNum ?? 0);
+      if (country === "US" || areaId === "2" || warehouseName.includes("US")) {
         usStock += Number.isFinite(qty) ? qty : 0;
       }
     }

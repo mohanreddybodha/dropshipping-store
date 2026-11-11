@@ -140,8 +140,8 @@ export default function CatalogExplorer({
     }
   }, [isFilterModalOpen]);
 
-  // Infinite scroll state
-  const [visibleCount, setVisibleCount] = useState<number>(pageSize);
+  // Infinite scroll state: Continuous multi-scroll discovery
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Filter & Sort Pipeline
@@ -194,21 +194,16 @@ export default function CatalogExplorer({
   }, [products, activeCategory, activeSearch, selectedPriceRange, sortBy]);
 
   const totalItems = filteredProducts.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  const safePage = Math.min(currentPage, totalPages);
-  const startOffset = (safePage - 1) * pageSize;
 
-  // Reset visible count when filters or route page change
+  // Reset visible count when filters change
   useEffect(() => {
-    setVisibleCount(pageSize);
-  }, [activeCategory, activeSearch, selectedPriceRange, sortBy, pageSize, safePage]);
+    setVisibleCount(PAGE_SIZE);
+  }, [activeCategory, activeSearch, selectedPriceRange, sortBy]);
 
   // Infinite scroll via IntersectionObserver
   const loadMore = useCallback(() => {
-    setVisibleCount((prev) =>
-      Math.min(prev + pageSize, Math.max(0, filteredProducts.length - startOffset))
-    );
-  }, [filteredProducts.length, pageSize, startOffset]);
+    setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, filteredProducts.length));
+  }, [filteredProducts.length]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -217,14 +212,14 @@ export default function CatalogExplorer({
       (entries) => {
         if (entries[0].isIntersecting) loadMore();
       },
-      { rootMargin: "300px" }
+      { rootMargin: "600px" }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [loadMore]);
 
-  const visibleProducts = filteredProducts.slice(startOffset, startOffset + visibleCount);
-  const hasMore = startOffset + visibleCount < totalItems;
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < totalItems;
 
   // Apply filters ONLY when the user clicks the "Apply Filters" button in the modal!
   const handleApplyFilters = () => {
@@ -470,34 +465,6 @@ export default function CatalogExplorer({
             Loading more products…
           </div>
         </div>
-      )}
-
-      {/* Clean Bottom Crawler & Keyboard Pagination (Gives search engines direct SSR links to all products 25–91+) */}
-      {!isCollectionPage && !hasActiveFilters && totalPages > 1 && (
-        <nav
-          aria-label="Catalog pagination"
-          className="flex items-center justify-center gap-1.5 pt-2 pb-1 text-xs text-slate-500"
-        >
-          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((pageNum) => {
-            const href = pageNum === 1 ? "/" : `/?page=${pageNum}`;
-            const isCurrent = pageNum === safePage;
-            return (
-              <Link
-                key={pageNum}
-                href={href}
-                prefetch={false}
-                aria-current={isCurrent ? "page" : undefined}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition border ${
-                  isCurrent
-                    ? "bg-slate-900 text-white border-slate-900"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-emerald-400 hover:text-emerald-700"
-                }`}
-              >
-                {pageNum}
-              </Link>
-            );
-          })}
-        </nav>
       )}
     </div>
   );

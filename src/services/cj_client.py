@@ -272,11 +272,12 @@ class CJClient:
         stock_records = self.query_variant_stock(vid)
         us_stock = 0
         for record in stock_records:
-            # Check country or warehouse label
-            country = (record.get("countryCode") or "").upper()
-            area_id = record.get("areaId")
-            storage_num = int(record.get("storageNum") or record.get("inventoryNum") or 0)
-            if country == "US" or area_id == 2 or "US" in (record.get("warehouseName") or "").upper():
+            # Check country, areaId ('2' or 2), or warehouse/area label
+            country = str(record.get("countryCode") or "").upper()
+            area_id = str(record.get("areaId") or "").strip()
+            warehouse_label = f"{record.get('warehouseName') or ''} {record.get('areaEn') or ''}".upper()
+            storage_num = int(record.get("storageNum") or record.get("cjInventoryNum") or record.get("inventoryNum") or 0)
+            if country == "US" or area_id == "2" or "US" in warehouse_label:
                 us_stock += storage_num
 
         return us_stock
