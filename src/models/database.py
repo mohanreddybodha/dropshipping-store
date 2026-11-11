@@ -117,6 +117,10 @@ class ProductVariant(Base):
     carrier_name: Mapped[str] = mapped_column(String(128), default="USPS", nullable=False)
     delivery_sla: Mapped[str] = mapped_column(String(64), default="3-7 Days", nullable=False)
     is_available: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    variant_name: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    display_name: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    size: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    color: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
     # Relationship back to product
     product: Mapped[Product] = relationship("Product", back_populates="variants")

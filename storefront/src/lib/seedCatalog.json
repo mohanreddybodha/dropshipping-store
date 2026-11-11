@@ -57,7 +57,8 @@
       "slug": "new-for-keeping-turbo-fans-for-with-9002by",
       "category": "Home & Kitchen",
       "rating": 4.6,
-      "review_count": 255
+      "review_count": 255,
+      "amazon_benchmark": 34.99
     },
     "faq_schema": [
       {
@@ -91,7 +92,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 133,
+        "us_warehouse_stock": 57,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -168,7 +169,8 @@
       "slug": "and-bidet-baby-mute-3304dw",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 244
+      "review_count": 244,
+      "amazon_benchmark": 39.99
     },
     "faq_schema": [
       {
@@ -202,7 +204,7 @@
         "retail_price_1x": 26.47,
         "bundle_2_price": 46.58,
         "bundle_3_price": 65.11,
-        "us_warehouse_stock": 122,
+        "us_warehouse_stock": 11350,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -221,7 +223,7 @@
         "retail_price_1x": 52.98,
         "bundle_2_price": 93.23,
         "bundle_3_price": 130.32,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 35916,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -240,7 +242,7 @@
         "retail_price_1x": 87.13,
         "bundle_2_price": 153.34,
         "bundle_3_price": 214.33,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 36801,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -259,7 +261,7 @@
         "retail_price_1x": 117.57,
         "bundle_2_price": 206.91,
         "bundle_3_price": 289.21,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 39812,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -327,7 +329,8 @@
       "slug": "pcs-tape-with-high-glass-cup-coffee-9901az",
       "category": "Home & Kitchen",
       "rating": 4.6,
-      "review_count": 253
+      "review_count": 253,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -351,7 +354,7 @@
         "id": 4,
         "vid": "1957036227023732738",
         "sku": "CJHS245959901AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -361,7 +364,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 131,
+        "us_warehouse_stock": 23,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -380,7 +383,7 @@
         "retail_price_1x": 11.02,
         "bundle_2_price": 19.39,
         "bundle_3_price": 27.1,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14883,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -399,7 +402,7 @@
         "retail_price_1x": 12.28,
         "bundle_2_price": 21.6,
         "bundle_3_price": 30.2,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13434,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -470,7 +473,8 @@
       "slug": "it-is-to-keep-cool-in-summer-2801az",
       "category": "Home & Kitchen",
       "rating": 4.6,
-      "review_count": 287
+      "review_count": 287,
+      "amazon_benchmark": 29.99
     },
     "faq_schema": [
       {
@@ -504,7 +508,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 165,
+        "us_warehouse_stock": 145,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -523,7 +527,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 153,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -601,7 +605,8 @@
       "slug": "corner-shelf-with-hooks-easy-to-install-6201az",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 284
+      "review_count": 284,
+      "amazon_benchmark": 28.99
     },
     "faq_schema": [
       {
@@ -635,7 +640,7 @@
         "retail_price_1x": 28.95,
         "bundle_2_price": 50.94,
         "bundle_3_price": 71.21,
-        "us_warehouse_stock": 162,
+        "us_warehouse_stock": 1024,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -713,7 +718,8 @@
       "slug": "10-pack-cabinet-pulls-3in-76mm-center-2101az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 273
+      "review_count": 273,
+      "amazon_benchmark": 21.99
     },
     "faq_schema": [
       {
@@ -747,7 +753,7 @@
         "retail_price_1x": 21.95,
         "bundle_2_price": 38.62,
         "bundle_3_price": 53.99,
-        "us_warehouse_stock": 151,
+        "us_warehouse_stock": 86,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -895,7 +901,8 @@
       "slug": "special-set-piece-set-piece-set-knife-4-5set",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 183
+      "review_count": 183,
+      "amazon_benchmark": 49.99
     },
     "faq_schema": [
       {
@@ -929,7 +936,7 @@
         "retail_price_1x": 47.03,
         "bundle_2_price": 82.76,
         "bundle_3_price": 115.68,
-        "us_warehouse_stock": 130,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -948,7 +955,7 @@
         "retail_price_1x": 29.87,
         "bundle_2_price": 52.56,
         "bundle_3_price": 73.47,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -967,7 +974,7 @@
         "retail_price_1x": 27.08,
         "bundle_2_price": 47.65,
         "bundle_3_price": 66.61,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -986,7 +993,7 @@
         "retail_price_1x": 21.78,
         "bundle_2_price": 38.32,
         "bundle_3_price": 53.57,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1005,7 +1012,7 @@
         "retail_price_1x": 15.43,
         "bundle_2_price": 27.15,
         "bundle_3_price": 37.95,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40002,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1024,7 +1031,7 @@
         "retail_price_1x": 20.26,
         "bundle_2_price": 35.65,
         "bundle_3_price": 49.83,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1043,7 +1050,7 @@
         "retail_price_1x": 60.69,
         "bundle_2_price": 106.8,
         "bundle_3_price": 149.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 32003,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1062,7 +1069,7 @@
         "retail_price_1x": 59.21,
         "bundle_2_price": 104.2,
         "bundle_3_price": 145.65,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 37617,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1081,7 +1088,7 @@
         "retail_price_1x": 57.08,
         "bundle_2_price": 100.45,
         "bundle_3_price": 140.41,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1100,7 +1107,7 @@
         "retail_price_1x": 13.27,
         "bundle_2_price": 23.35,
         "bundle_3_price": 32.63,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1119,7 +1126,7 @@
         "retail_price_1x": 41.33,
         "bundle_2_price": 72.73,
         "bundle_3_price": 101.66,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1138,7 +1145,7 @@
         "retail_price_1x": 57.35,
         "bundle_2_price": 100.93,
         "bundle_3_price": 141.07,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1157,7 +1164,7 @@
         "retail_price_1x": 18.26,
         "bundle_2_price": 32.13,
         "bundle_3_price": 44.91,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40034,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1176,7 +1183,7 @@
         "retail_price_1x": 12.14,
         "bundle_2_price": 21.36,
         "bundle_3_price": 29.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1195,7 +1202,7 @@
         "retail_price_1x": 124.93,
         "bundle_2_price": 219.87,
         "bundle_3_price": 307.32,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1214,7 +1221,7 @@
         "retail_price_1x": 13.52,
         "bundle_2_price": 23.79,
         "bundle_3_price": 33.25,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1233,7 +1240,7 @@
         "retail_price_1x": 32.97,
         "bundle_2_price": 58.02,
         "bundle_3_price": 81.1,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1252,7 +1259,7 @@
         "retail_price_1x": 18.26,
         "bundle_2_price": 32.13,
         "bundle_3_price": 44.91,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1271,7 +1278,7 @@
         "retail_price_1x": 44.18,
         "bundle_2_price": 77.75,
         "bundle_3_price": 108.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 97,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1290,7 +1297,7 @@
         "retail_price_1x": 50.92,
         "bundle_2_price": 89.61,
         "bundle_3_price": 125.25,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1309,7 +1316,7 @@
         "retail_price_1x": 29.17,
         "bundle_2_price": 51.33,
         "bundle_3_price": 71.75,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1328,7 +1335,7 @@
         "retail_price_1x": 26.85,
         "bundle_2_price": 47.25,
         "bundle_3_price": 66.04,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1347,7 +1354,7 @@
         "retail_price_1x": 16.84,
         "bundle_2_price": 29.63,
         "bundle_3_price": 41.42,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1366,7 +1373,7 @@
         "retail_price_1x": 12.35,
         "bundle_2_price": 21.73,
         "bundle_3_price": 30.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1385,7 +1392,7 @@
         "retail_price_1x": 18.03,
         "bundle_2_price": 31.72,
         "bundle_3_price": 44.34,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40033,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1404,7 +1411,7 @@
         "retail_price_1x": 36.39,
         "bundle_2_price": 64.04,
         "bundle_3_price": 89.51,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1423,7 +1430,7 @@
         "retail_price_1x": 25.62,
         "bundle_2_price": 45.08,
         "bundle_3_price": 63.02,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1442,7 +1449,7 @@
         "retail_price_1x": 57.8,
         "bundle_2_price": 101.72,
         "bundle_3_price": 142.18,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40021,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1461,7 +1468,7 @@
         "retail_price_1x": 38.48,
         "bundle_2_price": 67.71,
         "bundle_3_price": 94.65,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1480,7 +1487,7 @@
         "retail_price_1x": 30.5,
         "bundle_2_price": 53.67,
         "bundle_3_price": 75.02,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1499,7 +1506,7 @@
         "retail_price_1x": 40.25,
         "bundle_2_price": 70.83,
         "bundle_3_price": 99.01,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1518,7 +1525,7 @@
         "retail_price_1x": 36.24,
         "bundle_2_price": 63.77,
         "bundle_3_price": 89.14,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1537,7 +1544,7 @@
         "retail_price_1x": 12.35,
         "bundle_2_price": 21.73,
         "bundle_3_price": 30.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1556,7 +1563,7 @@
         "retail_price_1x": 19.25,
         "bundle_2_price": 33.87,
         "bundle_3_price": 47.34,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1575,7 +1582,7 @@
         "retail_price_1x": 29.93,
         "bundle_2_price": 52.67,
         "bundle_3_price": 73.62,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40001,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1594,7 +1601,7 @@
         "retail_price_1x": 40.02,
         "bundle_2_price": 70.43,
         "bundle_3_price": 98.44,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1613,7 +1620,7 @@
         "retail_price_1x": 18.26,
         "bundle_2_price": 32.13,
         "bundle_3_price": 44.91,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40014,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1683,7 +1690,8 @@
       "slug": "dual-faucet-wine-stopper-bottle-stopper-faucet-6001az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 275
+      "review_count": 275,
+      "amazon_benchmark": 8.99
     },
     "faq_schema": [
       {
@@ -1717,7 +1725,7 @@
         "retail_price_1x": 8.99,
         "bundle_2_price": 15.81,
         "bundle_3_price": 22.11,
-        "us_warehouse_stock": 153,
+        "us_warehouse_stock": 12615,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1736,7 +1744,7 @@
         "retail_price_1x": 8.99,
         "bundle_2_price": 15.81,
         "bundle_3_price": 22.11,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 10759,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1807,7 +1815,8 @@
       "slug": "alarm-clock-multi-led-digital-car-home-8301az",
       "category": "Smart Lighting",
       "rating": 4.8,
-      "review_count": 276
+      "review_count": 276,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -1841,7 +1850,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 154,
+        "us_warehouse_stock": 49,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -1911,7 +1920,8 @@
       "slug": "bedroom-nap-with-lcd-backlit-clock-small-2201az",
       "category": "Smart Lighting",
       "rating": 4.9,
-      "review_count": 280
+      "review_count": 280,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -1945,7 +1955,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 158,
+        "us_warehouse_stock": 72,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2016,7 +2026,8 @@
       "slug": "cartoon-deer-night-light-usb-charge-rabbit-3001az",
       "category": "Smart Lighting",
       "rating": 4.7,
-      "review_count": 258
+      "review_count": 258,
+      "amazon_benchmark": 18.99
     },
     "faq_schema": [
       {
@@ -2050,7 +2061,7 @@
         "retail_price_1x": 18.95,
         "bundle_2_price": 33.34,
         "bundle_3_price": 46.61,
-        "us_warehouse_stock": 136,
+        "us_warehouse_stock": 30000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2069,7 +2080,7 @@
         "retail_price_1x": 18.95,
         "bundle_2_price": 33.34,
         "bundle_3_price": 46.61,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 74,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2136,7 +2147,8 @@
       "slug": "1pc-wall-mounted-shelf-shower-caddy-rack-7902by",
       "category": "Home & Kitchen",
       "rating": 4.6,
-      "review_count": 254
+      "review_count": 254,
+      "amazon_benchmark": 17.99
     },
     "faq_schema": [
       {
@@ -2170,7 +2182,7 @@
         "retail_price_1x": 17.95,
         "bundle_2_price": 31.58,
         "bundle_3_price": 44.15,
-        "us_warehouse_stock": 132,
+        "us_warehouse_stock": 39,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2241,7 +2253,8 @@
       "slug": "car-and-hard-wearing-pet-cage-dog-1401az",
       "category": "Everyday Carry & Auto",
       "rating": 4.9,
-      "review_count": 286
+      "review_count": 286,
+      "amazon_benchmark": 39.99
     },
     "faq_schema": [
       {
@@ -2275,7 +2288,7 @@
         "retail_price_1x": 37.49,
         "bundle_2_price": 65.97,
         "bundle_3_price": 92.22,
-        "us_warehouse_stock": 164,
+        "us_warehouse_stock": 14073,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2294,7 +2307,7 @@
         "retail_price_1x": 39.95,
         "bundle_2_price": 70.3,
         "bundle_3_price": 98.27,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11501,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2371,7 +2384,8 @@
       "slug": "cooking-utensil-set-premium-piece-kitchen-utensil-8601az",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 248
+      "review_count": 248,
+      "amazon_benchmark": 29.99
     },
     "faq_schema": [
       {
@@ -2405,7 +2419,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 126,
+        "us_warehouse_stock": 150,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2506,7 +2520,8 @@
       "slug": "black-square-carbon-oven-6301az",
       "category": "Everyday Carry & Auto",
       "rating": 4.9,
-      "review_count": 279
+      "review_count": 279,
+      "amazon_benchmark": 38.99
     },
     "faq_schema": [
       {
@@ -2540,7 +2555,7 @@
         "retail_price_1x": 38.95,
         "bundle_2_price": 68.54,
         "bundle_3_price": 95.81,
-        "us_warehouse_stock": 157,
+        "us_warehouse_stock": 566,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2635,7 +2650,8 @@
       "slug": "tmx200-is-up-and-down-12-degrees-8101az",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 297
+      "review_count": 297,
+      "amazon_benchmark": 29.99
     },
     "faq_schema": [
       {
@@ -2669,7 +2685,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 175,
+        "us_warehouse_stock": 167,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2750,7 +2766,8 @@
       "slug": "pet-dog-collars-pet-dog-3901az",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 285
+      "review_count": 285,
+      "amazon_benchmark": 16.99
     },
     "faq_schema": [
       {
@@ -2784,7 +2801,7 @@
         "retail_price_1x": 16.95,
         "bundle_2_price": 29.82,
         "bundle_3_price": 41.69,
-        "us_warehouse_stock": 163,
+        "us_warehouse_stock": 188,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2803,7 +2820,7 @@
         "retail_price_1x": 16.95,
         "bundle_2_price": 29.82,
         "bundle_3_price": 41.69,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 334,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2879,7 +2896,8 @@
       "slug": "warming-tray-buffet-food-warming-temp-control-2401az",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 260
+      "review_count": 260,
+      "amazon_benchmark": 39.99
     },
     "faq_schema": [
       {
@@ -2913,7 +2931,7 @@
         "retail_price_1x": 39.95,
         "bundle_2_price": 70.3,
         "bundle_3_price": 98.27,
-        "us_warehouse_stock": 138,
+        "us_warehouse_stock": 274,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2984,7 +3002,8 @@
       "slug": "new-product-car-hud-hd-head-up-6401az",
       "category": "Everyday Carry & Auto",
       "rating": 4.6,
-      "review_count": 256
+      "review_count": 256,
+      "amazon_benchmark": 24.99
     },
     "faq_schema": [
       {
@@ -3018,7 +3037,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 134,
+        "us_warehouse_stock": 33422,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3037,7 +3056,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40871,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3110,7 +3129,8 @@
       "slug": "double-mark-elegant-white-desktop-lamp-usb-3801az",
       "category": "Smart Lighting",
       "rating": 4.9,
-      "review_count": 245
+      "review_count": 245,
+      "amazon_benchmark": 34.99
     },
     "faq_schema": [
       {
@@ -3144,7 +3164,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 123,
+        "us_warehouse_stock": 241,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3260,7 +3280,8 @@
       "slug": "mini-garment-steamer-fabric-steam-iron-for-4021uf",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 260
+      "review_count": 260,
+      "amazon_benchmark": 24.99
     },
     "faq_schema": [
       {
@@ -3294,7 +3315,7 @@
         "retail_price_1x": 16.38,
         "bundle_2_price": 28.82,
         "bundle_3_price": 40.28,
-        "us_warehouse_stock": 138,
+        "us_warehouse_stock": 13588,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3313,7 +3334,7 @@
         "retail_price_1x": 14.51,
         "bundle_2_price": 25.53,
         "bundle_3_price": 35.68,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11349,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3332,7 +3353,7 @@
         "retail_price_1x": 14.51,
         "bundle_2_price": 25.53,
         "bundle_3_price": 35.68,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13609,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3351,7 +3372,7 @@
         "retail_price_1x": 17.11,
         "bundle_2_price": 30.1,
         "bundle_3_price": 42.08,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13471,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3370,7 +3391,7 @@
         "retail_price_1x": 14.51,
         "bundle_2_price": 25.53,
         "bundle_3_price": 35.68,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13210,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3389,7 +3410,7 @@
         "retail_price_1x": 14.51,
         "bundle_2_price": 25.53,
         "bundle_3_price": 35.68,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14284,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3408,7 +3429,7 @@
         "retail_price_1x": 14.97,
         "bundle_2_price": 26.34,
         "bundle_3_price": 36.82,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11737,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3427,7 +3448,7 @@
         "retail_price_1x": 14.97,
         "bundle_2_price": 26.34,
         "bundle_3_price": 36.82,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13333,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3446,7 +3467,7 @@
         "retail_price_1x": 17.11,
         "bundle_2_price": 30.1,
         "bundle_3_price": 42.08,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13759,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3465,7 +3486,7 @@
         "retail_price_1x": 14.51,
         "bundle_2_price": 25.53,
         "bundle_3_price": 35.68,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 12657,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3484,7 +3505,7 @@
         "retail_price_1x": 14.51,
         "bundle_2_price": 25.53,
         "bundle_3_price": 35.68,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 10360,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3503,7 +3524,7 @@
         "retail_price_1x": 14.51,
         "bundle_2_price": 25.53,
         "bundle_3_price": 35.68,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11057,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3522,7 +3543,7 @@
         "retail_price_1x": 14.51,
         "bundle_2_price": 25.53,
         "bundle_3_price": 35.68,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14287,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3541,7 +3562,7 @@
         "retail_price_1x": 17.11,
         "bundle_2_price": 30.1,
         "bundle_3_price": 42.08,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 15012,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3560,7 +3581,7 @@
         "retail_price_1x": 14.51,
         "bundle_2_price": 25.53,
         "bundle_3_price": 35.68,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 12526,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3579,7 +3600,7 @@
         "retail_price_1x": 45.32,
         "bundle_2_price": 79.75,
         "bundle_3_price": 111.48,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11409,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3598,7 +3619,7 @@
         "retail_price_1x": 74.23,
         "bundle_2_price": 130.63,
         "bundle_3_price": 182.6,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13951,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3617,7 +3638,7 @@
         "retail_price_1x": 19.48,
         "bundle_2_price": 34.27,
         "bundle_3_price": 47.91,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5348,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3636,7 +3657,7 @@
         "retail_price_1x": 18.31,
         "bundle_2_price": 32.22,
         "bundle_3_price": 45.03,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 7923,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3655,7 +3676,7 @@
         "retail_price_1x": 18.31,
         "bundle_2_price": 32.22,
         "bundle_3_price": 45.03,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5407,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3674,7 +3695,7 @@
         "retail_price_1x": 18.31,
         "bundle_2_price": 32.22,
         "bundle_3_price": 45.03,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5852,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3693,7 +3714,7 @@
         "retail_price_1x": 18.31,
         "bundle_2_price": 32.22,
         "bundle_3_price": 45.03,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 8461,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3712,7 +3733,7 @@
         "retail_price_1x": 18.31,
         "bundle_2_price": 32.22,
         "bundle_3_price": 45.03,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5279,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3731,7 +3752,7 @@
         "retail_price_1x": 18.31,
         "bundle_2_price": 32.22,
         "bundle_3_price": 45.03,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 8389,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3750,7 +3771,7 @@
         "retail_price_1x": 18.31,
         "bundle_2_price": 32.22,
         "bundle_3_price": 45.03,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 7066,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3769,7 +3790,7 @@
         "retail_price_1x": 18.31,
         "bundle_2_price": 32.22,
         "bundle_3_price": 45.03,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5029,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3788,7 +3809,7 @@
         "retail_price_1x": 18.31,
         "bundle_2_price": 32.22,
         "bundle_3_price": 45.03,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 6816,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3807,7 +3828,7 @@
         "retail_price_1x": 23.55,
         "bundle_2_price": 41.44,
         "bundle_3_price": 57.92,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5578,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3826,7 +3847,7 @@
         "retail_price_1x": 21.69,
         "bundle_2_price": 38.16,
         "bundle_3_price": 53.35,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5795,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3845,7 +3866,7 @@
         "retail_price_1x": 21.69,
         "bundle_2_price": 38.16,
         "bundle_3_price": 53.35,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 8006,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3864,7 +3885,7 @@
         "retail_price_1x": 21.69,
         "bundle_2_price": 38.16,
         "bundle_3_price": 53.35,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 6542,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3883,7 +3904,7 @@
         "retail_price_1x": 17.89,
         "bundle_2_price": 31.48,
         "bundle_3_price": 44.0,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 7068,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3902,7 +3923,7 @@
         "retail_price_1x": 17.89,
         "bundle_2_price": 31.48,
         "bundle_3_price": 44.0,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5753,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3921,7 +3942,7 @@
         "retail_price_1x": 17.89,
         "bundle_2_price": 31.48,
         "bundle_3_price": 44.0,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 9207,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3940,7 +3961,7 @@
         "retail_price_1x": 25.79,
         "bundle_2_price": 45.38,
         "bundle_3_price": 63.43,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 7427,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3959,7 +3980,7 @@
         "retail_price_1x": 25.79,
         "bundle_2_price": 45.38,
         "bundle_3_price": 63.43,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 7876,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3978,7 +3999,7 @@
         "retail_price_1x": 25.79,
         "bundle_2_price": 45.38,
         "bundle_3_price": 63.43,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 9171,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4046,7 +4067,8 @@
       "slug": "wide-heavy-duty-nylon-large-dog-collar-9601az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 275
+      "review_count": 275,
+      "amazon_benchmark": 21.99
     },
     "faq_schema": [
       {
@@ -4080,7 +4102,7 @@
         "retail_price_1x": 21.95,
         "bundle_2_price": 38.62,
         "bundle_3_price": 53.99,
-        "us_warehouse_stock": 153,
+        "us_warehouse_stock": 460,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4099,7 +4121,7 @@
         "retail_price_1x": 21.95,
         "bundle_2_price": 38.62,
         "bundle_3_price": 53.99,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 460,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4171,7 +4193,8 @@
       "slug": "cable-manual-fits-mazda-miata-3901az",
       "category": "Workspace & Tech",
       "rating": 4.7,
-      "review_count": 260
+      "review_count": 260,
+      "amazon_benchmark": 39.99
     },
     "faq_schema": [
       {
@@ -4205,7 +4228,7 @@
         "retail_price_1x": 39.92,
         "bundle_2_price": 70.25,
         "bundle_3_price": 98.19,
-        "us_warehouse_stock": 138,
+        "us_warehouse_stock": 99,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4294,7 +4317,8 @@
       "slug": "tv-stand-tmx400-with-load-bearing-of-3901az",
       "category": "Workspace & Tech",
       "rating": 4.9,
-      "review_count": 280
+      "review_count": 280,
+      "amazon_benchmark": 32.99
     },
     "faq_schema": [
       {
@@ -4328,7 +4352,7 @@
         "retail_price_1x": 32.95,
         "bundle_2_price": 57.98,
         "bundle_3_price": 81.05,
-        "us_warehouse_stock": 158,
+        "us_warehouse_stock": 161,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4397,7 +4421,8 @@
       "slug": "dowmoo-mini-water-baby-kitchen-toys-mini-2101az",
       "category": "Home & Kitchen",
       "rating": 4.6,
-      "review_count": 254
+      "review_count": 254,
+      "amazon_benchmark": 21.99
     },
     "faq_schema": [
       {
@@ -4431,7 +4456,7 @@
         "retail_price_1x": 21.95,
         "bundle_2_price": 38.62,
         "bundle_3_price": 53.99,
-        "us_warehouse_stock": 132,
+        "us_warehouse_stock": 150,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4450,7 +4475,7 @@
         "retail_price_1x": 32.55,
         "bundle_2_price": 57.28,
         "bundle_3_price": 80.06,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 150,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4469,7 +4494,7 @@
         "retail_price_1x": 40.13,
         "bundle_2_price": 70.62,
         "bundle_3_price": 98.71,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 150,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4488,7 +4513,7 @@
         "retail_price_1x": 43.91,
         "bundle_2_price": 77.27,
         "bundle_3_price": 108.01,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 150,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4551,7 +4576,8 @@
       "slug": "crochet-set-wool-crochet-tool-set-bag-ck004",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 234
+      "review_count": 234,
+      "amazon_benchmark": 15.99
     },
     "faq_schema": [
       {
@@ -4585,7 +4611,7 @@
         "retail_price_1x": 13.32,
         "bundle_2_price": 23.43,
         "bundle_3_price": 32.76,
-        "us_warehouse_stock": 181,
+        "us_warehouse_stock": 36,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4657,7 +4683,8 @@
       "slug": "to-the-whole-scene-with-power-bank-5601az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 276
+      "review_count": 276,
+      "amazon_benchmark": 34.99
     },
     "faq_schema": [
       {
@@ -4691,7 +4718,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 154,
+        "us_warehouse_stock": 35,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4770,7 +4797,8 @@
       "slug": "suction-and-folding-phone-holder-6201az",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 261
+      "review_count": 261,
+      "amazon_benchmark": 18.99
     },
     "faq_schema": [
       {
@@ -4804,7 +4832,7 @@
         "retail_price_1x": 18.95,
         "bundle_2_price": 33.34,
         "bundle_3_price": 46.61,
-        "us_warehouse_stock": 139,
+        "us_warehouse_stock": 11773,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4823,7 +4851,7 @@
         "retail_price_1x": 18.95,
         "bundle_2_price": 33.34,
         "bundle_3_price": 46.61,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13679,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4842,7 +4870,7 @@
         "retail_price_1x": 18.95,
         "bundle_2_price": 33.34,
         "bundle_3_price": 46.61,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 10879,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4861,7 +4889,7 @@
         "retail_price_1x": 18.95,
         "bundle_2_price": 33.34,
         "bundle_3_price": 46.61,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 10096,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4931,7 +4959,8 @@
       "slug": "mouth-cover-to-prevent-eating-large-dog-6601az",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 265
+      "review_count": 265,
+      "amazon_benchmark": 12.99
     },
     "faq_schema": [
       {
@@ -4965,7 +4994,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 143,
+        "us_warehouse_stock": 41827,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -4984,7 +5013,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 39993,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5003,7 +5032,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40699,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5022,7 +5051,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 39434,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5041,7 +5070,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 43763,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5060,7 +5089,7 @@
         "retail_price_1x": 21.07,
         "bundle_2_price": 37.07,
         "bundle_3_price": 51.82,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 38028,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5079,7 +5108,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 39223,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5098,7 +5127,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 34497,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5117,7 +5146,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 37180,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5136,7 +5165,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 38881,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5155,7 +5184,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 39492,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5174,7 +5203,7 @@
         "retail_price_1x": 21.07,
         "bundle_2_price": 37.07,
         "bundle_3_price": 51.82,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 37261,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5193,7 +5222,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 35401,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5212,7 +5241,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 34180,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5231,7 +5260,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 37694,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5250,7 +5279,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 29271,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5269,7 +5298,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 45189,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5288,7 +5317,7 @@
         "retail_price_1x": 21.07,
         "bundle_2_price": 37.07,
         "bundle_3_price": 51.82,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 29431,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5307,7 +5336,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 42332,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5326,7 +5355,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 36282,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5345,7 +5374,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 36159,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5364,7 +5393,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 38569,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5383,7 +5412,7 @@
         "retail_price_1x": 12.95,
         "bundle_2_price": 22.78,
         "bundle_3_price": 31.85,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 36513,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5402,7 +5431,7 @@
         "retail_price_1x": 21.07,
         "bundle_2_price": 37.07,
         "bundle_3_price": 51.82,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 35522,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5471,7 +5500,8 @@
       "slug": "us-local-stock-luxury-alloy-dog-chain-7701az",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 283
+      "review_count": 283,
+      "amazon_benchmark": 29.99
     },
     "faq_schema": [
       {
@@ -5505,7 +5535,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 161,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5524,7 +5554,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5543,7 +5573,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 159,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5562,7 +5592,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5581,7 +5611,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5600,7 +5630,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5619,7 +5649,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5638,7 +5668,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5657,7 +5687,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5676,7 +5706,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5695,7 +5725,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5714,7 +5744,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5787,7 +5817,8 @@
       "slug": "cat-litter-self-8801az",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 286
+      "review_count": 286,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -5821,7 +5852,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 164,
+        "us_warehouse_stock": 13604,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5840,7 +5871,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 10553,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -5912,7 +5943,8 @@
       "slug": "hole-opener-hand-drill-wood-reamer-bit-2101az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 269
+      "review_count": 269,
+      "amazon_benchmark": 18.99
     },
     "faq_schema": [
       {
@@ -5946,7 +5978,7 @@
         "retail_price_1x": 18.95,
         "bundle_2_price": 33.34,
         "bundle_3_price": 46.61,
-        "us_warehouse_stock": 147,
+        "us_warehouse_stock": 40072,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6020,7 +6052,8 @@
       "slug": "new-fashion-clock-english-led-digital-clock-3401az",
       "category": "Smart Lighting",
       "rating": 4.8,
-      "review_count": 269
+      "review_count": 269,
+      "amazon_benchmark": 34.99
     },
     "faq_schema": [
       {
@@ -6054,7 +6087,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 147,
+        "us_warehouse_stock": 77,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6124,7 +6157,8 @@
       "slug": "mobile-desk-bedroom-large-alarm-clock-led-7701az",
       "category": "Smart Lighting",
       "rating": 4.9,
-      "review_count": 283
+      "review_count": 283,
+      "amazon_benchmark": 26.99
     },
     "faq_schema": [
       {
@@ -6158,7 +6192,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 161,
+        "us_warehouse_stock": 17,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6232,7 +6266,8 @@
       "slug": "vehicle-back-seat-with-pouches-set-of-8301az",
       "category": "Everyday Carry & Auto",
       "rating": 4.7,
-      "review_count": 262
+      "review_count": 262,
+      "amazon_benchmark": 29.99
     },
     "faq_schema": [
       {
@@ -6266,7 +6301,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 140,
+        "us_warehouse_stock": 88,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6335,7 +6370,8 @@
       "slug": "wall-mounted-storage-bag-door-closet-hanging-0701az",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 265
+      "review_count": 265,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -6369,7 +6405,7 @@
         "retail_price_1x": 18.79,
         "bundle_2_price": 33.06,
         "bundle_3_price": 46.21,
-        "us_warehouse_stock": 143,
+        "us_warehouse_stock": 460,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6458,7 +6494,8 @@
       "slug": "cute-led-night-light-touch-sensor-cartoon-9901az",
       "category": "Smart Lighting",
       "rating": 4.9,
-      "review_count": 250
+      "review_count": 250,
+      "amazon_benchmark": 16.99
     },
     "faq_schema": [
       {
@@ -6492,7 +6529,7 @@
         "retail_price_1x": 16.95,
         "bundle_2_price": 29.82,
         "bundle_3_price": 41.69,
-        "us_warehouse_stock": 128,
+        "us_warehouse_stock": 13134,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6511,7 +6548,7 @@
         "retail_price_1x": 16.95,
         "bundle_2_price": 29.82,
         "bundle_3_price": 41.69,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11509,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6530,7 +6567,7 @@
         "retail_price_1x": 16.95,
         "bundle_2_price": 29.82,
         "bundle_3_price": 41.69,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 9490,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6549,7 +6586,7 @@
         "retail_price_1x": 23.16,
         "bundle_2_price": 40.75,
         "bundle_3_price": 56.96,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5905,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6622,7 +6659,8 @@
       "slug": "heating-pad-not-shipped-on-it-cannot-2901az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 267
+      "review_count": 267,
+      "amazon_benchmark": 34.99
     },
     "faq_schema": [
       {
@@ -6656,7 +6694,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 145,
+        "us_warehouse_stock": 182,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6721,7 +6759,8 @@
       "slug": "lawn-aerator-92-in-manual-core-aerator-830001",
       "category": "Home & Kitchen",
       "rating": 4.6,
-      "review_count": 254
+      "review_count": 254,
+      "amazon_benchmark": 34.99
     },
     "faq_schema": [
       {
@@ -6755,7 +6794,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 132,
+        "us_warehouse_stock": 845,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6851,7 +6890,8 @@
       "slug": "tv-stand-tmw600-has-load-of-50kg-1301az",
       "category": "Workspace & Tech",
       "rating": 4.8,
-      "review_count": 269
+      "review_count": 269,
+      "amazon_benchmark": 36.99
     },
     "faq_schema": [
       {
@@ -6885,7 +6925,7 @@
         "retail_price_1x": 36.95,
         "bundle_2_price": 65.02,
         "bundle_3_price": 90.89,
-        "us_warehouse_stock": 147,
+        "us_warehouse_stock": 191,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6997,7 +7037,8 @@
       "slug": "tv-stand-tmw003s-load-50kg-2001az",
       "category": "Workspace & Tech",
       "rating": 4.7,
-      "review_count": 265
+      "review_count": 265,
+      "amazon_benchmark": 31.99
     },
     "faq_schema": [
       {
@@ -7031,7 +7072,7 @@
         "retail_price_1x": 31.95,
         "bundle_2_price": 56.22,
         "bundle_3_price": 78.59,
-        "us_warehouse_stock": 143,
+        "us_warehouse_stock": 555,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7125,7 +7166,8 @@
       "slug": "metal-car-charger-100w-super-fast-car-2701az",
       "category": "Everyday Carry & Auto",
       "rating": 4.8,
-      "review_count": 277
+      "review_count": 277,
+      "amazon_benchmark": 26.99
     },
     "faq_schema": [
       {
@@ -7159,7 +7201,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 155,
+        "us_warehouse_stock": 13449,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7178,7 +7220,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 31,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7197,7 +7239,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 12142,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7216,7 +7258,7 @@
         "retail_price_1x": 53.26,
         "bundle_2_price": 93.73,
         "bundle_3_price": 131.01,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14284,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7235,7 +7277,7 @@
         "retail_price_1x": 67.69,
         "bundle_2_price": 119.12,
         "bundle_3_price": 166.51,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11624,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7254,7 +7296,7 @@
         "retail_price_1x": 87.59,
         "bundle_2_price": 154.15,
         "bundle_3_price": 215.46,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 10322,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7273,7 +7315,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 10431,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7292,7 +7334,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13930,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7311,7 +7353,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13560,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7330,7 +7372,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14690,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7349,7 +7391,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 12812,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7368,7 +7410,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13535,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7387,7 +7429,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 12656,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7406,7 +7448,7 @@
         "retail_price_1x": 26.95,
         "bundle_2_price": 47.42,
         "bundle_3_price": 66.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 9537,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7478,7 +7520,8 @@
       "slug": "pet-dog-carrier-bag-carrier-for-dogs-grey-m",
       "category": "Everyday Carry & Auto",
       "rating": 4.9,
-      "review_count": 145
+      "review_count": 145,
+      "amazon_benchmark": 24.99
     },
     "faq_schema": [
       {
@@ -7512,7 +7555,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 92,
+        "us_warehouse_stock": 13886,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7531,7 +7574,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13405,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7550,7 +7593,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11742,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7569,7 +7612,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7588,7 +7631,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7607,7 +7650,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 7613,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7626,7 +7669,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 8328,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7645,7 +7688,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7664,7 +7707,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7683,7 +7726,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4023,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7702,7 +7745,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7721,7 +7764,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4018,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7740,7 +7783,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7759,7 +7802,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4020,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7778,7 +7821,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7797,7 +7840,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7816,7 +7859,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4017,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7835,7 +7878,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7854,7 +7897,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7873,7 +7916,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4010,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7892,7 +7935,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 4000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -7962,7 +8005,8 @@
       "slug": "calf-alarm-clock-for-kids-3701az",
       "category": "Workspace & Tech",
       "rating": 4.8,
-      "review_count": 242
+      "review_count": 242,
+      "amazon_benchmark": 22.99
     },
     "faq_schema": [
       {
@@ -7996,7 +8040,7 @@
         "retail_price_1x": 22.95,
         "bundle_2_price": 40.38,
         "bundle_3_price": 56.45,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 61,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8004,105 +8048,6 @@
     ],
     "wholesale_cost": 10.59,
     "retail_price_1x": 22.95
-  },
-  {
-    "id": 60,
-    "pid": "2001199190408867841",
-    "title": "High-Density Self-Wringing PU Sponge Mop",
-    "brand_title": "Vastire",
-    "slug": "sponge-mop-high-density-pu-sponge-mop-100001",
-    "legacy_slug": "sponge-mop-high-density-pu-sponge-mop-100001",
-    "category": "Home & Kitchen",
-    "rating": 4.7,
-    "review_count": 262,
-    "hero_image_url": "https://cf.cjdropshipping.com/17659296/1ee4b8a8-d143-4338-bb8e-a01b8639e9f9.jpg",
-    "images": [
-      "https://cf.cjdropshipping.com/17659296/1ee4b8a8-d143-4338-bb8e-a01b8639e9f9.jpg",
-      "https://cf.cjdropshipping.com/17659296/eef3941c-15bb-4f72-a031-58663de0d155.jpg",
-      "https://cf.cjdropshipping.com/17659296/2cc9f9f3-eb88-412e-b1d1-e63d2a7459a1.jpg",
-      "https://cf.cjdropshipping.com/17659296/1ba94b55-063d-400f-9208-7265aabeb1d0.jpg",
-      "https://cf.cjdropshipping.com/17659296/fbf7b897-4588-45b5-9bc3-2d93998ac89b.jpg",
-      "https://cf.cjdropshipping.com/17659296/d663e48f-45f9-43e2-8766-55776ec49f60.jpg"
-    ],
-    "pas_description_html": "<div class=\"space-y-3.5 text-slate-700 text-xs sm:text-sm\">\n  <p class=\"font-bold text-slate-900 leading-snug text-sm sm:text-base\">\n    Engineered for Everyday Convenience and Dependable Utility\n  </p>\n  <p class=\"leading-relaxed text-slate-600\">\n    The <strong>Sponge Mop High Density Pu Sponge Mop</strong> is designed to solve everyday household and lifestyle needs with durable construction, intuitive functionality, and straightforward ease of use.\n  </p>\n  <p class=\"leading-relaxed text-slate-600\">\n    Precision-crafted to meet US domestic standards, delivering dependable performance and clean modern aesthetics right out of the box.\n  </p>\n</div>",
-    "features": [
-      {
-        "icon": "sparkles",
-        "title": "Durable Build Quality",
-        "desc": "Constructed from verified materials for dependable everyday resilience."
-      },
-      {
-        "icon": "zap",
-        "title": "Effortless Operation",
-        "desc": "Ready to use right out of the box with zero complex learning curves."
-      },
-      {
-        "icon": "box",
-        "title": "Compact Storage",
-        "desc": "Designed to fit neatly in standard drawers, shelves, or travel luggage."
-      },
-      {
-        "icon": "truck",
-        "title": "US Domestic Shipping",
-        "desc": "Dispatched promptly with tracked 3–5 business day delivery via USPS."
-      }
-    ],
-    "specs": {
-      "material": "Reinforced Eco-Friendly Composite & Durable Polymer",
-      "in_the_box": "1x Sponge Mop High Density Pu Sponge Mop (Manufacturer Sealed Retail Unit)",
-      "carrier_sla": "USPS Tracked Ground (3-5 Business Days)",
-      "power_source": "Standard Non-Powered Tool",
-      "package_weight": "Approx. 280g - 450g Standard Domestic Parcel",
-      "fulfillment_origin": "US Domestic Distribution Center"
-    },
-    "seo_meta": {
-      "meta_title": "Sponge Mop High Density Pu Sponge Mop | Fast US Shipping & 30-Day Guarantee",
-      "meta_description": "Shop the Sponge Mop High Density Pu Sponge Mop. Fast tracked US domestic delivery, 30-day money-back guarantee, and multi-unit bundle savings.",
-      "slug": "sponge-mop-high-density-pu-sponge-mop-100001",
-      "category": "Home & Kitchen",
-      "rating": 4.7,
-      "review_count": 262
-    },
-    "faq_schema": [
-      {
-        "question": "How quickly will my order arrive?",
-        "answer": "All orders are processed immediately from our domestic US fulfillment centers and arrive in 3 to 5 business days via tracked USPS."
-      },
-      {
-        "question": "What is the return policy?",
-        "answer": "We offer a 100% money-back guarantee within 30 days of delivery. If you are not completely satisfied, return it for a prompt refund."
-      },
-      {
-        "question": "How do bundle discounts work?",
-        "answer": "Selecting the 2-pack saves you 12%, and the 3-pack saves 18% with zero extra shipping charges."
-      }
-    ],
-    "viral_scripts": null,
-    "fallback_affiliate_url": null,
-    "is_active": true,
-    "variants": [
-      {
-        "id": 60,
-        "vid": "2001199190811521026",
-        "sku": "CJFU26519100001",
-        "variant_name": "Grey",
-        "display_name": "Grey",
-        "size": null,
-        "color": "Grey",
-        "image_url": "https://cf.cjdropshipping.com/17659296/1ee4b8a8-d143-4338-bb8e-a01b8639e9f9.jpg",
-        "wholesale_cost": 6.0,
-        "shipping_cost": 0.0,
-        "retail_price_1x": 18.79,
-        "bundle_2_price": 33.06,
-        "bundle_3_price": 46.21,
-        "us_warehouse_stock": 140,
-        "carrier_name": "USPS",
-        "delivery_sla": "3-5 Days",
-        "is_available": true
-      }
-    ],
-    "wholesale_cost": 6.0,
-    "retail_price_1x": 18.79
   },
   {
     "id": 62,
@@ -8172,7 +8117,8 @@
       "slug": "2pc-mark-shape-table-lamp-usb-three-6301az",
       "category": "Smart Lighting",
       "rating": 4.6,
-      "review_count": 255
+      "review_count": 255,
+      "amazon_benchmark": 34.99
     },
     "faq_schema": [
       {
@@ -8206,7 +8152,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 133,
+        "us_warehouse_stock": 180,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8225,7 +8171,7 @@
         "retail_price_1x": 56.79,
         "bundle_2_price": 99.94,
         "bundle_3_price": 139.69,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 99,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8294,7 +8240,8 @@
       "slug": "2pcs-led-daytime-running-lights-car-led-4901az",
       "category": "Smart Lighting",
       "rating": 4.7,
-      "review_count": 262
+      "review_count": 262,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -8328,7 +8275,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 140,
+        "us_warehouse_stock": 460,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8401,7 +8348,8 @@
       "slug": "ladies-tool-set-storage-tote-bag-8701az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 268
+      "review_count": 268,
+      "amazon_benchmark": 22.99
     },
     "faq_schema": [
       {
@@ -8435,7 +8383,7 @@
         "retail_price_1x": 21.3,
         "bundle_2_price": 37.48,
         "bundle_3_price": 52.39,
-        "us_warehouse_stock": 146,
+        "us_warehouse_stock": 29929,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8454,7 +8402,7 @@
         "retail_price_1x": 21.3,
         "bundle_2_price": 37.48,
         "bundle_3_price": 52.39,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 36990,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8473,7 +8421,7 @@
         "retail_price_1x": 21.3,
         "bundle_2_price": 37.48,
         "bundle_3_price": 52.39,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 35885,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8492,7 +8440,7 @@
         "retail_price_1x": 19.11,
         "bundle_2_price": 33.62,
         "bundle_3_price": 47.0,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 9241,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8566,7 +8514,8 @@
       "slug": "three-story-kitchen-mini-home-shelf-0001az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 273
+      "review_count": 273,
+      "amazon_benchmark": 34.99
     },
     "faq_schema": [
       {
@@ -8600,7 +8549,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 151,
+        "us_warehouse_stock": 545,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8672,7 +8621,8 @@
       "slug": "colors-gravity-pet-feeder-water-cute-cat-1001az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 274
+      "review_count": 274,
+      "amazon_benchmark": 34.99
     },
     "faq_schema": [
       {
@@ -8706,7 +8656,7 @@
         "retail_price_1x": 39.95,
         "bundle_2_price": 70.3,
         "bundle_3_price": 98.27,
-        "us_warehouse_stock": 152,
+        "us_warehouse_stock": 243,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8725,7 +8675,7 @@
         "retail_price_1x": 39.95,
         "bundle_2_price": 70.3,
         "bundle_3_price": 98.27,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 256,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8744,7 +8694,7 @@
         "retail_price_1x": 39.95,
         "bundle_2_price": 70.3,
         "bundle_3_price": 98.27,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 290,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8818,7 +8768,8 @@
       "slug": "durable-pet-cat-dog-vehicle-leash-nylon-3703cx",
       "category": "Everyday Carry & Auto",
       "rating": 4.8,
-      "review_count": 268
+      "review_count": 268,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -8852,7 +8803,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 146,
+        "us_warehouse_stock": 159,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8871,7 +8822,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 159,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8890,7 +8841,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 158,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8988,7 +8939,8 @@
       "slug": "large-double-sided-heating-digital-display-usb-5701az",
       "category": "Workspace & Tech",
       "rating": 4.7,
-      "review_count": 228
+      "review_count": 228,
+      "amazon_benchmark": 21.99
     },
     "faq_schema": [
       {
@@ -9022,7 +8974,7 @@
         "retail_price_1x": 20.24,
         "bundle_2_price": 35.61,
         "bundle_3_price": 49.78,
-        "us_warehouse_stock": 106,
+        "us_warehouse_stock": 6865,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9041,7 +8993,7 @@
         "retail_price_1x": 20.24,
         "bundle_2_price": 35.61,
         "bundle_3_price": 49.78,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 7619,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9060,7 +9012,7 @@
         "retail_price_1x": 20.24,
         "bundle_2_price": 35.61,
         "bundle_3_price": 49.78,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5569,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9079,7 +9031,7 @@
         "retail_price_1x": 25.97,
         "bundle_2_price": 45.7,
         "bundle_3_price": 63.88,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 8695,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9098,7 +9050,7 @@
         "retail_price_1x": 13.48,
         "bundle_2_price": 23.71,
         "bundle_3_price": 33.15,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 9844,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9117,7 +9069,7 @@
         "retail_price_1x": 13.48,
         "bundle_2_price": 23.71,
         "bundle_3_price": 33.15,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 8729,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9136,7 +9088,7 @@
         "retail_price_1x": 13.48,
         "bundle_2_price": 23.71,
         "bundle_3_price": 33.15,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5555,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9155,7 +9107,7 @@
         "retail_price_1x": 13.48,
         "bundle_2_price": 23.71,
         "bundle_3_price": 33.15,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 6692,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9174,7 +9126,7 @@
         "retail_price_1x": 21.96,
         "bundle_2_price": 38.64,
         "bundle_3_price": 54.01,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 8590,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9193,7 +9145,7 @@
         "retail_price_1x": 21.96,
         "bundle_2_price": 38.64,
         "bundle_3_price": 54.01,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 6440,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9212,7 +9164,7 @@
         "retail_price_1x": 21.96,
         "bundle_2_price": 38.64,
         "bundle_3_price": 54.01,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 6095,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9308,7 +9260,8 @@
       "slug": "padded-step-stool-step-stool-non-slip-2201az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 268
+      "review_count": 268,
+      "amazon_benchmark": 29.99
     },
     "faq_schema": [
       {
@@ -9342,7 +9295,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 146,
+        "us_warehouse_stock": 2000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9425,7 +9378,8 @@
       "slug": "steel-knife-kitchen-knife-fruit-knife-knife",
       "category": "Home & Kitchen",
       "rating": 4.6,
-      "review_count": 118
+      "review_count": 118,
+      "amazon_benchmark": 39.99
     },
     "faq_schema": [
       {
@@ -9459,7 +9413,7 @@
         "retail_price_1x": 38.65,
         "bundle_2_price": 68.01,
         "bundle_3_price": 95.07,
-        "us_warehouse_stock": 65,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9478,7 +9432,26 @@
         "retail_price_1x": 111.95,
         "bundle_2_price": 197.02,
         "bundle_3_price": 275.39,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
+        "carrier_name": "USPS",
+        "delivery_sla": "3-5 Days",
+        "is_available": true
+      },
+      {
+        "id": 476,
+        "vid": "30A56458-F134-4887-BAE2-91C8EB3E1919",
+        "sku": "CJJJCFCF01035-5pcs",
+        "variant_name": "5pcs",
+        "display_name": "5-Knife Collection Set",
+        "size": null,
+        "color": null,
+        "image_url": "https://cf.cjdropshipping.com/2043/121457628333.png",
+        "wholesale_cost": 111.32,
+        "shipping_cost": 0.0,
+        "retail_price_1x": 163.27,
+        "bundle_2_price": 293.89,
+        "bundle_3_price": 416.34,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9497,7 +9470,7 @@
         "retail_price_1x": 103.57,
         "bundle_2_price": 182.27,
         "bundle_3_price": 254.77,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9516,7 +9489,7 @@
         "retail_price_1x": 64.25,
         "bundle_2_price": 113.07,
         "bundle_3_price": 158.04,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9535,7 +9508,7 @@
         "retail_price_1x": 64.25,
         "bundle_2_price": 113.07,
         "bundle_3_price": 158.04,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 46,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9554,7 +9527,7 @@
         "retail_price_1x": 128.93,
         "bundle_2_price": 226.91,
         "bundle_3_price": 317.16,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9573,7 +9546,7 @@
         "retail_price_1x": 39.01,
         "bundle_2_price": 68.65,
         "bundle_3_price": 95.95,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9592,7 +9565,7 @@
         "retail_price_1x": 64.25,
         "bundle_2_price": 113.07,
         "bundle_3_price": 158.04,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9611,7 +9584,7 @@
         "retail_price_1x": 34.93,
         "bundle_2_price": 61.47,
         "bundle_3_price": 85.92,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9685,7 +9658,8 @@
       "slug": "cifbuy-in-wall-key-holder-with-sturdy-770001",
       "category": "Everyday Carry & Auto",
       "rating": 4.9,
-      "review_count": 245
+      "review_count": 245,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -9719,7 +9693,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 123,
+        "us_warehouse_stock": 230,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9800,7 +9774,8 @@
       "slug": "shell-car-vacuum-cleaner-10kpa-outdoor-suction-8302by",
       "category": "Outdoor & Patio",
       "rating": 4.8,
-      "review_count": 272
+      "review_count": 272,
+      "amazon_benchmark": 36.99
     },
     "faq_schema": [
       {
@@ -9834,7 +9809,7 @@
         "retail_price_1x": 36.95,
         "bundle_2_price": 65.02,
         "bundle_3_price": 90.89,
-        "us_warehouse_stock": 150,
+        "us_warehouse_stock": 11130,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9853,7 +9828,7 @@
         "retail_price_1x": 59.91,
         "bundle_2_price": 105.43,
         "bundle_3_price": 147.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13313,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9927,7 +9902,8 @@
       "slug": "knife-holder-for-kitchen-knife-holder-color",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 81
+      "review_count": 81,
+      "amazon_benchmark": 31.99
     },
     "faq_schema": [
       {
@@ -9961,7 +9937,7 @@
         "retail_price_1x": 31.95,
         "bundle_2_price": 56.22,
         "bundle_3_price": 78.59,
-        "us_warehouse_stock": 208,
+        "us_warehouse_stock": 40008,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9980,7 +9956,7 @@
         "retail_price_1x": 78.71,
         "bundle_2_price": 138.52,
         "bundle_3_price": 193.62,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9999,7 +9975,7 @@
         "retail_price_1x": 56.57,
         "bundle_2_price": 99.55,
         "bundle_3_price": 139.15,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10105,7 +10081,8 @@
       "slug": "kitchen-knife-set-chef-knife-meat-knife-knife",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 163
+      "review_count": 163,
+      "amazon_benchmark": 49.99
     },
     "faq_schema": [
       {
@@ -10139,7 +10116,7 @@
         "retail_price_1x": 38.29,
         "bundle_2_price": 67.38,
         "bundle_3_price": 94.18,
-        "us_warehouse_stock": 110,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10158,7 +10135,7 @@
         "retail_price_1x": 149.41,
         "bundle_2_price": 262.95,
         "bundle_3_price": 367.54,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10177,7 +10154,7 @@
         "retail_price_1x": 149.58,
         "bundle_2_price": 263.25,
         "bundle_3_price": 367.96,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 36021,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10196,7 +10173,7 @@
         "retail_price_1x": 98.34,
         "bundle_2_price": 173.07,
         "bundle_3_price": 241.91,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14354,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10215,7 +10192,7 @@
         "retail_price_1x": 58.24,
         "bundle_2_price": 102.49,
         "bundle_3_price": 143.26,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10234,7 +10211,7 @@
         "retail_price_1x": 56.07,
         "bundle_2_price": 98.67,
         "bundle_3_price": 137.92,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10253,7 +10230,7 @@
         "retail_price_1x": 61.43,
         "bundle_2_price": 108.11,
         "bundle_3_price": 151.11,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10272,7 +10249,7 @@
         "retail_price_1x": 27.42,
         "bundle_2_price": 48.25,
         "bundle_3_price": 67.44,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 6050,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10291,7 +10268,7 @@
         "retail_price_1x": 34.72,
         "bundle_2_price": 61.1,
         "bundle_3_price": 85.4,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40002,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10310,7 +10287,7 @@
         "retail_price_1x": 75.99,
         "bundle_2_price": 133.73,
         "bundle_3_price": 186.93,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10329,7 +10306,7 @@
         "retail_price_1x": 97.11,
         "bundle_2_price": 170.9,
         "bundle_3_price": 238.88,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10348,7 +10325,7 @@
         "retail_price_1x": 75.99,
         "bundle_2_price": 133.73,
         "bundle_3_price": 186.93,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10367,7 +10344,7 @@
         "retail_price_1x": 58.66,
         "bundle_2_price": 103.23,
         "bundle_3_price": 144.29,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10386,7 +10363,7 @@
         "retail_price_1x": 76.68,
         "bundle_2_price": 134.95,
         "bundle_3_price": 188.62,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10405,7 +10382,7 @@
         "retail_price_1x": 97.11,
         "bundle_2_price": 170.9,
         "bundle_3_price": 238.88,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40000,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10480,7 +10457,8 @@
       "slug": "pull-out-hot-and-cold-kitchen-and-5801az",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 281
+      "review_count": 281,
+      "amazon_benchmark": 39.99
     },
     "faq_schema": [
       {
@@ -10514,26 +10492,7 @@
         "retail_price_1x": 46.0,
         "bundle_2_price": 80.95,
         "bundle_3_price": 113.15,
-        "us_warehouse_stock": 159,
-        "carrier_name": "USPS",
-        "delivery_sla": "3-5 Days",
-        "is_available": true
-      },
-      {
-        "id": 508,
-        "vid": "1468188250026938368",
-        "sku": "CJCF137445802BY",
-        "variant_name": "Regular draw",
-        "display_name": "Regular draw",
-        "size": null,
-        "color": null,
-        "image_url": "https://cf.cjdropshipping.com/8c6765b3-7906-4142-8163-224bd8e7d0bf.jpg?bid=1793523711954399232",
-        "wholesale_cost": 19.55,
-        "shipping_cost": 0.0,
-        "retail_price_1x": 43.14,
-        "bundle_2_price": 75.92,
-        "bundle_3_price": 106.11,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 33074,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10552,7 +10511,7 @@
         "retail_price_1x": 20.56,
         "bundle_2_price": 36.18,
         "bundle_3_price": 50.57,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 5597,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10635,7 +10594,8 @@
       "slug": "tool-holder-large-holder-kitchen-tool-0469-a",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 162
+      "review_count": 162,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -10669,7 +10629,7 @@
         "retail_price_1x": 23.3,
         "bundle_2_price": 41.0,
         "bundle_3_price": 57.31,
-        "us_warehouse_stock": 109,
+        "us_warehouse_stock": 10472,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10688,7 +10648,7 @@
         "retail_price_1x": 11.94,
         "bundle_2_price": 21.0,
         "bundle_3_price": 29.36,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14130,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10707,7 +10667,7 @@
         "retail_price_1x": 24.56,
         "bundle_2_price": 43.22,
         "bundle_3_price": 60.41,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13257,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10726,7 +10686,7 @@
         "retail_price_1x": 14.56,
         "bundle_2_price": 25.62,
         "bundle_3_price": 35.81,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14500,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10803,7 +10763,8 @@
       "slug": "36l-outdoor-daypack-travel-4401az",
       "category": "Outdoor & Patio",
       "rating": 4.9,
-      "review_count": 248
+      "review_count": 248,
+      "amazon_benchmark": 39.99
     },
     "faq_schema": [
       {
@@ -10824,25 +10785,6 @@
     "is_active": true,
     "variants": [
       {
-        "id": 80,
-        "vid": "1952575130433986561",
-        "sku": "CJYD244784401AZ",
-        "variant_name": "Orange",
-        "display_name": "Orange",
-        "size": null,
-        "color": "Orange",
-        "image_url": "https://cf.cjdropshipping.com/39451abf-740e-4e6a-927e-d292211002c5.jpg",
-        "wholesale_cost": 20.27,
-        "shipping_cost": 0.0,
-        "retail_price_1x": 39.95,
-        "bundle_2_price": 70.3,
-        "bundle_3_price": 98.27,
-        "us_warehouse_stock": 126,
-        "carrier_name": "USPS",
-        "delivery_sla": "3-5 Days",
-        "is_available": true
-      },
-      {
         "id": 513,
         "vid": "1952575130433986562",
         "sku": "CJYD244784402BY",
@@ -10856,13 +10798,13 @@
         "retail_price_1x": 39.95,
         "bundle_2_price": 70.3,
         "bundle_3_price": 98.27,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 32,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
       }
     ],
-    "wholesale_cost": 20.27,
+    "wholesale_cost": 19.71,
     "retail_price_1x": 39.95
   },
   {
@@ -10926,7 +10868,8 @@
       "slug": "tent-outdoor-camping-people-quickly-open-5001az",
       "category": "Outdoor & Patio",
       "rating": 4.8,
-      "review_count": 241
+      "review_count": 241,
+      "amazon_benchmark": 49.99
     },
     "faq_schema": [
       {
@@ -10960,7 +10903,7 @@
         "retail_price_1x": 34.03,
         "bundle_2_price": 59.88,
         "bundle_3_price": 83.7,
-        "us_warehouse_stock": 119,
+        "us_warehouse_stock": 12096,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10979,7 +10922,7 @@
         "retail_price_1x": 37.19,
         "bundle_2_price": 65.44,
         "bundle_3_price": 91.48,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14503,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11064,7 +11007,8 @@
       "slug": "new-rgb-led-solar-light-step-fence-3101az",
       "category": "Smart Lighting",
       "rating": 4.7,
-      "review_count": 264
+      "review_count": 264,
+      "amazon_benchmark": 16.99
     },
     "faq_schema": [
       {
@@ -11098,7 +11042,7 @@
         "retail_price_1x": 14.1,
         "bundle_2_price": 24.81,
         "bundle_3_price": 34.68,
-        "us_warehouse_stock": 142,
+        "us_warehouse_stock": 40159,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11117,7 +11061,7 @@
         "retail_price_1x": 42.76,
         "bundle_2_price": 75.25,
         "bundle_3_price": 105.18,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 10657,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11136,7 +11080,7 @@
         "retail_price_1x": 29.82,
         "bundle_2_price": 52.47,
         "bundle_3_price": 73.35,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13067,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11155,7 +11099,7 @@
         "retail_price_1x": 58.68,
         "bundle_2_price": 103.27,
         "bundle_3_price": 144.34,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 7921,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11247,7 +11191,8 @@
       "slug": "in-rose-flowers-led-light-and-speaker-7001az",
       "category": "Smart Lighting",
       "rating": 4.7,
-      "review_count": 262
+      "review_count": 262,
+      "amazon_benchmark": 24.99
     },
     "faq_schema": [
       {
@@ -11281,7 +11226,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 140,
+        "us_warehouse_stock": 13466,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11300,7 +11245,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11231,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11319,7 +11264,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 12712,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11338,7 +11283,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11449,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11357,7 +11302,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14339,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11376,7 +11321,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 10343,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11395,7 +11340,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 13805,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11414,7 +11359,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 12749,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11433,7 +11378,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 11054,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11452,7 +11397,7 @@
         "retail_price_1x": 24.95,
         "bundle_2_price": 43.9,
         "bundle_3_price": 61.37,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 14666,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11525,7 +11470,8 @@
       "slug": "small-night-light-small-wax-lamp-9301az",
       "category": "Smart Lighting",
       "rating": 4.9,
-      "review_count": 279
+      "review_count": 279,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -11549,7 +11495,7 @@
         "id": 85,
         "vid": "1468455400947978240",
         "sku": "CJSN137489301AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -11559,7 +11505,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 157,
+        "us_warehouse_stock": 38511,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11568,7 +11514,7 @@
         "id": 538,
         "vid": "1468455400947978241",
         "sku": "CJSN137489302BY",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -11578,7 +11524,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 32064,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11587,7 +11533,7 @@
         "id": 539,
         "vid": "1468455400952172544",
         "sku": "CJSN137489303CX",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -11597,7 +11543,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 36484,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11606,7 +11552,7 @@
         "id": 540,
         "vid": "1468455400952172545",
         "sku": "CJSN137489304DW",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -11616,7 +11562,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 35367,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11690,7 +11636,8 @@
       "slug": "12-seat-high-end-watch-storage-box-0601az",
       "category": "Everyday Carry & Auto",
       "rating": 4.8,
-      "review_count": 270
+      "review_count": 270,
+      "amazon_benchmark": 34.99
     },
     "faq_schema": [
       {
@@ -11714,7 +11661,7 @@
         "id": 86,
         "vid": "1871461081949966338",
         "sku": "CJCC225230601AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -11724,7 +11671,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 148,
+        "us_warehouse_stock": 578,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11793,7 +11740,8 @@
       "slug": "20-pack-vacuum-storage-bags-with-hand-9801az",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 260
+      "review_count": 260,
+      "amazon_benchmark": 27.99
     },
     "faq_schema": [
       {
@@ -11817,7 +11765,7 @@
         "id": 87,
         "vid": "1895322443625172993",
         "sku": "CJJT231089801AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -11827,7 +11775,7 @@
         "retail_price_1x": 27.95,
         "bundle_2_price": 49.18,
         "bundle_3_price": 68.75,
-        "us_warehouse_stock": 138,
+        "us_warehouse_stock": 789,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -11902,7 +11850,8 @@
       "slug": "tablet-storage-case-for-97-inch-tablet-5501az",
       "category": "Workspace & Tech",
       "rating": 4.6,
-      "review_count": 287
+      "review_count": 287,
+      "amazon_benchmark": 29.99
     },
     "faq_schema": [
       {
@@ -11926,7 +11875,7 @@
         "id": 88,
         "vid": "1892399155474722818",
         "sku": "CJJT229625501AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -11936,7 +11885,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 165,
+        "us_warehouse_stock": 176,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12017,7 +11966,8 @@
       "slug": "99-39cm-bathtub-anti-slip-pad-4401az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 276
+      "review_count": 276,
+      "amazon_benchmark": 29.99
     },
     "faq_schema": [
       {
@@ -12041,7 +11991,7 @@
         "id": 89,
         "vid": "1876470165038219265",
         "sku": "CJYS226314401AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12051,7 +12001,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 154,
+        "us_warehouse_stock": 110,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12125,7 +12075,8 @@
       "slug": "the-box-and-drying-deeply-clean-the-0701az",
       "category": "Home & Kitchen",
       "rating": 4.7,
-      "review_count": 298
+      "review_count": 298,
+      "amazon_benchmark": 28.99
     },
     "faq_schema": [
       {
@@ -12149,7 +12100,7 @@
         "id": 90,
         "vid": "1897599349166309378",
         "sku": "CJJT231770701AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12159,7 +12110,7 @@
         "retail_price_1x": 28.01,
         "bundle_2_price": 49.29,
         "bundle_3_price": 68.89,
-        "us_warehouse_stock": 176,
+        "us_warehouse_stock": 154,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12232,7 +12183,8 @@
       "slug": "rabbit-night-light-led-cute-jade-rabbit-7101az",
       "category": "Smart Lighting",
       "rating": 4.6,
-      "review_count": 257
+      "review_count": 257,
+      "amazon_benchmark": 19.99
     },
     "faq_schema": [
       {
@@ -12256,7 +12208,7 @@
         "id": 91,
         "vid": "1410150270901555200",
         "sku": "CJJT119727101AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12266,7 +12218,7 @@
         "retail_price_1x": 19.95,
         "bundle_2_price": 35.1,
         "bundle_3_price": 49.07,
-        "us_warehouse_stock": 135,
+        "us_warehouse_stock": 34738,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12275,7 +12227,7 @@
         "id": 541,
         "vid": "1516707560886382592",
         "sku": "CJJT119727102BY",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12285,7 +12237,7 @@
         "retail_price_1x": 31.56,
         "bundle_2_price": 55.54,
         "bundle_3_price": 77.63,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 38436,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12294,7 +12246,7 @@
         "id": 542,
         "vid": "1516707560890576896",
         "sku": "CJJT119727103CX",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12304,7 +12256,7 @@
         "retail_price_1x": 57.12,
         "bundle_2_price": 100.52,
         "bundle_3_price": 140.51,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 39054,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12313,7 +12265,7 @@
         "id": 543,
         "vid": "2511090214511603400",
         "sku": "CJJT119727104DW",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12323,7 +12275,7 @@
         "retail_price_1x": 19.13,
         "bundle_2_price": 33.66,
         "bundle_3_price": 47.05,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 9409,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12405,7 +12357,8 @@
       "slug": "boat-anchor-hook-304-steel-slide-anchor-8401az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 269
+      "review_count": 269,
+      "amazon_benchmark": 39.99
     },
     "faq_schema": [
       {
@@ -12429,7 +12382,7 @@
         "id": 93,
         "vid": "1953138651240976385",
         "sku": "CJJT244968401AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12439,7 +12392,7 @@
         "retail_price_1x": 39.28,
         "bundle_2_price": 69.12,
         "bundle_3_price": 96.62,
-        "us_warehouse_stock": 147,
+        "us_warehouse_stock": 52,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12521,7 +12474,8 @@
       "slug": "18-pairs-of-glasses-cases-0701az",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 285
+      "review_count": 285,
+      "amazon_benchmark": 31.99
     },
     "faq_schema": [
       {
@@ -12545,7 +12499,7 @@
         "id": 94,
         "vid": "1869268927801872384",
         "sku": "CJJT224700701AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12555,7 +12509,7 @@
         "retail_price_1x": 31.95,
         "bundle_2_price": 56.22,
         "bundle_3_price": 78.59,
-        "us_warehouse_stock": 163,
+        "us_warehouse_stock": 95,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12624,7 +12578,8 @@
       "slug": "braided-nylon-cord-32-strand-design-720-1601az",
       "category": "Home & Kitchen",
       "rating": 4.8,
-      "review_count": 304
+      "review_count": 304,
+      "amazon_benchmark": 28.99
     },
     "faq_schema": [
       {
@@ -12648,7 +12603,7 @@
         "id": 96,
         "vid": "1956891659682840577",
         "sku": "CJJT245871601AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12658,7 +12613,7 @@
         "retail_price_1x": 28.95,
         "bundle_2_price": 50.94,
         "bundle_3_price": 71.21,
-        "us_warehouse_stock": 182,
+        "us_warehouse_stock": 109,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12735,7 +12690,8 @@
       "slug": "double-fill-light-mobile-phone-selfie-stick-2801az",
       "category": "Smart Lighting",
       "rating": 4.9,
-      "review_count": 281
+      "review_count": 281,
+      "amazon_benchmark": 16.99
     },
     "faq_schema": [
       {
@@ -12759,7 +12715,7 @@
         "id": 97,
         "vid": "1538381649111691264",
         "sku": "CJJT150572801AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12769,7 +12725,7 @@
         "retail_price_1x": 16.95,
         "bundle_2_price": 29.82,
         "bundle_3_price": 41.69,
-        "us_warehouse_stock": 159,
+        "us_warehouse_stock": 40689,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12778,7 +12734,7 @@
         "id": 544,
         "vid": "1538381649115885568",
         "sku": "CJJT150572802BY",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12788,7 +12744,7 @@
         "retail_price_1x": 16.95,
         "bundle_2_price": 29.82,
         "bundle_3_price": 41.69,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 44535,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12797,7 +12753,7 @@
         "id": 545,
         "vid": "1538381649115885569",
         "sku": "CJJT150572803CX",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12807,7 +12763,7 @@
         "retail_price_1x": 16.95,
         "bundle_2_price": 29.82,
         "bundle_3_price": 41.69,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 40607,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12816,7 +12772,7 @@
         "id": 546,
         "vid": "1538381649115885570",
         "sku": "CJJT150572804DW",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12826,7 +12782,7 @@
         "retail_price_1x": 16.95,
         "bundle_2_price": 29.82,
         "bundle_3_price": 41.69,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 18,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12835,7 +12791,7 @@
         "id": 547,
         "vid": "1538381649120079872",
         "sku": "CJJT150572805EV",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12845,7 +12801,7 @@
         "retail_price_1x": 22.88,
         "bundle_2_price": 40.26,
         "bundle_3_price": 56.27,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 34081,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12854,7 +12810,7 @@
         "id": 548,
         "vid": "1538381649120079873",
         "sku": "CJJT150572806FU",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12864,7 +12820,7 @@
         "retail_price_1x": 24.59,
         "bundle_2_price": 43.27,
         "bundle_3_price": 60.48,
-        "us_warehouse_stock": 120,
+        "us_warehouse_stock": 43216,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -12941,7 +12897,8 @@
       "slug": "premium-heavy-duty-weed-barrier-fabric-32oz-2901az",
       "category": "Home & Kitchen",
       "rating": 4.9,
-      "review_count": 278
+      "review_count": 278,
+      "amazon_benchmark": 29.99
     },
     "faq_schema": [
       {
@@ -12965,7 +12922,7 @@
         "id": 98,
         "vid": "1874691673257332737",
         "sku": "CJJT225892901AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -12975,7 +12932,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 156,
+        "us_warehouse_stock": 290,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -13051,7 +13008,8 @@
       "slug": "led-camping-lantern-battery-powered-all-in-1801az",
       "category": "Smart Lighting",
       "rating": 4.8,
-      "review_count": 275
+      "review_count": 275,
+      "amazon_benchmark": 29.99
     },
     "faq_schema": [
       {
@@ -13075,7 +13033,7 @@
         "id": 99,
         "vid": "1895333198131007490",
         "sku": "CJJT231091801AZ",
-        "variant_name": null,
+        "variant_name": "Standard Edition",
         "display_name": "Standard Edition",
         "size": null,
         "color": null,
@@ -13085,7 +13043,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 153,
+        "us_warehouse_stock": 352,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true

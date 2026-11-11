@@ -589,8 +589,8 @@ def run_discover(limit: int = 10) -> int:
     return run_bulk_seed(target=limit)
 
 
-def variant_passes_financial_gate(variant: ProductVariant) -> bool:
-    """Verify PayPal + RTO strict net profit (>= $4.00) and strict net margin (>= 20%)."""
+def variant_passes_financial_gate(variant: ProductVariant, product: Optional[Product] = None) -> bool:
+    """Verify PayPal + RTO strict net profit (>= $4.00), net margin (>= 20%), and single-unit anomaly bounds."""
     retail = float(variant.retail_price or 0.0)
     cogs = float(variant.wholesale_cost or 0.0) + float(variant.shipping_cost or 0.0)
     if retail <= 0:
@@ -599,7 +599,25 @@ def variant_passes_financial_gate(variant: ProductVariant) -> bool:
     rto_buffer = round(0.08 * retail, 2)
     net_profit = round(retail - (cogs + paypal_fee + rto_buffer), 2)
     net_margin = (net_profit / retail) * 100.0
-    return net_profit >= MIN_NET_PROFIT_USD and net_margin >= MIN_NET_MARGIN_PCT
+    if net_profit < MIN_NET_PROFIT_USD or net_margin < MIN_NET_MARGIN_PCT:
+        return False
+
+    # Enforce stored Amazon single-unit anomaly ceiling when configured in product.seo_meta_json
+    if product and isinstance(product.seo_meta_json, dict):
+        amz = product.seo_meta_json.get("amazon_benchmark")
+        min_w = min((float(v.wholesale_cost or cogs) for v in product.variants), default=cogs)
+        if amz and float(amz) > 0:
+            amz_val = float(amz)
+            # Single-unit / non-set variant must never exceed Amazon + $5.00
+            is_single_tier = (float(variant.wholesale_cost or 0.0) <= min_w * 1.35)
+            dname = str(getattr(variant, "display_name", None) or getattr(variant, "variant_name", None) or variant.sku or "").lower()
+            is_explicit_bundle = any(tok in dname for tok in ("pack", "set", "pcs", "pc", "cans", "knife"))
+            if is_single_tier and retail > amz_val + 5.00:
+                return False
+            # Single-unit pricing anomaly guard (e.g. supplier 10-pack wholesale mislabeled as single variant)
+            if not is_explicit_bundle and retail > max(amz_val * 3.0, 59.99):
+                return False
+    return True
 
 
 def trigger_storefront_revalidation() -> None:
@@ -631,6 +649,13 @@ def enforce_catalog_rules(session) -> Dict[str, int]:
     all_products = session.query(Product).all()
     for product in all_products:
         checked_products += 1
+        if not product.is_active:
+            for v in product.variants:
+                if v.is_available:
+                    v.is_available = False
+                    disabled_variants += 1
+            continue
+
         category_ok = is_approved_impulse_item(product.title or "", product.category or "")
         specs_ok = bool(product.specs_json) and bool(product.features_json)
         media_ok = bool(product.hero_image_url and "placeholder" not in product.hero_image_url.lower())
@@ -638,7 +663,7 @@ def enforce_catalog_rules(session) -> Dict[str, int]:
         available_variant_count = 0
         for v in product.variants:
             stock_ok = int(v.us_warehouse_stock or 0) >= MIN_ACTIVE_US_STOCK
-            finance_ok = variant_passes_financial_gate(v)
+            finance_ok = variant_passes_financial_gate(v, product)
             should_be_avail = bool(category_ok and specs_ok and media_ok and stock_ok and finance_ok)
             if v.is_available != should_be_avail:
                 v.is_available = should_be_avail
@@ -695,7 +720,7 @@ def run_stock_sync(enforce_rules: bool = True) -> int:
                     try:
                         live_stock = client.get_verified_us_stock(variant.vid)
                         variant.us_warehouse_stock = live_stock
-                        is_ok = (live_stock >= MIN_ACTIVE_US_STOCK) and variant_passes_financial_gate(variant)
+                        is_ok = (live_stock >= MIN_ACTIVE_US_STOCK) and variant_passes_financial_gate(variant, product)
                         variant.is_available = is_ok
                         if is_ok:
                             avail_count += 1
