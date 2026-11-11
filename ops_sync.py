@@ -65,54 +65,45 @@ except ImportError:
     console = None
 
 
-PROHIBITED_WORDS = {
-    # Medical, cosmetic, ingestible, supplement
-    "cream", "serum", "collagen", "lotion", "gel", "moisturizer",
-    "patch", "capsule", "pill", "supplement", "vitamin", "tea",
-    "oil", "mask", "whitening", "anti-aging", "anti aging", "slimming",
-    "butt", "breast", "eyelash", "acne", "hair removal", "gummy", "gummies",
-    "diet", "keto", "drop", "drops", "snore", "snoring", "teeth", "tooth",
-    "booster", "testosterone", "formula", "fragrance", "perfume", "parfum",
-    "shampoo", "soap", "deodorant", "nail", "nails", "eyeshadow", "lipstick",
-    # Apparel & accessories
-    "shirt", "t-shirt", "tshirt", "hoodie", "shoes", "shoe", "sneaker",
-    "dress", "pants", "bra", "underwear", "clothing", "jacket", "coat",
-    "shorts", "sweater", "skirt", "socks", "sock", "leggings", "swimsuit",
-    "swimwear", "boots", "boot", "sandals", "sandal", "heels", "blouse",
-    "jeans", "jean", "denim", "fleece", "vest", "robe", "lingerie", "scarf",
-    "tights", "pantyhose", "suit", "jewelry", "ring", "earring", "necklace",
-    # Tiles & stickers
-    "tile", "tiles", "wallpaper", "flooring", "wall sticker", "seashell", "pyramid",
-    # Furniture
-    "chair", "folding desk", "computer desk", "standing desk", "sofa", "couch",
-    "mattress", "bed", "wardrobe", "furniture", "luggage cart", "luggage",
-    "suitcase", "wagon", "trolley",
-}
+MIN_INGESTION_US_STOCK = 50
+MIN_ACTIVE_US_STOCK = 16  # Strictly > 15 physical US warehouse units
+MAX_DELIVERY_SLA_DAYS = 7
+MIN_NET_PROFIT_USD = 4.00
+MIN_NET_MARGIN_PCT = 20.0
+
+PROHIBITED_WORDS = set(CJClient.PROHIBITED_KEYWORDS)
+THIRD_PARTY_BRANDS = set(CJClient.THIRD_PARTY_BRANDS)
 
 APPROVED_THEMES = [
     # Portable gadgets & Everyday Carry
     "gadget", "portable", "rechargeable", "pocket", "foldable", "usb",
     "flashlight", "fan", "multitool", "opener", "alarm", "sensor", "keychain", "tool",
-    "clip", "hook", "strap", "wallet", "case",
+    "clip", "hook", "strap", "wallet", "case", "paracord", "tripod", "warmer", "ultrasonic",
     # Car accessories
-    "car", "vehicle", "auto", "dash", "cup holder", "seat hook", "trunk", "steering",
-    # Smart kitchen tools
+    "car", "vehicle", "auto", "dash", "cup holder", "seat hook", "trunk", "steering", "vacuum",
+    # Smart kitchen & bath tools
     "kitchen", "cooking", "chopper", "slicer", "grater", "peeler", "dispenser",
-    "knife", "bottle", "scale", "fridge", "sponge", "drainer", "caddy",
+    "knife", "cleaver", "bottle", "scale", "fridge", "sponge", "drainer", "caddy",
+    "tumbler", "mug", "faucet", "mop", "steamer", "bidet", "cabinet", "pull",
     # Pet accessories
-    "pet", "dog", "cat", "puppy", "kitten", "collar", "leash", "harness", "grooming", "feeder", "pet toy",
-    # Workspace & Tech
-    "desk", "cable", "organizer", "holder", "stand", "charger", "mount", "tray", "dock", "mouse pad", "shelf", "rack", "storage", "box",
+    "pet", "dog", "cat", "puppy", "kitten", "collar", "leash", "harness", "feeder", "pet toy", "muzzle", "litter",
+    # Workspace, hardware & Tech
+    "desk", "cable", "organizer", "holder", "stand", "charger", "mount", "tray", "dock",
+    "mouse pad", "shelf", "rack", "storage", "box", "clock", "drill", "bit", "reamer", "stool",
     # Lighting & Outdoor utility
-    "light", "lamp", "led", "nightlight", "lantern", "torch", "outdoor", "camping", "hammock", "grill", "mat", "pad"
+    "light", "lamp", "led", "nightlight", "lantern", "torch", "outdoor", "camping",
+    "hammock", "grill", "mat", "pad", "tent", "backpack", "aerator", "weed barrier"
 ]
 
 
 def is_approved_impulse_item(title: str, cat: str = "") -> bool:
-    """Enforce strict double-gate (negative blacklist + positive vertical whitelist)."""
+    """Enforce strict double-gate (negative blacklist + 3P brands + positive vertical whitelist)."""
     text = f"{title.lower()} {cat.lower()}"
     for kw in PROHIBITED_WORDS:
         if re.search(r"\b" + re.escape(kw) + r"(s|es|ies)?\b", text):
+            return False
+    for brand in THIRD_PARTY_BRANDS:
+        if re.search(r"\b" + re.escape(brand) + r"\b", text):
             return False
     for theme in APPROVED_THEMES:
         if re.search(r"\b" + re.escape(theme) + r"(s|es)?\b", text):
@@ -411,10 +402,10 @@ def run_bulk_seed(target: int = 150) -> int:
     items_processed = 0
     errors = []
 
-    # Paginate through US warehouse pages and targeted keywords with Double-Gate filtering
+    # Paginate through US warehouse pages and targeted keywords with Double-Gate filtering (>= 50 physical US units)
     queries = (
-        [{"page": p, "keyword": None, "stock": 10} for p in range(45, 85)] +
-        [{"page": p, "keyword": kw, "stock": 1} for kw in [
+        [{"page": p, "keyword": None, "stock": MIN_INGESTION_US_STOCK} for p in range(45, 85)] +
+        [{"page": p, "keyword": kw, "stock": MIN_INGESTION_US_STOCK} for kw in [
             "kitchen", "outdoor", "camping", "led", "lamp", "charger",
             "storage", "cleaner", "brush", "knife", "fan", "box", "hook",
             "mat", "car", "pet", "tool", "gadget", "organizer", "bottle",
@@ -431,8 +422,8 @@ def run_bulk_seed(target: int = 150) -> int:
 
             kw = q.get("keyword")
             pg = q.get("page", 1)
-            stk = q.get("stock", 10)
-            logger.info("Querying CJ US warehouse (page=%d, keyword=%s, stock=%d)...", pg, kw, stk)
+            stk = q.get("stock", MIN_INGESTION_US_STOCK)
+            logger.info("Querying CJ US warehouse (page=%d, keyword=%s, stock>=%d)...", pg, kw, stk)
             try:
                 candidates = client.query_us_warehouse_products(
                     page=pg,
@@ -458,16 +449,18 @@ def run_bulk_seed(target: int = 150) -> int:
                 raw_title = item.get("nameEn") or item.get("productName") or ""
                 supplier_cat = item.get("categoryName") or item.get("threeCategoryName") or ""
 
-                # Enforce strict double-gate (negative blacklist + positive vertical whitelist)
+                # Enforce strict double-gate (negative blacklist + 3P brands + positive vertical whitelist)
                 if not is_approved_impulse_item(raw_title, supplier_cat):
                     continue
 
+                # Format clean consumer title & category and re-check cleaned title
+                title = clean_consumer_title(raw_title)
+                if not is_approved_impulse_item(title, supplier_cat):
+                    continue
+                category = categorize_product(title, supplier_cat)
+
                 seen_pids.add(pid)
                 items_processed += 1
-
-                # Format clean consumer title & category
-                title = clean_consumer_title(raw_title)
-                category = categorize_product(title, supplier_cat)
 
                 try:
                     # Single detail query per product to fetch images and variants
@@ -476,10 +469,10 @@ def run_bulk_seed(target: int = 150) -> int:
                     if not variants:
                         continue
 
-                    # Extract multi-images (at least 3-6 verified URLs)
+                    # Extract multi-images (at least 2 verified HTTPS URLs)
                     gallery_images = extract_multi_images(details, item.get("bigImage"))
                     if len(gallery_images) < 2:
-                        continue  # Must have rich photos for conversion
+                        continue
 
                     hero_image = gallery_images[0]
 
@@ -492,15 +485,26 @@ def run_bulk_seed(target: int = 150) -> int:
                         continue
                     selected_variant = eligible_vars[0]
                     wholesale = float(selected_variant.get("variantSellPrice") or 10.0)
-
-                    # Free domestic USPS Ground shipping offered to customer
-                    standard_freight = 0.0
-                    pricing = calculate_pricing(wholesale, standard_freight)
-                    if not pricing["is_viable"]:
-                        continue
-
                     vid = str(selected_variant.get("vid"))
                     sku = str(selected_variant.get("variantSku") or vid)
+
+                    # Verify real physical US warehouse stock (>= 50 units on fresh ingest; never fabricate stock)
+                    live_us_stock = client.get_verified_us_stock(vid)
+                    if live_us_stock < MIN_INGESTION_US_STOCK:
+                        logger.info("Skipping PID %s (VID %s): physical US stock %d < %d", pid, vid, live_us_stock, MIN_INGESTION_US_STOCK)
+                        continue
+
+                    # Verify live US domestic freight SLA <= 7 days & true freight cost
+                    carrier_name, actual_freight, delivery_aging, max_days = client.get_cheapest_domestic_shipping(vid)
+                    if not carrier_name or max_days > MAX_DELIVERY_SLA_DAYS:
+                        logger.info("Skipping PID %s (VID %s): US carrier=%s transit=%dd (>%dd limit)", pid, vid, carrier_name, max_days, MAX_DELIVERY_SLA_DAYS)
+                        continue
+
+                    pricing = calculate_pricing(wholesale, actual_freight)
+                    if not pricing["is_viable"]:
+                        logger.info("Skipping PID %s (VID %s): margin/profit gate failed (net=$%.2f, %.1f%%)", pid, vid, pricing["net_profit"], pricing["net_margin_pct"])
+                        continue
+
                     retail_1x = pricing["retail_price_1x"]
 
                     # Generate rich consumer marketing & review copy
@@ -511,9 +515,6 @@ def run_bulk_seed(target: int = 150) -> int:
                         retail_price=retail_1x,
                         pid=pid,
                     )
-
-                    # Determine realistic US inventory (50-250 units)
-                    stock_seed = 50 + (sum(ord(c) for c in pid) % 180)
 
                     # Create Product
                     new_prod = Product(
@@ -533,20 +534,20 @@ def run_bulk_seed(target: int = 150) -> int:
                     session.add(new_prod)
                     session.flush()
 
-                    # Create Variant
+                    # Create Variant with real CJ US stock, freight, and SLA
                     new_var = ProductVariant(
                         vid=vid,
                         product_id=new_prod.id,
                         sku=sku,
                         image_url=selected_variant.get("variantImage") or hero_image,
                         wholesale_cost=wholesale,
-                        shipping_cost=standard_freight,
+                        shipping_cost=actual_freight,
                         retail_price=retail_1x,
                         bundle_2_price=pricing["bundle_2_price"],
                         bundle_3_price=pricing["bundle_3_price"],
-                        us_warehouse_stock=stock_seed,
-                        carrier_name="USPS",
-                        delivery_sla="3-5 Days",
+                        us_warehouse_stock=live_us_stock,
+                        carrier_name=carrier_name,
+                        delivery_sla=f"{delivery_aging} Days" if "day" not in delivery_aging.lower() else delivery_aging,
                         is_available=True,
                     )
                     session.add(new_var)
@@ -554,8 +555,8 @@ def run_bulk_seed(target: int = 150) -> int:
 
                     items_ingested += 1
                     logger.info(
-                        "Ingested [%d/%d] [%s] '%s' ($%.2f retail, %d images, %d stock)",
-                        items_ingested, target, category, title, retail_1x, len(gallery_images), stock_seed
+                        "Ingested [%d/%d] [%s] '%s' ($%.2f retail, $%.2f freight, %d images, %d US stock)",
+                        items_ingested, target, category, title, retail_1x, actual_freight, len(gallery_images), live_us_stock
                     )
 
                 except Exception as item_err:
@@ -578,7 +579,7 @@ def run_bulk_seed(target: int = 150) -> int:
         session.close()
         client.close()
 
-    total_final = session.query(Product).filter(Product.is_active == True).count() if not session.is_active else items_ingested
+    total_final = items_ingested
     logger.info("Bulk seeding finished. Total active products in database: %d", total_final)
     return total_final
 
@@ -588,8 +589,83 @@ def run_discover(limit: int = 10) -> int:
     return run_bulk_seed(target=limit)
 
 
-def run_stock_sync() -> int:
-    """Audit live stock and shipping margins for all active database products."""
+def variant_passes_financial_gate(variant: ProductVariant) -> bool:
+    """Verify PayPal + RTO strict net profit (>= $4.00) and strict net margin (>= 20%)."""
+    retail = float(variant.retail_price or 0.0)
+    cogs = float(variant.wholesale_cost or 0.0) + float(variant.shipping_cost or 0.0)
+    if retail <= 0:
+        return False
+    paypal_fee = round(0.0349 * retail + 0.49, 2)
+    rto_buffer = round(0.08 * retail, 2)
+    net_profit = round(retail - (cogs + paypal_fee + rto_buffer), 2)
+    net_margin = (net_profit / retail) * 100.0
+    return net_profit >= MIN_NET_PROFIT_USD and net_margin >= MIN_NET_MARGIN_PCT
+
+
+def trigger_storefront_revalidation() -> None:
+    """Trigger Vastire production cron endpoint in revalidate-only mode after DB updates."""
+    admin_key = (os.getenv("ADMIN_API_KEY") or os.getenv("CRON_SECRET") or "").strip()
+    target_url = (os.getenv("STOREFRONT_REVALIDATE_URL") or "https://vastire.com/api/cron/sync-cj?mode=revalidate").strip()
+    if not admin_key:
+        logger.info("Skipping remote storefront revalidation (ADMIN_API_KEY not set).")
+        return
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            target_url,
+            method="POST",
+            headers={"Authorization": f"Bearer {admin_key}", "User-Agent": "Vastire-OpsSync/2.0"},
+        )
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            logger.info("Storefront revalidation triggered (%d): %s", resp.status, resp.read().decode("utf-8", errors="ignore")[:240])
+    except Exception as rev_err:
+        logger.warning("Storefront revalidation warning: %s", rev_err)
+
+
+def enforce_catalog_rules(session) -> Dict[str, int]:
+    """Audit and enforce category, third-party brand, stock (> 15), and margin gates across DB products."""
+    deactivated_products = 0
+    disabled_variants = 0
+    checked_products = 0
+
+    all_products = session.query(Product).all()
+    for product in all_products:
+        checked_products += 1
+        category_ok = is_approved_impulse_item(product.title or "", product.category or "")
+        specs_ok = bool(product.specs_json) and bool(product.features_json)
+        media_ok = bool(product.hero_image_url and "placeholder" not in product.hero_image_url.lower())
+
+        available_variant_count = 0
+        for v in product.variants:
+            stock_ok = int(v.us_warehouse_stock or 0) >= MIN_ACTIVE_US_STOCK
+            finance_ok = variant_passes_financial_gate(v)
+            should_be_avail = bool(category_ok and specs_ok and media_ok and stock_ok and finance_ok)
+            if v.is_available != should_be_avail:
+                v.is_available = should_be_avail
+                if not should_be_avail:
+                    disabled_variants += 1
+            if should_be_avail:
+                available_variant_count += 1
+
+        should_be_active = bool(category_ok and specs_ok and media_ok and available_variant_count > 0)
+        if product.is_active and not should_be_active:
+            product.is_active = False
+            deactivated_products += 1
+            logger.warning(
+                "Deactivated product ID %s ('%s'): category_ok=%s specs_ok=%s avail_variants=%d",
+                product.id, (product.title or "")[:45], category_ok, specs_ok, available_variant_count
+            )
+
+    session.commit()
+    return {
+        "checked_products": checked_products,
+        "deactivated_products": deactivated_products,
+        "disabled_variants": disabled_variants,
+    }
+
+
+def run_stock_sync(enforce_rules: bool = True) -> int:
+    """Audit live CJ US warehouse stock (> 15 units) and enforce all pipeline rules."""
     engine = init_db()
     session = get_session(engine)
     client = CJClient()
@@ -599,21 +675,45 @@ def run_stock_sync() -> int:
     errors = []
 
     try:
-        active_products = session.query(Product).filter(Product.is_active == True).all()
-        logger.info("Auditing %d active products in database.", len(active_products))
+        cj_authed = False
+        try:
+            cj_authed = client.authenticate()
+        except Exception as auth_err:
+            errors.append({"auth_error": str(auth_err)})
 
-        for product in active_products:
-            items_processed += 1
-            for variant in product.variants:
-                try:
-                    live_stock = client.get_verified_us_stock(variant.vid)
-                    variant.us_warehouse_stock = live_stock
-                    variant.is_available = live_stock >= 10
-                    items_updated += 1
-                except Exception as var_err:
-                    errors.append({"vid": variant.vid, "error": str(var_err)})
+        if not cj_authed:
+            logger.error("CJ authentication failed; aborting live CJ stock mutation (fail-safe).")
+            errors.append({"general_error": "CJ API authentication failed; skipped live stock mutations."})
+        else:
+            active_products = session.query(Product).filter(Product.is_active == True).all()
+            logger.info("Auditing live CJ US stock for %d active products in database.", len(active_products))
 
-            session.commit()
+            for product in active_products:
+                items_processed += 1
+                avail_count = 0
+                for variant in product.variants:
+                    try:
+                        live_stock = client.get_verified_us_stock(variant.vid)
+                        variant.us_warehouse_stock = live_stock
+                        is_ok = (live_stock >= MIN_ACTIVE_US_STOCK) and variant_passes_financial_gate(variant)
+                        variant.is_available = is_ok
+                        if is_ok:
+                            avail_count += 1
+                        items_updated += 1
+                    except Exception as var_err:
+                        errors.append({"vid": variant.vid, "error": str(var_err)})
+                        if variant.is_available:
+                            avail_count += 1
+
+                if avail_count == 0 and product.variants:
+                    product.is_active = False
+                    logger.warning("Product ID %s ('%s') deactivated: 0 variants with US stock > 15.", product.id, (product.title or "")[:40])
+
+                session.commit()
+
+        if enforce_rules:
+            rule_summary = enforce_catalog_rules(session)
+            logger.info("Rule enforcement summary: %s", rule_summary)
     except Exception as exc:
         logger.error("Stock sync error: %s", exc)
         errors.append({"general_error": str(exc)})
@@ -629,6 +729,7 @@ def run_stock_sync() -> int:
         session.close()
         client.close()
 
+    trigger_storefront_revalidation()
     return items_updated
 
 
@@ -638,7 +739,8 @@ def main() -> None:
     parser.add_argument("--discover", action="store_true", help="Discover and ingest new winning US domestic products")
     parser.add_argument("--bulk-seed", action="store_true", help="Fast-track bulk multi-category ingestion (150-300 items)")
     parser.add_argument("--target", type=int, default=150, help="Target number of active products in database (default: 150)")
-    parser.add_argument("--sync-stock", action="store_true", help="Audit live US warehouse stock for active products")
+    parser.add_argument("--sync-stock", action="store_true", help="Audit live US warehouse stock (> 15) and rules for active products")
+    parser.add_argument("--enforce-rules", action="store_true", help="Enforce category, 3P brand, stock (> 15), and margin gates in DB")
     parser.add_argument("--limit", type=int, default=10, help="Maximum products to discover (default: 10)")
     args = parser.parse_args()
 
@@ -650,7 +752,14 @@ def main() -> None:
     elif args.discover:
         run_discover(limit=args.limit)
     elif args.sync_stock:
-        run_stock_sync()
+        run_stock_sync(enforce_rules=True)
+    elif args.enforce_rules:
+        engine = init_db()
+        session = get_session(engine)
+        summary = enforce_catalog_rules(session)
+        logger.info("Offline rule audit completed: %s", summary)
+        session.close()
+        trigger_storefront_revalidation()
     elif not args.reset_db:
         parser.print_help()
 

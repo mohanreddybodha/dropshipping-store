@@ -1,7 +1,11 @@
 import React from "react";
 import Link from "next/link";
-import { permanentRedirect } from "next/navigation";
-import { getProductBySlug, getCatalog, FALLBACK_PRODUCTS } from "../../../lib/api";
+import { notFound, permanentRedirect } from "next/navigation";
+import {
+  getAuthoritativeCatalog,
+  getAuthoritativeProductBySlug,
+} from "../../../lib/catalogServer";
+import { filterFallbackProducts } from "../../../lib/api";
 import {
   ProductGallery,
   ProductInteractivePanel,
@@ -32,14 +36,15 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  return FALLBACK_PRODUCTS.map((p) => ({
+  const catalog = await getAuthoritativeCatalog(2000).catch(() => filterFallbackProducts());
+  return catalog.map((p) => ({
     slug: p.slug,
   }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const product = await getAuthoritativeProductBySlug(slug);
   if (!product) {
     return {
       title: "Product Not Found | Vastire",
@@ -90,15 +95,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProductDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const sp = searchParams ? await searchParams : {};
-  const product = await getProductBySlug(slug);
+  const product = await getAuthoritativeProductBySlug(slug);
 
   if (!product) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-12 text-center space-y-3">
-        <h1 className="text-xl font-bold text-slate-900">Product Unavailable</h1>
-        <p className="text-xs text-slate-500">This item is currently out of stock.</p>
-      </div>
-    );
+    notFound();
   }
 
   // Canonical URL Enforcement: redirect non-standard or spaced slugs to the official slug
@@ -106,8 +106,8 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
     permanentRedirect(`/products/${product.slug}`);
   }
 
-  // Fetch catalog and project lightweight summary representations (eliminates 450KB RSC Flight bloat)
-  const allProducts = await getCatalog({ limit: 100 });
+  // Authoritative SSR catalog projection (zero 2s loopback fetch or OOS drift)
+  const allProducts = await getAuthoritativeCatalog(2000);
   const categoryName = product.category || "Featured";
 
   const toCardSummary = (p: typeof product) => ({

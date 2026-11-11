@@ -73,6 +73,7 @@ interface IndexedVariant {
     bundle_2_price: number;
     bundle_3_price: number;
     wholesale_cost: number;
+    us_warehouse_stock: number;
     is_available: boolean;
   };
 }
@@ -83,6 +84,10 @@ let dbIndexCache: {
   ts: number;
 } | null = null;
 const DB_INDEX_TTL_MS = 60_000;
+
+export function clearPricingCache(): void {
+  dbIndexCache = null;
+}
 
 async function getDbVariantIndex(): Promise<{
   byVid: Map<string, IndexedVariant>;
@@ -119,6 +124,7 @@ async function getDbVariantIndex(): Promise<{
         v.bundle_2_price,
         v.bundle_3_price,
         v.wholesale_cost,
+        v.us_warehouse_stock,
         v.is_available
       FROM product_variants v
       INNER JOIN products p ON v.product_id = p.id
@@ -148,6 +154,7 @@ async function getDbVariantIndex(): Promise<{
             bundle_2_price: Number(r.bundle_2_price || 0),
             bundle_3_price: Number(r.bundle_3_price || 0),
             wholesale_cost: Number(r.wholesale_cost || 0),
+            us_warehouse_stock: Number(r.us_warehouse_stock ?? 100),
             is_available: r.is_available !== false,
           },
         };
@@ -197,6 +204,7 @@ function getSeedVariantIndex(): {
           bundle_2_price: Number(v.bundle_2_price || 0),
           bundle_3_price: Number(v.bundle_3_price || 0),
           wholesale_cost: Number(v.wholesale_cost || 0),
+          us_warehouse_stock: Number(v.us_warehouse_stock ?? 100),
           is_available: v.is_available !== false,
         },
       };
@@ -288,7 +296,7 @@ export async function resolveAuthoritativeCart(
       );
     }
 
-    if (!matched.product.is_active || !matched.variant.is_available) {
+    if (!matched.product.is_active || !matched.variant.is_available || matched.variant.us_warehouse_stock <= 15) {
       throw new CatalogPricingError(
         `"${matched.product.title}" is currently unavailable for purchase.`,
         "UNAVAILABLE_VARIANT",

@@ -66,18 +66,28 @@ class CJClient:
     BASE_URL = "https://developers.cjdropshipping.com/api2.0/v1"
 
     PROHIBITED_KEYWORDS = [
-        # Medical, cosmetic, ingestible, and supplement liabilities
+        # Medical, cosmetic, facial, skincare, ingestible, and supplement liabilities
+        "facial", "blackhead", "pore", "cleansing strip", "cleanser", "skincare",
+        "cosmetic", "beauty device", "microcurrent",
         "cream", "serum", "collagen", "lotion", "gel", "moisturizer",
         "patch", "capsule", "pill", "supplement", "vitamin", "tea",
         "oil", "mask", "whitening", "anti-aging", "anti aging", "slimming",
         "butt", "breast", "eyelash", "acne", "hair removal", "gummy", "gummies",
         "diet", "keto", "drop", "drops", "snore", "snoring", "teeth", "tooth",
-        # Apparel, shoes, and clothing (singular & plural)
+        "booster", "testosterone", "formula", "fragrance oil", "perfume", "parfum",
+        "body spray", "shampoo", "soap", "deodorant", "nail", "nails",
+        "eyeshadow", "lipstick", "pet wipes", "wet wipes", "grooming wipes",
+        # Chemicals / sprays / aerosols
+        "rust remover spray", "brake cleaner", "cleaner spray", "aerosol", "iron powder",
+        # Apparel, shoes, clothing, and worn jewelry (25-35% return rate gate)
         "t-shirt", "tshirt", "shirt", "hoodie", "shoes", "shoe", "sneaker",
-        "dress", "pants", "bra", "underwear", "clothing", "jacket", "coat",
+        "dress", "pants", "trousers", "cargo pants", "romper", "jumpsuit",
+        "bra", "underwear", "clothing", "jacket", "coat",
         "shorts", "sweater", "skirt", "socks", "sock", "leggings", "swimsuit",
         "swimwear", "boots", "boot", "sandals", "sandal", "heels", "blouse",
         "jeans", "jean", "denim", "fleece", "vest", "robe", "lingerie", "scarf",
+        "tights", "pantyhose", "suit", "jewelry making", "earring", "necklace",
+        "bracelet", "ring",
         # Tiles, wallpapers, and wall stickers
         "tile", "tiles", "wallpaper", "flooring", "wall sticker",
         # Heavy furniture, chairs, large desks, and bulky luggage
@@ -86,6 +96,12 @@ class CJClient:
         "suitcase", "wagon", "trolley",
         # Expensive / high-liability electronics
         "smartphone", "drone", "television",
+    ]
+
+    THIRD_PARTY_BRANDS = [
+        "sansi", "ouhoe", "rayhong", "yegbong", "kegani", "eelhoe",
+        "west&month", "hoker", "vevor", "dowmoo", "cifbuy",
+        "anker", "xiaomi", "baseus", "ugreen", "philips", "sony", "apple", "samsung",
     ]
 
     def __init__(
@@ -151,13 +167,21 @@ class CJClient:
             logger.error("Exception during CJ authentication: %s", exc)
             return False
 
+    def has_third_party_brand(self, title: str, category_name: str = "") -> bool:
+        """Return True if title contains a known third-party trademarked brand."""
+        combined = f"{title.lower()} {category_name.lower()}"
+        for brand in self.THIRD_PARTY_BRANDS:
+            if re.search(r"\b" + re.escape(brand) + r"\b", combined):
+                return True
+        return False
+
     def is_prohibited_product(self, title: str, category_name: str = "") -> bool:
-        """Return True if title or category matches the strict liability blacklist."""
+        """Return True if title/category matches liability blacklist or third-party brands."""
         combined = f"{title.lower()} {category_name.lower()}"
         for kw in self.PROHIBITED_KEYWORDS:
             if re.search(r"\b" + re.escape(kw) + r"(s|es|ies)?\b", combined):
                 return True
-        return False
+        return self.has_third_party_brand(title, category_name)
 
     def query_us_warehouse_products(
         self,
@@ -225,14 +249,23 @@ class CJClient:
     def query_variant_stock(self, vid: str) -> List[Dict[str, Any]]:
         """Query physical warehouse stock count for a variant by VID.
 
-        Returns list of stock records per warehouse.
+        Returns list of stock records per warehouse, handling silent 1600200 rate limits.
         """
         self.authenticate()
         self.rate_limiter.acquire()
 
         url = f"{self.BASE_URL}/product/stock/queryByVid"
         resp = self.client.get(url, params={"vid": vid}, headers=self._get_headers())
-        return resp.json().get("data", []) or []
+        res_json = resp.json() if resp.status_code == 200 else {}
+        if resp.status_code == 429 or res_json.get("code") == 1600200:
+            logger.warning("CJ API rate limit on stock/queryByVid (%s). Backing off 3.0s...", res_json.get("code") or resp.status_code)
+            time.sleep(3.0)
+            self.rate_limiter.acquire()
+            resp = self.client.get(url, params={"vid": vid}, headers=self._get_headers())
+            res_json = resp.json() if resp.status_code == 200 else {}
+        if res_json.get("code") not in (None, 200) and res_json.get("result") is not True:
+            raise RuntimeError(f"CJ stock lookup failed ({res_json.get('code')}): {res_json.get('message')}")
+        return res_json.get("data", []) or []
 
     def get_verified_us_stock(self, vid: str) -> int:
         """Inspect warehouse records and extract total physical stock in US warehouses."""

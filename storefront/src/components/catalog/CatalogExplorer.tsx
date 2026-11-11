@@ -61,10 +61,8 @@ export default function CatalogExplorer({
   const [products, setProducts] = useState<Product[]>(initialProducts);
 
   useEffect(() => {
-    if (initialProducts.length > products.length) {
-      setProducts(initialProducts);
-    }
-  }, [initialProducts, products.length]);
+    setProducts(initialProducts);
+  }, [initialProducts]);
 
   useEffect(() => {
     // If SSR or build only had partial/fallback products, revalidate live catalog

@@ -1,33 +1,48 @@
 import { getDb } from "./db";
 import seedData from "./seedCatalog.json";
 import { Product } from "./types";
-import { normalizeCatalogSlugs } from "./seo";
+import { normalizeCatalogSlugs, toSeoProductSlug } from "./seo";
+
+export const MIN_ACTIVE_US_STOCK = 16; // Strictly > 15 physical US warehouse units
 
 let cachedDbItems: Product[] | null = null;
 let lastDbFetchTime = 0;
 const DB_CACHE_TTL_MS = 5 * 60 * 1000;
 
+export function clearCatalogCache(): void {
+  cachedDbItems = null;
+  lastDbFetchTime = 0;
+}
+
+export function isVariantInStock(v: { is_available?: boolean; us_warehouse_stock?: number }): boolean {
+  if (v.is_available === false) return false;
+  if (v.us_warehouse_stock !== undefined && Number(v.us_warehouse_stock) <= 15) return false;
+  return true;
+}
+
 export function mapDbRowToProduct(r: any): Product {
-  const variants = (r.variants || []).map((v: any) => ({
-    id: v.id,
-    vid: String(v.vid || ""),
-    sku: String(v.sku || ""),
-    variant_name: v.variant_name || undefined,
-    display_name: v.display_name || v.variant_name || "Standard Edition",
-    title: v.display_name || v.variant_name || undefined,
-    size: v.size || undefined,
-    color: v.color || undefined,
-    image_url: v.image_url || r.hero_image_url,
-    wholesale_cost: Number(v.wholesale_cost || 0),
-    shipping_cost: Number(v.shipping_cost || 0),
-    retail_price_1x: Number(v.retail_price_1x || 0),
-    bundle_2_price: Number(v.bundle_2_price || 0),
-    bundle_3_price: Number(v.bundle_3_price || 0),
-    us_warehouse_stock: Number(v.us_warehouse_stock ?? 100),
-    carrier_name: v.carrier_name || "USPS",
-    delivery_sla: v.delivery_sla || "3-5 Days",
-    is_available: v.is_available !== false,
-  }));
+  const variants = (r.variants || [])
+    .map((v: any) => ({
+      id: v.id,
+      vid: String(v.vid || ""),
+      sku: String(v.sku || ""),
+      variant_name: v.variant_name || undefined,
+      display_name: v.display_name || v.variant_name || "Standard Edition",
+      title: v.display_name || v.variant_name || undefined,
+      size: v.size || undefined,
+      color: v.color || undefined,
+      image_url: v.image_url || r.hero_image_url,
+      wholesale_cost: Number(v.wholesale_cost || 0),
+      shipping_cost: Number(v.shipping_cost || 0),
+      retail_price_1x: Number(v.retail_price_1x || 0),
+      bundle_2_price: Number(v.bundle_2_price || 0),
+      bundle_3_price: Number(v.bundle_3_price || 0),
+      us_warehouse_stock: Number(v.us_warehouse_stock ?? 100),
+      carrier_name: v.carrier_name || "USPS",
+      delivery_sla: v.delivery_sla || "3-5 Days",
+      is_available: v.is_available !== false,
+    }))
+    .filter(isVariantInStock);
 
   const firstVariant = variants[0];
 
@@ -35,7 +50,7 @@ export function mapDbRowToProduct(r: any): Product {
     id: r.id,
     pid: String(r.pid || ""),
     title: r.title,
-    brand_title: r.brand_title || "Vastire Curated",
+    brand_title: r.brand_title || "Vastire",
     slug: r.slug,
     category: r.category || "General",
     rating: Number(r.seo_meta_json?.rating || 4.7),
@@ -50,7 +65,7 @@ export function mapDbRowToProduct(r: any): Product {
     specs: r.specs_json || {},
     seo_meta: r.seo_meta_json || {},
     faq_schema: Array.isArray(r.faq_schema_json) ? r.faq_schema_json : [],
-    is_active: r.is_active !== false,
+    is_active: r.is_active !== false && variants.length > 0,
     variants,
     wholesale_cost: firstVariant ? firstVariant.wholesale_cost : 0,
     retail_price_1x: firstVariant ? firstVariant.retail_price_1x : 0,
@@ -122,7 +137,9 @@ export async function getAuthoritativeCatalog(timeoutMs = 1500): Promise<Product
       const rows = await Promise.race([dbPromise, timeout]);
 
       if (Array.isArray(rows) && rows.length > 0) {
-        const items = normalizeCatalogSlugs(rows.map(mapDbRowToProduct));
+        const items = normalizeCatalogSlugs(
+          rows.map(mapDbRowToProduct).filter((p) => p.is_active && p.variants.length > 0)
+        );
         cachedDbItems = items;
         lastDbFetchTime = now;
         return items;
@@ -133,6 +150,41 @@ export async function getAuthoritativeCatalog(timeoutMs = 1500): Promise<Product
   }
 
   return normalizeCatalogSlugs(
-    (seedData as unknown as Product[]).filter((p) => p.is_active !== false)
+    (seedData as unknown as Product[])
+      .map((p) => ({
+        ...p,
+        variants: (p.variants || []).filter(isVariantInStock),
+      }))
+      .filter((p) => p.is_active !== false && p.variants.length > 0)
+  );
+}
+
+export async function getAuthoritativeProductBySlug(
+  identifier: string,
+  timeoutMs = 2000
+): Promise<Product | null> {
+  const decoded = decodeURIComponent(identifier || "").trim().toLowerCase();
+  if (!decoded) return null;
+  const normalizedHyphen = decoded.replace(/\s+/g, "-");
+
+  const catalog = await getAuthoritativeCatalog(timeoutMs);
+  return (
+    catalog.find((p) => {
+      const candidates = [p.slug, p.legacy_slug, toSeoProductSlug(p.title)]
+        .filter((s): s is string => Boolean(s))
+        .map((s) => s.toLowerCase());
+      if (
+        candidates.some(
+          (c) =>
+            c === decoded ||
+            c === normalizedHyphen ||
+            c.replace(/-/g, " ") === decoded ||
+            decoded.replace(/-/g, " ") === c.replace(/-/g, " ")
+        )
+      ) {
+        return true;
+      }
+      return String(p.id) === decoded || String(p.pid) === decoded;
+    }) || null
   );
 }

@@ -37,9 +37,26 @@ export async function runComplianceTests(base = "http://localhost:3009") {
       `Count: ${data.items?.length}`
     );
     assert(
-      data.total >= 90,
-      "P2-1: Total catalog size reflects full synchronized product catalog (>= 90)",
+      data.total >= 70,
+      "P2-1: Total catalog size reflects compliant synchronized product catalog (>= 70)",
       `Total: ${data.total}`
+    );
+    const allRes = await fetch(`${base}/api/catalog?limit=500`);
+    const allData = await allRes.json();
+    const allItems = allData.items || [];
+    const lowStockLeak = allItems.some((p) =>
+      (p.variants || []).some((v) => v.is_available === false || (typeof v.us_warehouse_stock === "number" && v.us_warehouse_stock <= 15))
+    );
+    assert(
+      !lowStockLeak,
+      "P2-1b: Catalog API excludes all unavailable or <= 15 stock variants"
+    );
+    const prohibitedLeak = allItems.some((p) =>
+      /\b(blackhead|facial|sansi|ouhoe|rayhong|yegbong|kegani|hoodie|trousers|cargo pants|t-shirt|romper|jumpsuit)\b/i.test(p.title || "")
+    );
+    assert(
+      !prohibitedLeak,
+      "P2-1c: Catalog API contains zero prohibited facial, apparel, or third-party brand items"
     );
     const item0 = data.items[0];
     assert(

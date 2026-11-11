@@ -119,6 +119,23 @@ class TestLiabilityWhitelist:
         assert client.is_prohibited_product("Heavy Blend Fleece Cotton Hoodie") is True
         assert client.is_prohibited_product("Men's Athletic Running Shoes") is True
         assert client.is_prohibited_product("Moisturizing Face Mask Gel") is True
+        assert client.is_prohibited_product("EMS Microcurrent Facial Sculpting Device") is True
+        assert client.is_prohibited_product("Deep Pore Cleansing Blackhead Remover Strips") is True
+        assert client.is_prohibited_product("SANSI 60W Equivalent LED Light Bulbs") is True
+        assert client.is_prohibited_product("OUHOE Automotive Rust Remover Spray") is True
+
+    def test_amazon_option3_pricing_gate(self):
+        """Verify Amazon Option 3 adaptive match, +$5 cap, and commodity trap rejection."""
+        # Adaptive match down to Amazon price ($19.99) when profitable
+        matched = calculate_pricing(8.00, 0.00, amazon_price=19.99)
+        assert matched["retail_price_1x"] == 19.95
+        assert matched["pricing_decision"] == "ADAPTIVE_MATCH"
+        assert matched["is_viable"] is True
+
+        # Commodity trap: COGS $25.74 vs Amazon $24.99 cannot pass minimum margin/profit
+        rejected = calculate_pricing(25.74, 0.00, amazon_price=24.99)
+        assert rejected["is_viable"] is False
+        assert rejected["pricing_decision"] == "REJECT_COMMODITY_TRAP"
 
     def test_whitelisted_products(self):
         client = CJClient(api_key="mock_key")

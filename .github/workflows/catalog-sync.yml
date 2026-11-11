@@ -1,0 +1,45 @@
+name: Scheduled CJ Inventory & Compliance Sync
+
+on:
+  schedule:
+    # Run every 6 hours to sync live CJ US warehouse inventory (> 15 units),
+    # deactivate out-of-stock/non-compliant products in Neon DB, and trigger
+    # Next.js ISR revalidation for /merchant-feed.xml and /sitemap.xml.
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  cj-catalog-sync:
+    name: Full CJ US Warehouse Stock & Rules Sync
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Live CJ US Stock Sync & Rules Enforcement
+        if: ${{ secrets.DATABASE_URL != '' && secrets.CJ_API_KEY != '' }}
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CJ_API_KEY: ${{ secrets.CJ_API_KEY }}
+          ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+          TARGET_COUNTRY_CODE: "US"
+        run: |
+          python ops_sync.py --sync-stock
+
+      - name: Revalidate Storefront Feed & Sitemap
+        if: ${{ secrets.ADMIN_API_KEY != '' }}
+        run: |
+          curl -fsSL -X POST "https://vastire.com/api/cron/sync-cj?mode=revalidate" \
+            -H "Authorization: Bearer ${{ secrets.ADMIN_API_KEY }}"

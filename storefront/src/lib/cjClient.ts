@@ -247,6 +247,74 @@ export async function createCjOrder(params: CjCreateOrderParams): Promise<CjOrde
 /**
  * Query order details and tracking status from CJ Dropshipping.
  */
+export async function queryVariantUsStockByVid(
+  vid: string,
+  providedToken?: string
+): Promise<{
+  ok: boolean;
+  usStock: number;
+  code?: number;
+  message?: string;
+}> {
+  const token = providedToken || (await getCjAccessToken());
+  if (!token) {
+    return {
+      ok: false,
+      usStock: 0,
+      message: "CJ API authentication failed or CJ_API_KEY is invalid.",
+    };
+  }
+
+  try {
+    const url = `${CJ_BASE_URL}/product/stock/queryByVid?vid=${encodeURIComponent(vid)}`;
+    const res = await fetch(url, {
+      headers: { "CJ-Access-Token": token },
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (res.status === 429) {
+      return { ok: false, usStock: 0, code: 429, message: "CJ API HTTP 429 rate limited" };
+    }
+    if (!res.ok) {
+      return { ok: false, usStock: 0, code: res.status, message: `CJ HTTP ${res.status}` };
+    }
+
+    const json = await res.json().catch(() => ({}));
+    const code = Number(json.code || 0);
+    if (code === 1600200) {
+      return { ok: false, usStock: 0, code, message: "CJ silent rate limit (1600200)" };
+    }
+    if (code !== 200 && json.result !== true) {
+      return {
+        ok: false,
+        usStock: 0,
+        code,
+        message: String(json.message || "CJ stock query failed"),
+      };
+    }
+
+    const records = Array.isArray(json.data) ? json.data : [];
+    let usStock = 0;
+    for (const rec of records) {
+      const country = String(rec?.countryCode || "").toUpperCase();
+      const areaId = Number(rec?.areaId || 0);
+      const warehouseName = String(rec?.warehouseName || "").toUpperCase();
+      const qty = Number(rec?.storageNum ?? rec?.inventoryNum ?? 0);
+      if (country === "US" || areaId === 2 || warehouseName.includes("US")) {
+        usStock += Number.isFinite(qty) ? qty : 0;
+      }
+    }
+
+    return { ok: true, usStock };
+  } catch (err: any) {
+    return {
+      ok: false,
+      usStock: 0,
+      message: err?.message || "Network error during CJ stock check",
+    };
+  }
+}
+
 export async function fetchCjOrderTracking(targetId: string): Promise<{
   found: boolean;
   cj_order_id?: string | null;

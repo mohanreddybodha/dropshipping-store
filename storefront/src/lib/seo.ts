@@ -266,7 +266,11 @@ export interface ProductSeoMetadataResult {
 
 function getPriceBounds(product: Product): { minPrice: number; maxPrice: number; inStock: boolean } {
   const variants = Array.isArray(product.variants) ? product.variants : [];
-  const activeVariants = variants.filter((v) => v.is_available !== false);
+  const activeVariants = variants.filter(
+    (v) =>
+      v.is_available !== false &&
+      (v.us_warehouse_stock === undefined || v.us_warehouse_stock > 15)
+  );
   const pricePool = (activeVariants.length > 0 ? activeVariants : variants)
     .map((v) => Number(v.retail_price_1x))
     .filter((n) => Number.isFinite(n) && n > 0);
@@ -275,7 +279,11 @@ function getPriceBounds(product: Product): { minPrice: number; maxPrice: number;
   const maxPrice = pricePool.length > 0 ? Math.max(...pricePool) : minPrice;
   const inStock =
     variants.length === 0 ||
-    variants.some((v) => v.is_available !== false && (v.us_warehouse_stock === undefined || v.us_warehouse_stock > 0));
+    variants.some(
+      (v) =>
+        v.is_available !== false &&
+        (v.us_warehouse_stock === undefined || v.us_warehouse_stock > 15)
+    );
 
   return { minPrice, maxPrice, inStock };
 }
@@ -527,7 +535,7 @@ export function buildProductJsonLdGraph(
     priceValidUntil: validUntil,
     itemCondition: "https://schema.org/NewCondition",
     availability:
-      v && (v.is_available === false || v.us_warehouse_stock === 0)
+      v && (v.is_available === false || (v.us_warehouse_stock !== undefined && v.us_warehouse_stock <= 15))
         ? "https://schema.org/OutOfStock"
         : "https://schema.org/InStock",
     seller: { "@id": `${SITE_URL}/#organization` },

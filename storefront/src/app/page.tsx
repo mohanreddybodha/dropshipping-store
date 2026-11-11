@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
-import { getCatalog } from "../lib/api";
+import { getAuthoritativeCatalog } from "../lib/catalogServer";
+import { Product } from "../lib/types";
 import { CatalogExplorer } from "../components/catalog";
 import {
   SITE_NAME,
@@ -8,6 +9,8 @@ import {
   getCategorySeoProfile,
   buildCatalogItemListJsonLd,
 } from "../lib/seo";
+
+export const revalidate = 60;
 
 interface HomePageProps {
   searchParams?: Promise<{ category?: string; search?: string; page?: string }>;
@@ -59,16 +62,26 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const initialSearch = sp.search?.trim() || "";
   const initialPage = Math.max(1, parseInt(sp.page || "1", 10) || 1);
 
-  const products = await getCatalog({
-    limit: 200,
-    ...(initialCategory !== "All Products" ? { category: initialCategory } : {}),
-    ...(initialSearch ? { search: initialSearch } : {}),
-  });
+  const allProducts: Product[] = await getAuthoritativeCatalog(2000);
+  let products = allProducts;
 
-  const allProducts =
-    initialCategory !== "All Products" || initialSearch
-      ? await getCatalog({ limit: 200 })
-      : products;
+  if (initialCategory !== "All Products") {
+    const cat = initialCategory.toLowerCase();
+    products = products.filter(
+      (p) =>
+        (p.category && p.category.toLowerCase().includes(cat)) ||
+        (p.seo_meta?.category && p.seo_meta.category.toLowerCase().includes(cat))
+    );
+  }
+  if (initialSearch) {
+    const q = initialSearch.toLowerCase();
+    products = products.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        (p.category && p.category.toLowerCase().includes(q)) ||
+        p.features?.some((f) => f.title.toLowerCase().includes(q) || f.desc.toLowerCase().includes(q))
+    );
+  }
 
   const itemListSchema = buildCatalogItemListJsonLd(
     products,

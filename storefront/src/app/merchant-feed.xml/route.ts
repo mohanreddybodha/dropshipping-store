@@ -122,8 +122,9 @@ export async function GET() {
 
       const isAvailable =
         variant.is_available !== false &&
-        (variant.us_warehouse_stock === undefined || variant.us_warehouse_stock > 0);
-      const availability = isAvailable ? "in_stock" : "out_of_stock";
+        (variant.us_warehouse_stock === undefined || variant.us_warehouse_stock > 15);
+      if (!isAvailable) continue;
+      const availability = "in_stock";
 
       const colorVal = (variant.color || "").trim();
       const sizeVal = (variant.size || "").trim();

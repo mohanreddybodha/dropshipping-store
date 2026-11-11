@@ -220,7 +220,11 @@ export default function SizeSelector({
   const [filterTab, setFilterTab] = useState<"all" | "sets" | "singles">("all");
 
   const variants = useMemo(() => {
-    return (product.variants || []).filter((v) => v.is_available !== false);
+    return (product.variants || []).filter(
+      (v) =>
+        v.is_available !== false &&
+        (v.us_warehouse_stock === undefined || v.us_warehouse_stock > 15)
+    );
   }, [product.variants]);
 
   // Check if variants follow Color-Size or Size-Color apparel convention

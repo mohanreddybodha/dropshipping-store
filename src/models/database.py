@@ -263,21 +263,29 @@ class SyncAuditLog(Base):
         )
 
 
-def calculate_pricing(wholesale_cost: float, shipping_cost: float = 0.0) -> Dict[str, float]:
-    """Calculate psychological retail price, tiered bundle discounts, and net margin.
+def calculate_pricing(
+    wholesale_cost: float,
+    shipping_cost: float = 0.0,
+    amazon_price: Optional[float] = None,
+) -> Dict[str, Any]:
+    """Calculate psychological retail price, Option 3 Amazon benchmark match, bundle tiers, and net margin.
 
-    Dynamic Tiered Multiplier & Psychological Price Cap Engine:
-        - wholesale_cost <= 8.00: Retail = ROUND(wholesale_cost * 3.5, 2) - 0.01 (e.g., $5 -> $17.49)
-        - 8.00 < wholesale_cost <= 18.00: Retail = ROUND(wholesale_cost * 2.2, 2) - 0.01 (e.g., $12 -> $26.39)
-        - wholesale_cost > 18.00: Retail = ROUND(MIN(wholesale_cost * 1.6, 49.99), 2) - 0.01 (Strict US market ceiling)
+    Rules & Gates (see PRODUCT_PIPELINE_RULES.md):
+        - COGS = wholesale_cost + shipping_cost
+        - Tier 1 (COGS <= 8.00): ROUND(COGS * 3.5, 2) - 0.01
+        - Tier 2 (8.00 < COGS <= 18.00): ROUND(COGS * 2.2, 2) - 0.01
+        - Tier 3 (COGS > 18.00): ROUND(MIN(COGS * 1.6, 49.99), 2) - 0.01
+        - Amazon Option 3 Match (when amazon_price provided):
+            * Prefer Retail <= amazon_price (match at amazon_price - 0.04 when > $10)
+            * Hard ceiling: Retail <= amazon_price + 5.00
         - 2x Bundle: 12% off total (ROUND(Retail * 2.0 * 0.88, 2) - 0.01)
         - 3x Bundle: 18% off total (ROUND(Retail * 3.0 * 0.82, 2) - 0.01)
-        - Gateway Fee = 0.025 * Retail_Price + 0.30
-        - RTO Buffer = 0.08 * Retail_Price
-        - Net Profit = Retail_Price - (Total_Cost + Gateway + RTO)
-        - Net Margin % = (Net Profit / Retail_Price) * 100
+        - PayPal Gateway Fee = ROUND(0.0349 * Retail + 0.49, 2)
+        - RTO Buffer = ROUND(0.08 * Retail, 2)
+        - Net Profit = ROUND(Retail - (COGS + Gateway + RTO), 2)
+        - Strict Minimum Gates: Net_Profit >= $4.00 AND Net_Margin >= 20.0% AND Gross_Margin >= 35.0%
     """
-    total_cost = wholesale_cost + shipping_cost
+    total_cost = round(wholesale_cost + shipping_cost, 2)
 
     # Dynamic Tiered Multiplier & Psychological Price Cap Engine
     if total_cost <= 8.00:
@@ -288,21 +296,53 @@ def calculate_pricing(wholesale_cost: float, shipping_cost: float = 0.0) -> Dict
         raw_retail = round(min(total_cost * 1.6, 49.99), 2) - 0.01
 
     retail_1x = round(raw_retail, 2)
+    amazon_compliant = True
+    pricing_decision = "FORMULA_BASE"
+
+    def _eval(price_val: float):
+        pf = round(0.0349 * price_val + 0.49, 2)
+        rto = round(0.08 * price_val, 2)
+        np_val = round(price_val - (total_cost + pf + rto), 2)
+        nm_val = round((np_val / price_val) * 100, 2) if price_val > 0 else 0.0
+        gm_val = round(((price_val - total_cost) / price_val) * 100, 2) if price_val > 0 else 0.0
+        return pf, rto, np_val, nm_val, gm_val
+
+    if amazon_price is not None and amazon_price > 0:
+        if retail_1x <= amazon_price:
+            pricing_decision = "VERIFIED_WINNER"
+        else:
+            cand_match = round(amazon_price - 0.04, 2) if amazon_price > 10.0 else round(amazon_price, 2)
+            _, _, m_net, m_nm, m_gm = _eval(cand_match)
+            if m_net >= 4.00 and m_nm >= 20.0 and m_gm >= 35.0:
+                retail_1x = cand_match
+                pricing_decision = "ADAPTIVE_MATCH"
+            else:
+                # Tolerance window: <= Amazon + $5.00 max
+                cand_cap = min(retail_1x, round(amazon_price + 4.96, 2))
+                _, _, c_net, c_nm, c_gm = _eval(cand_cap)
+                if (cand_cap - amazon_price) <= 5.00 and c_net >= 4.00 and c_nm >= 20.0 and c_gm >= 35.0:
+                    retail_1x = cand_cap
+                    pricing_decision = "TOLERANCE_WITHIN_5"
+                else:
+                    amazon_compliant = False
+                    pricing_decision = "REJECT_COMMODITY_TRAP"
 
     # Multi-unit bundle calculations (using free incremental shipping on domestic)
     bundle_2 = round(retail_1x * 2.0 * 0.88, 2) - 0.01
     bundle_3 = round(retail_1x * 3.0 * 0.82, 2) - 0.01
 
-    # Gateway and RTO protections
-    payment_fee = round(0.025 * retail_1x + 0.30, 2)
-    rto_buffer = round(0.08 * retail_1x, 2)
-    net_profit = round(retail_1x - (total_cost + payment_fee + rto_buffer), 2)
-    net_margin_pct = round((net_profit / retail_1x) * 100, 2) if retail_1x > 0 else 0.0
+    payment_fee, rto_buffer, net_profit, net_margin_pct, gross_margin_pct = _eval(retail_1x)
+    is_viable = bool(
+        amazon_compliant
+        and net_profit >= 4.00
+        and net_margin_pct >= 20.0
+        and gross_margin_pct >= 35.0
+    )
 
     return {
         "wholesale_cost": round(wholesale_cost, 2),
         "shipping_cost": round(shipping_cost, 2),
-        "total_cost": round(total_cost, 2),
+        "total_cost": total_cost,
         "retail_price_1x": retail_1x,
         "bundle_2_price": round(bundle_2, 2),
         "bundle_3_price": round(bundle_3, 2),
@@ -310,7 +350,10 @@ def calculate_pricing(wholesale_cost: float, shipping_cost: float = 0.0) -> Dict
         "rto_buffer": rto_buffer,
         "net_profit": net_profit,
         "net_margin_pct": net_margin_pct,
-        "is_viable": net_profit > 0 and net_margin_pct >= 20.0,
+        "gross_margin_pct": gross_margin_pct,
+        "amazon_price": amazon_price,
+        "pricing_decision": pricing_decision,
+        "is_viable": is_viable,
     }
 
 

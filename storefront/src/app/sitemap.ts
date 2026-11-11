@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { FALLBACK_PRODUCTS } from "@/lib/api";
 import { getAuthoritativeCatalog } from "@/lib/catalogServer";
 import { SITE_URL, COLLECTION_DEFINITIONS, toAbsoluteUrl } from "@/lib/seo";
 
@@ -35,15 +34,10 @@ async function getSitemapProducts(): Promise<SitemapProductRecord[]> {
     bySlug.set(cleanSlug, { slug: cleanSlug, images: validImages });
   };
 
-  for (const p of FALLBACK_PRODUCTS) {
-    if (p.is_active !== false) {
-      register(p.slug, p.hero_image_url, p.images);
-    }
-  }
-
+  // Use strictly active, compliant, >15-stock catalog (with automatic seed fallback inside catalogServer)
   const liveProducts = await getAuthoritativeCatalog(2500);
   for (const p of liveProducts) {
-    if (p.is_active !== false) {
+    if (p.is_active !== false && Array.isArray(p.variants) && p.variants.length > 0) {
       register(p.slug, p.hero_image_url, p.images);
     }
   }
