@@ -24,6 +24,7 @@ export function VastireIcon({
   className?: string;
 }) {
   const pixelSize = typeof size === "number" ? size : parseInt(String(size), 10) || 44;
+  const width = Math.round(pixelSize * 1.25);
   const [src, setSrc] = useState<string>(VASTIRE_BRAND_EMBLEM_DATA_URI);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export function VastireIcon({
     <div
       className={`inline-flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105 ${className}`}
       style={{
-        width: `${pixelSize}px`,
+        width: `${width}px`,
         height: `${pixelSize}px`,
       }}
       aria-label="Vastire Brand Icon"
@@ -50,7 +51,7 @@ export function VastireIcon({
       <img
         src={src}
         alt="Vastire"
-        width={pixelSize}
+        width={width}
         height={pixelSize}
         decoding="sync"
         loading="eager"

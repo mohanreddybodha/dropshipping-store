@@ -15,7 +15,6 @@ import {
   User as UserIcon,
   LogOut,
   ArrowRight,
-  ArrowLeft,
   ShieldCheck,
   Search,
   X,
@@ -38,6 +37,7 @@ import {
   createCheckoutOrder,
 } from "../../lib/api";
 import { CustomerOrder } from "../../lib/types";
+import NavigationBackButton from "../../components/ui/NavigationBackButton";
 
 // Helper to resolve product image, title, and link for order items
 function resolveOrderItemInfo(item: any) {
@@ -84,7 +84,7 @@ function GoogleIcon() {
   );
 }
 
-// ── FAQ Accordion Item ───────────────────────────────────────────────────────
+// ── FAQ Accordion Item (All Closed by Default) ──────────────────────────────
 function FaqAccordionItem({
   question,
   answer,
@@ -100,10 +100,10 @@ function FaqAccordionItem({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between p-3.5 text-left group gap-3"
+        className="w-full flex items-center justify-between p-3.5 sm:p-4 text-left group gap-3 cursor-pointer"
         aria-expanded={open}
       >
-        <span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
+        <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-700 transition">
           {question}
         </span>
         <ChevronDown
@@ -114,10 +114,10 @@ function FaqAccordionItem({
       </button>
       <div
         className={`grid transition-all duration-300 ease-in-out ${
-          open ? "grid-rows-[1fr] opacity-100 px-3.5 pb-3.5" : "grid-rows-[0fr] opacity-0 px-3.5 pb-0"
+          open ? "grid-rows-[1fr] opacity-100 px-3.5 sm:px-4 pb-3.5 sm:pb-4" : "grid-rows-[0fr] opacity-0 px-3.5 sm:px-4 pb-0"
         }`}
       >
-        <div className="overflow-hidden text-xs text-slate-600 leading-relaxed pt-1 border-t border-slate-200/70">
+        <div className="overflow-hidden text-xs sm:text-sm text-slate-600 leading-relaxed pt-2 border-t border-slate-200/70">
           {answer}
         </div>
       </div>
@@ -382,8 +382,8 @@ export default function ProfilePage() {
     const s = (status || "").toUpperCase();
     if (s.includes("DELIVERED")) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-          <CheckCircle2 className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+          <CheckCircle2 className="w-3.5 h-3.5" />
           Delivered
         </span>
       );
@@ -395,118 +395,75 @@ export default function ProfilePage() {
       s.includes("CAPTURED")
     ) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-sky-800 border border-sky-200">
-          <Truck className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-800 border border-sky-200">
+          <Truck className="w-3.5 h-3.5" />
           In Transit
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-        <Clock className="w-3 h-3" />
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+        <Clock className="w-3.5 h-3.5" />
         Processing
       </span>
     );
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-6 pb-24 md:pb-12 space-y-4 sm:space-y-5">
-      {/* ── TOP HEADER (Clean, zero noisy subtitle) ── */}
-      <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <Link
-            href="/"
-            className="flex w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 items-center justify-center text-slate-600 transition active:scale-95 flex-shrink-0"
-            aria-label="Back to storefront"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <h1 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
-            <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 flex-shrink-0" />
-            <span className="truncate">Account</span>
-          </h1>
-        </div>
-
-        {currentUser && (
-          <button
-            onClick={handleSignOut}
-            className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition shadow-2xs active:scale-95 whitespace-nowrap cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5 text-rose-600 flex-shrink-0" />
-            <span>Sign Out</span>
-          </button>
-        )}
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 sm:pb-20 md:pb-10 space-y-4 sm:space-y-5">
+      {/* ── TOP HEADER (Clean back navigation + title, zero top-right button) ── */}
+      <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
+        <NavigationBackButton />
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
+          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 flex-shrink-0" />
+          <span className="truncate">Account</span>
+        </h1>
       </div>
 
       {/* ── AUTH STATUS SKELETON ── */}
       {authLoading && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center space-y-2.5">
           <div className="w-7 h-7 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-semibold text-slate-500">Loading account...</p>
+          <p className="text-sm font-semibold text-slate-500">Loading account...</p>
         </div>
       )}
 
-      {/* ── HERO PROFILE / SIGN IN CARD (Clean, zero clutter) ── */}
+      {/* ── HERO PROFILE / SIGN IN CARD (Clean, no redundant buttons) ── */}
       {!authLoading && (
         <>
           {currentUser ? (
-            /* Logged-In User Profile Card */
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5 min-w-0">
-                {currentUser.photoURL ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={currentUser.photoURL}
-                    alt={currentUser.displayName || "User"}
-                    className="w-12 h-12 rounded-full border border-slate-200 object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-emerald-600 text-white font-black text-lg flex items-center justify-center flex-shrink-0">
-                    {(currentUser.displayName || currentUser.email || "U")[0].toUpperCase()}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-black text-slate-900 truncate">
-                      {currentUser.displayName || "Customer"}
-                    </h2>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex-shrink-0">
-                      <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                      Verified
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 font-mono mt-0.5 truncate">{currentUser.email}</p>
+            /* Logged-In User Profile Card (Name + Email only, zero redundant buttons) */
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs flex items-center gap-3.5">
+              {currentUser.photoURL ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={currentUser.photoURL}
+                  alt={currentUser.displayName || "User"}
+                  className="w-12 h-12 rounded-full border border-slate-200 object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-emerald-600 text-white font-black text-lg flex items-center justify-center flex-shrink-0">
+                  {(currentUser.displayName || currentUser.email || "U")[0].toUpperCase()}
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Link
-                  href="/orders"
-                  prefetch={true}
-                  className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5 shadow-2xs"
-                >
-                  <Package className="w-3.5 h-3.5" />
-                  <span>My Orders</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveModal("track-order");
-                    setLookupResults(null);
-                    setLookupError(null);
-                  }}
-                  className="flex-1 sm:flex-initial px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Search className="w-3.5 h-3.5 text-slate-600" />
-                  <span>Track Order</span>
-                </button>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 truncate">
+                    {currentUser.displayName || "Customer"}
+                  </h2>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex-shrink-0">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    Verified
+                  </span>
+                </div>
+                <p className="text-sm text-slate-500 font-mono mt-0.5 truncate">{currentUser.email}</p>
               </div>
             </div>
           ) : (
-            /* Clean Unauthenticated Login Card (Zero noise, zero filler descriptions) */
+            /* Clean Unauthenticated Login Card */
             <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
               <div>
-                <h2 className="text-base font-black text-slate-900 tracking-tight">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
                   Login / Sign In with Email
                 </h2>
               </div>
@@ -516,7 +473,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={loginPending}
-                  className="w-full sm:w-auto min-w-[200px] flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-900 font-bold text-xs sm:text-sm rounded-xl border border-slate-300 shadow-2xs hover:border-slate-400 transition active:scale-98 disabled:opacity-60 cursor-pointer"
+                  className="w-full sm:w-auto min-w-[200px] flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-900 font-bold text-sm rounded-xl border border-slate-300 shadow-2xs hover:border-slate-400 transition active:scale-98 disabled:opacity-60 cursor-pointer"
                 >
                   <GoogleIcon />
                   <span>{loginPending ? "Signing in..." : "Continue with Google"}</span>
@@ -528,7 +485,7 @@ export default function ProfilePage() {
       )}
 
       {authError && (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-800 font-medium">
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-sm text-rose-800 font-medium">
           <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
           <span className="flex-1">{authError}</span>
           <button
@@ -540,11 +497,11 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ── CLEAN NAVIGATION BUTTONS (Zero noisy descriptions below titles) ── */}
+      {/* ── CLEAN NAVIGATION BUTTONS (Standard Readable Font Size) ── */}
       <div className="space-y-4">
         {/* SECTION 1: ORDERS & TRACKING */}
         <div className="space-y-1">
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
+          <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400 px-1">
             Orders & Tracking
           </h3>
 
@@ -557,41 +514,41 @@ export default function ProfilePage() {
                 setLookupResults(null);
                 setLookupError(null);
               }}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center flex-shrink-0 text-sky-600 group-hover:bg-sky-100 transition">
-                  <Search className="w-4 h-4" />
+                <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center flex-shrink-0 text-sky-600 group-hover:bg-sky-100 transition">
+                  <Search className="w-5 h-5" />
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
+                <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-700 transition">
                   Track Order
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
             </button>
 
             {/* Orders */}
             <Link
               href="/orders"
               prefetch={true}
-              className="flex items-center justify-between p-3.5 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left"
+              className="flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-600 group-hover:bg-emerald-100 transition">
-                  <Package className="w-4 h-4" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-600 group-hover:bg-emerald-100 transition">
+                  <Package className="w-5 h-5" />
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
+                <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-700 transition">
                   Orders
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
             </Link>
           </div>
         </div>
 
         {/* SECTION 2: CUSTOMER CARE */}
         <div className="space-y-1">
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
+          <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400 px-1">
             Customer Care
           </h3>
 
@@ -600,41 +557,41 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setActiveModal("faqs")}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0 text-amber-600 group-hover:bg-amber-100 transition">
-                  <HelpCircle className="w-4 h-4" />
+                <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0 text-amber-600 group-hover:bg-amber-100 transition">
+                  <HelpCircle className="w-5 h-5" />
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
+                <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-700 transition">
                   Frequently Asked Questions
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
             </button>
 
             {/* Support */}
             <button
               type="button"
               onClick={() => setActiveModal("support")}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center flex-shrink-0 text-purple-600 group-hover:bg-purple-100 transition">
-                  <Headphones className="w-4 h-4" />
+                <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center flex-shrink-0 text-purple-600 group-hover:bg-purple-100 transition">
+                  <Headphones className="w-5 h-5" />
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
+                <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-700 transition">
                   Support
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
             </button>
           </div>
         </div>
 
-        {/* SECTION 3: POLICIES */}
+        {/* SECTION 3: STORE POLICIES */}
         <div className="space-y-1">
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
+          <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400 px-1">
             Store Policies
           </h3>
 
@@ -643,101 +600,101 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setActiveModal("terms")}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-700 group-hover:bg-slate-200 transition">
-                  <FileText className="w-4 h-4" />
+                <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-700 group-hover:bg-slate-200 transition">
+                  <FileText className="w-5 h-5" />
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
+                <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-700 transition">
                   Terms and Conditions
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
             </button>
 
             {/* Refund Policy */}
             <button
               type="button"
               onClick={() => setActiveModal("refund")}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center flex-shrink-0 text-teal-700 group-hover:bg-teal-100 transition">
-                  <RotateCcw className="w-4 h-4" />
+                <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center flex-shrink-0 text-teal-700 group-hover:bg-teal-100 transition">
+                  <RotateCcw className="w-5 h-5" />
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
+                <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-700 transition">
                   Refund Policy
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
             </button>
 
             {/* Shipping Policy */}
             <button
               type="button"
               onClick={() => setActiveModal("shipping")}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-700 group-hover:bg-emerald-100 transition">
-                  <Truck className="w-4 h-4" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-700 group-hover:bg-emerald-100 transition">
+                  <Truck className="w-5 h-5" />
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
+                <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-700 transition">
                   Shipping Policy
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
             </button>
 
             {/* Privacy Policy */}
             <button
               type="button"
               onClick={() => setActiveModal("privacy")}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
+              className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 transition active:scale-[0.99] group text-left cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 text-blue-700 group-hover:bg-blue-100 transition">
-                  <Lock className="w-4 h-4" />
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 text-blue-700 group-hover:bg-blue-100 transition">
+                  <Lock className="w-5 h-5" />
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
+                <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-700 transition">
                   Privacy Policy
                 </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition flex-shrink-0" />
             </button>
           </div>
         </div>
 
-        {/* SECTION 4: ACCOUNT SECURITY */}
+        {/* SECTION 4: ACCOUNT SECURITY (Single Sign-Out Button) */}
         {currentUser && (
           <div className="space-y-1 pt-1">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-1">
-              Account
+            <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400 px-1">
+              Account Security
             </h3>
 
             <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden">
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="w-full flex items-center justify-between p-3.5 hover:bg-rose-50/50 transition active:scale-[0.99] group text-left cursor-pointer"
+                className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-rose-50/50 transition active:scale-[0.99] group text-left cursor-pointer"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center flex-shrink-0 text-rose-600 group-hover:bg-rose-100 transition">
-                    <LogOut className="w-4 h-4" />
+                  <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center flex-shrink-0 text-rose-600 group-hover:bg-rose-100 transition">
+                    <LogOut className="w-5 h-5" />
                   </div>
-                  <span className="text-xs sm:text-sm font-bold text-rose-700 group-hover:text-rose-800 transition">
+                  <span className="text-sm sm:text-base font-bold text-rose-700 group-hover:text-rose-800 transition">
                     Sign Out
                   </span>
                 </div>
-                <ArrowRight className="w-4 h-4 text-rose-400 group-hover:translate-x-0.5 transition flex-shrink-0" />
+                <ArrowRight className="w-5 h-5 text-rose-400 group-hover:translate-x-0.5 transition flex-shrink-0" />
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* ── INTERACTIVE MODAL DRAWERS (Animated smoothly from the bottom) ── */}
+      {/* ── INTERACTIVE MODAL DRAWERS (Animated from bottom) ── */}
       {activeModal && (
         <div
           className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
@@ -751,60 +708,60 @@ export default function ProfilePage() {
             {/* Mobile Drag Indicator */}
             <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mt-2.5 mb-1 sm:hidden flex-shrink-0" />
 
-            {/* Modal Header (Clean title only, zero noisy subtitle) */}
-            <div className="p-4 sm:p-4.5 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
-              <div className="flex items-center gap-2.5 min-w-0">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
                 {activeModal === "track-order" && (
-                  <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
-                    <Search className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
+                    <Search className="w-5 h-5" />
                   </div>
                 )}
                 {activeModal === "faqs" && (
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
-                    <HelpCircle className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+                    <HelpCircle className="w-5 h-5" />
                   </div>
                 )}
                 {activeModal === "terms" && (
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
-                    <FileText className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
+                    <FileText className="w-5 h-5" />
                   </div>
                 )}
                 {activeModal === "refund" && (
-                  <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700">
-                    <RotateCcw className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-700">
+                    <RotateCcw className="w-5 h-5" />
                   </div>
                 )}
                 {activeModal === "shipping" && (
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
-                    <Truck className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
+                    <Truck className="w-5 h-5" />
                   </div>
                 )}
                 {activeModal === "privacy" && (
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700">
-                    <Lock className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700">
+                    <Lock className="w-5 h-5" />
                   </div>
                 )}
                 {activeModal === "support" && (
-                  <div className="w-8 h-8 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
-                    <Headphones className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+                    <Headphones className="w-5 h-5" />
                   </div>
                 )}
 
-                <h3 className="text-sm sm:text-base font-black text-slate-900 truncate">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 truncate">
                   {activeModal === "track-order" && "Track Order"}
                   {activeModal === "faqs" && "Frequently Asked Questions"}
                   {activeModal === "terms" && "Terms and Conditions"}
                   {activeModal === "refund" && "Refund Policy"}
                   {activeModal === "shipping" && "Shipping Policy"}
                   {activeModal === "privacy" && "Privacy Policy"}
-                  {activeModal === "support" && "Support"}
+                  {activeModal === "support" && "Customer Support"}
                 </h3>
               </div>
 
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 transition flex-shrink-0 cursor-pointer"
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 transition flex-shrink-0 cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -812,17 +769,17 @@ export default function ProfilePage() {
             </div>
 
             {/* Modal Body - Scrollable */}
-            <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 text-sm sm:text-base text-slate-600 leading-relaxed">
               {/* 1. TRACK ORDER */}
               {activeModal === "track-order" && (
-                <div className="space-y-3.5">
-                  <p className="text-xs text-slate-500">
-                    Enter your checkout Email Address and 5-Digit US Delivery ZIP Code to view live package status.
+                <div className="space-y-4">
+                  <p className="text-xs sm:text-sm text-slate-500">
+                    Enter your checkout Email Address and 5-Digit US Delivery ZIP Code to look up your order status.
                   </p>
 
                   <form onSubmit={handleLookupSubmit} className="space-y-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                      <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-1">
                         Email Address
                       </label>
                       <input
@@ -831,12 +788,12 @@ export default function ProfilePage() {
                         value={lookupEmail}
                         onChange={(e) => setLookupEmail(e.target.value)}
                         placeholder="buyer@example.com"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                      <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-1">
                         5-Digit US ZIP Code
                       </label>
                       <input
@@ -846,12 +803,12 @@ export default function ProfilePage() {
                         value={lookupZip}
                         onChange={(e) => setLookupZip(e.target.value)}
                         placeholder="90210"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                       />
                     </div>
 
                     {lookupError && (
-                      <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-800 font-semibold">
+                      <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs sm:text-sm text-rose-800 font-semibold">
                         <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
                         <span>{lookupError}</span>
                       </div>
@@ -860,7 +817,7 @@ export default function ProfilePage() {
                     <button
                       type="submit"
                       disabled={lookupLoading}
-                      className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl transition shadow active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-xl transition shadow active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {lookupLoading ? "Looking up..." : "Track Order"}
                     </button>
@@ -869,14 +826,14 @@ export default function ProfilePage() {
                   {/* Results */}
                   {lookupResults && lookupResults.length > 0 && (
                     <div className="pt-2 border-t border-slate-100 space-y-2.5">
-                      <h4 className="text-xs font-bold text-slate-800">
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-800">
                         {lookupResults.length} {lookupResults.length === 1 ? "Order Found" : "Orders Found"}:
                       </h4>
                       <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                         {lookupResults.map((order) => (
                           <div
                             key={order.internal_order_number}
-                            className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs"
+                            className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs sm:text-sm"
                           >
                             <div className="flex items-center justify-between">
                               <span className="font-mono font-bold text-slate-900">
@@ -885,7 +842,7 @@ export default function ProfilePage() {
                               {renderStatusBadge(order.status)}
                             </div>
 
-                            <div className="text-slate-600 text-[11px] space-y-0.5">
+                            <div className="text-slate-600 text-xs sm:text-sm space-y-0.5">
                               <p>
                                 Destination: {order.shipping_city}, {order.shipping_province} {order.shipping_zip}
                               </p>
@@ -897,13 +854,13 @@ export default function ProfilePage() {
                             </div>
 
                             {order.items && order.items.length > 0 && (
-                              <div className="pt-1.5 border-t border-slate-200/80 space-y-1">
+                              <div className="pt-2 border-t border-slate-200/80 space-y-1">
                                 {order.items.map((item, idx) => {
                                   const info = resolveOrderItemInfo(item);
                                   return (
                                     <div
                                       key={idx}
-                                      className="flex items-center gap-2 text-[11px] text-slate-800 bg-white p-1.5 rounded-lg border border-slate-200/60"
+                                      className="flex items-center gap-2 text-xs sm:text-sm text-slate-800 bg-white p-2 rounded-lg border border-slate-200/60"
                                     >
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
                                       <img
@@ -912,12 +869,12 @@ export default function ProfilePage() {
                                         onError={(e) => {
                                           e.currentTarget.src = "/placeholder.jpg";
                                         }}
-                                        className="w-8 h-8 object-contain rounded-lg bg-slate-50 border border-slate-200 flex-shrink-0"
+                                        className="w-9 h-9 object-contain rounded-lg bg-slate-50 border border-slate-200 flex-shrink-0"
                                       />
                                       <span className="font-medium flex-1 min-w-0 truncate">
                                         {info.title}
                                       </span>
-                                      <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] flex-shrink-0">
+                                      <span className="font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-xs flex-shrink-0">
                                         Qty {info.quantity}
                                       </span>
                                     </div>
@@ -933,40 +890,63 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* 2. FAQS */}
+              {/* 2. FAQS (Accurate, Comprehensive, Closed by default) */}
               {activeModal === "faqs" && (
                 <div className="space-y-2.5">
                   <FaqAccordionItem
-                    defaultOpen={true}
-                    question="How fast will my order arrive?"
-                    answer="Orders are dispatched within 24 business hours. Tracked USPS domestic delivery takes 3 to 5 business days anywhere in the United States."
+                    defaultOpen={false}
+                    question="How long does shipping take?"
+                    answer="Orders are packaged and dispatched from domestic distribution centers within 24 business hours. Tracked USPS Ground Advantage delivery takes 3 to 5 business days anywhere in the United States."
                   />
                   <FaqAccordionItem
-                    question="Can I deliver to PO Boxes or military addresses?"
-                    answer="Yes. We ship exclusively via USPS domestic services, so standard PO Boxes, residential addresses, and APO/FPO military installations are fully supported."
+                    defaultOpen={false}
+                    question="How do I track my package?"
+                    answer="As soon as USPS scans your parcel, you will receive an email confirmation with your live door-to-door USPS tracking link. You can also look up current milestone updates anytime in Track Order using your email and ZIP code."
                   />
                   <FaqAccordionItem
-                    question="Can I modify or cancel my order?"
-                    answer="Yes. We offer an automated 30-minute grace window immediately after checkout. You can modify your address or cancel for a 100% full refund directly from the Orders tab."
+                    defaultOpen={false}
+                    question="Can I deliver to a PO Box or military address?"
+                    answer="Yes. Because we ship exclusively through the United States Postal Service (USPS), standard PO Boxes, residential addresses, and APO/FPO military bases are fully supported."
                   />
                   <FaqAccordionItem
-                    question="What is the 30-Day Guarantee?"
-                    answer="If an item arrives damaged, defective, or not as described, you have 30 days from delivery to request a free replacement or a 100% refund."
+                    defaultOpen={false}
+                    question="Can I modify my shipping address or cancel my order?"
+                    answer="Yes. We offer an automated 30-minute grace window immediately after checkout. During these 30 minutes, you can update your shipping address or cancel for an immediate 100% full refund directly from the Orders tab."
+                  />
+                  <FaqAccordionItem
+                    defaultOpen={false}
+                    question="What is your return & refund policy?"
+                    answer="All purchases are backed by our 30-Day Customer Satisfaction Guarantee. If an item arrives damaged, defective, or not as described, you have 30 calendar days from delivery to receive a free replacement or a 100% refund."
+                  />
+                  <FaqAccordionItem
+                    defaultOpen={false}
+                    question="What payment methods do you accept?"
+                    answer="We accept PayPal, Visa, MasterCard, American Express, and Discover. All transactions are tokenized via PCI-DSS compliant PayPal Enterprise infrastructure."
+                  />
+                  <FaqAccordionItem
+                    defaultOpen={false}
+                    question="Do you ship internationally?"
+                    answer="Currently, Vastire ships exclusively to addresses within the domestic United States. This guarantees fast 3–5 day delivery with zero unexpected customs or tariff charges."
+                  />
+                  <FaqAccordionItem
+                    defaultOpen={false}
+                    question="How do I reach customer support?"
+                    answer="You can email our customer support team directly at support@vastire.com with your order number. We respond to all inquiries within 24 business hours (Monday through Saturday, 9:00 AM – 6:00 PM EST)."
                   />
                 </div>
               )}
 
               {/* 3. TERMS AND CONDITIONS */}
               {activeModal === "terms" && (
-                <div className="space-y-3 text-xs">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                    <p className="font-bold text-slate-900">Purchase Agreement</p>
-                    <p className="text-slate-500 leading-relaxed">
+                <div className="space-y-3.5 text-xs sm:text-sm">
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                    <p className="font-bold text-slate-900 text-sm">Purchase Agreement</p>
+                    <p className="text-slate-600 leading-relaxed">
                       All orders are subject to domestic inventory verification and address validation. We reserve the right to cancel orders with invalid addresses or fraud indicators.
                     </p>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     <div>
                       <h4 className="font-bold text-slate-900">Transparent Pricing</h4>
                       <p className="text-slate-600 leading-relaxed">
@@ -975,7 +955,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div>
-                      <h4 className="font-bold text-slate-900">Order Cancellation</h4>
+                      <h4 className="font-bold text-slate-900">30-Minute Cancellation Window</h4>
                       <p className="text-slate-600 leading-relaxed">
                         Orders can be canceled for a 100% refund during the initial 30-minute post-purchase window before automated fulfillment locks the parcel for packaging.
                       </p>
@@ -986,15 +966,15 @@ export default function ProfilePage() {
 
               {/* 4. REFUND POLICY (Zero duplicate text or repeated cards) */}
               {activeModal === "refund" && (
-                <div className="space-y-3 text-xs">
-                  <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-1">
-                    <p className="font-bold text-xs sm:text-sm text-emerald-900">30-Day Customer Satisfaction Guarantee</p>
+                <div className="space-y-3.5 text-xs sm:text-sm">
+                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-1">
+                    <p className="font-bold text-sm sm:text-base text-emerald-900">30-Day Customer Satisfaction Guarantee</p>
                     <p className="text-emerald-800 leading-relaxed">
                       If your item arrives defective, damaged, or not as described, you have 30 calendar days from confirmed delivery to request a 100% refund or an immediate free replacement.
                     </p>
                   </div>
 
-                  <div className="space-y-2 text-slate-600">
+                  <div className="space-y-2.5 text-slate-600">
                     <div>
                       <h4 className="font-bold text-slate-900">Transit Damage Protection</h4>
                       <p className="leading-relaxed">
@@ -1021,15 +1001,15 @@ export default function ProfilePage() {
 
               {/* 5. SHIPPING POLICY */}
               {activeModal === "shipping" && (
-                <div className="space-y-3 text-xs">
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-0.5">
-                      <span className="text-[10px] font-bold uppercase text-slate-400">Processing SLA</span>
-                      <p className="text-xs sm:text-sm font-black text-slate-900">1–2 Business Days</p>
+                <div className="space-y-3.5 text-xs sm:text-sm">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-0.5">
+                      <span className="text-xs font-bold uppercase text-slate-400">Processing SLA</span>
+                      <p className="text-sm sm:text-base font-black text-slate-900">1–2 Business Days</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-0.5">
-                      <span className="text-[10px] font-bold uppercase text-emerald-700">Transit Window</span>
-                      <p className="text-xs sm:text-sm font-black text-emerald-950">3–5 Business Days</p>
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 space-y-0.5">
+                      <span className="text-xs font-bold uppercase text-emerald-700">Transit Window</span>
+                      <p className="text-sm sm:text-base font-black text-emerald-950">3–5 Business Days</p>
                     </div>
                   </div>
 
@@ -1049,7 +1029,7 @@ export default function ProfilePage() {
 
               {/* 6. PRIVACY POLICY */}
               {activeModal === "privacy" && (
-                <div className="space-y-2.5 text-xs text-slate-600">
+                <div className="space-y-3 text-xs sm:text-sm text-slate-600">
                   <div>
                     <h4 className="font-bold text-slate-900">Zero Data Selling</h4>
                     <p className="leading-relaxed">
@@ -1067,54 +1047,58 @@ export default function ProfilePage() {
                   <div>
                     <h4 className="font-bold text-slate-900">Consumer Rights</h4>
                     <p className="leading-relaxed">
-                      In compliance with CCPA regulations, you may request permanent deletion of your customer records by emailing privacy@vastire.com.
+                      In compliance with CCPA regulations, you may request permanent deletion of your customer records by emailing support@vastire.com.
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* 7. SUPPORT (Clean, direct, zero filler text) */}
+              {/* 7. SUPPORT (With requested description on top) */}
               {activeModal === "support" && (
-                <div className="space-y-3 text-xs">
-                  <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="space-y-3.5 text-xs sm:text-sm">
+                  <p className="text-slate-600 leading-relaxed">
+                    If you have any questions, inquiries, or need assistance with your order, please reach out to us:
+                  </p>
+
+                  <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Direct Email</span>
+                      <span className="text-xs uppercase font-bold text-slate-400 block">Direct Email</span>
                       <a
                         href="mailto:support@vastire.com"
-                        className="font-bold text-emerald-700 hover:underline text-xs sm:text-sm"
+                        className="font-bold text-emerald-700 hover:underline text-sm sm:text-base"
                       >
                         support@vastire.com
                       </a>
                     </div>
                     <a
                       href="mailto:support@vastire.com"
-                      className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition active:scale-95"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-lg transition active:scale-95"
                     >
                       Email Us
                     </a>
                   </div>
 
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Support Hours & SLA</span>
-                    <p className="font-bold text-slate-900">Monday – Saturday: 9:00 AM – 6:00 PM EST</p>
-                    <p className="text-slate-500">24-hour response SLA guarantee for all inquiries.</p>
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                    <span className="text-xs uppercase font-bold text-slate-400 block">Support Hours & SLA</span>
+                    <p className="font-bold text-slate-900 text-sm">Monday – Saturday: 9:00 AM – 6:00 PM EST</p>
+                    <p className="text-xs sm:text-sm text-slate-500">24-hour response SLA guarantee for all inquiries.</p>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Modal Footer with Direct Page Link & Close Action */}
-            <div className="p-3 sm:p-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3 flex-shrink-0">
+            <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3 flex-shrink-0">
               <div>
                 {activeModal === "terms" && (
                   <Link
                     href="/terms"
                     prefetch={true}
                     onClick={() => setActiveModal(null)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition"
+                    className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 transition"
                   >
                     <span>Full Policy Page</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
                 )}
                 {activeModal === "refund" && (
@@ -1122,10 +1106,10 @@ export default function ProfilePage() {
                     href="/refund-policy"
                     prefetch={true}
                     onClick={() => setActiveModal(null)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition"
+                    className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 transition"
                   >
                     <span>Full Policy Page</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
                 )}
                 {activeModal === "shipping" && (
@@ -1133,10 +1117,10 @@ export default function ProfilePage() {
                     href="/shipping-policy"
                     prefetch={true}
                     onClick={() => setActiveModal(null)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition"
+                    className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 transition"
                   >
                     <span>Full Policy Page</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
                 )}
                 {activeModal === "privacy" && (
@@ -1144,33 +1128,33 @@ export default function ProfilePage() {
                     href="/privacy"
                     prefetch={true}
                     onClick={() => setActiveModal(null)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition"
+                    className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 transition"
                   >
                     <span>Full Policy Page</span>
-                    <ExternalLink className="w-3 h-3" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </Link>
                 )}
                 {activeModal === "support" && (
                   <a
                     href="mailto:support@vastire.com"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition"
+                    className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 transition"
                   >
                     <span>support@vastire.com</span>
-                    <Mail className="w-3 h-3" />
+                    <Mail className="w-3.5 h-3.5" />
                   </a>
                 )}
                 {activeModal === "faqs" && (
                   <button
                     type="button"
                     onClick={() => setActiveModal("support")}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition cursor-pointer"
+                    className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-emerald-700 hover:text-emerald-800 transition cursor-pointer"
                   >
                     <span>Need help? Contact Support</span>
-                    <ArrowRight className="w-3 h-3" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 )}
                 {activeModal === "track-order" && (
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-xs text-slate-400">
                     Dual-factor protected
                   </span>
                 )}
@@ -1179,7 +1163,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition active:scale-95 cursor-pointer"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl transition active:scale-95 cursor-pointer"
               >
                 Close
               </button>
