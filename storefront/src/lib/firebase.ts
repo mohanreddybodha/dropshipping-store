@@ -8,7 +8,11 @@ import {
   User as FirebaseUser,
 } from "firebase/auth";
 
-const DEFAULT_AUTH_DOMAIN = "domesticlab-us-store.firebaseapp.com";
+import {
+  FIREBASE_DEFAULT_AUTH_DOMAIN,
+  FIREBASE_PUBLIC_CONFIG,
+} from "./firebaseConfig";
+
 const CUSTOM_AUTH_HOSTS = new Set(["vastire.com", "www.vastire.com"]);
 
 /**
@@ -23,17 +27,12 @@ function resolveAuthDomain(): string {
       return host;
     }
   }
-  return DEFAULT_AUTH_DOMAIN;
+  return FIREBASE_DEFAULT_AUTH_DOMAIN;
 }
 
 const firebaseConfig = {
-  projectId: "domesticlab-us-store",
-  appId: "1:880784030676:web:65e254e020faddbcf97441",
-  storageBucket: "domesticlab-us-store.firebasestorage.app",
-  apiKey: "AIzaSyAIqT64qFQ9rKSsEb0_oRO0jYWKspmS8Qo",
+  ...FIREBASE_PUBLIC_CONFIG,
   authDomain: resolveAuthDomain(),
-  messagingSenderId: "880784030676",
-  projectNumber: "880784030676",
 };
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);

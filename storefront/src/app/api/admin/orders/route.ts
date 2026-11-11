@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         {
           error: "FORBIDDEN",
+          reason: authResult.reason || "UNAUTHORIZED",
           message: "Unauthorized: Access restricted to authorized administrator Google accounts.",
         },
         { status: 403 }

@@ -1,14 +1,16 @@
 import { NextRequest } from "next/server";
 import crypto from "crypto";
+import { FIREBASE_WEB_API_KEY } from "./firebaseConfig";
 
 export async function verifyFirebaseIdToken(
   token: string
 ): Promise<{ email: string; emailVerified: boolean; uid: string } | null> {
   try {
-    const apiKey =
+    const apiKey = (
       process.env.FIREBASE_API_KEY ||
       process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
-      "";
+      FIREBASE_WEB_API_KEY
+    ).trim();
     if (!apiKey) return null;
     const res = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
@@ -32,6 +34,15 @@ export async function verifyFirebaseIdToken(
     console.error("[Auth] Firebase token verification error:", err);
     return null;
   }
+}
+
+function parseAllowedAdminEmails(): string[] {
+  const adminEmailsRaw =
+    process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "";
+  return adminEmailsRaw
+    .split(/[,;\n]+/)
+    .map((e) => e.trim().replace(/^["']|["']$/g, "").trim().toLowerCase())
+    .filter(Boolean);
 }
 
 export function verifyAdminApiKey(req: NextRequest): boolean {
@@ -72,11 +83,7 @@ export async function verifyAdminAuth(
     if (token) {
       const verified = await verifyFirebaseIdToken(token);
       if (verified && verified.email) {
-        const adminEmailsRaw = process.env.ADMIN_EMAILS || "";
-        const allowedEmails = adminEmailsRaw
-          .split(",")
-          .map((e) => e.trim().toLowerCase())
-          .filter(Boolean);
+        const allowedEmails = parseAllowedAdminEmails();
 
         if (allowedEmails.length > 0) {
           if (allowedEmails.includes(verified.email)) {
@@ -94,6 +101,7 @@ export async function verifyAdminAuth(
           return { authorized: false, reason: "ADMIN_EMAILS_NOT_CONFIGURED" };
         }
       }
+      return { authorized: false, reason: "FIREBASE_AUTH_FAILED" };
     }
   }
 

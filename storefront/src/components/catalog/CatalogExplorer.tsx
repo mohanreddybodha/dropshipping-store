@@ -1,16 +1,20 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { X, Check } from "lucide-react";
 import { Product } from "../../lib/types";
 import { getCatalog } from "../../lib/api";
+import { getCategorySeoProfile } from "../../lib/seo";
 import ProductCard from "./ProductCard";
 
 interface CatalogExplorerProps {
   initialProducts: Product[];
   categoriesSummary?: Record<string, number>;
   totalCount?: number;
+  initialCategory?: string;
+  initialSearch?: string;
 }
 
 const PRICE_RANGES = [
@@ -38,7 +42,11 @@ const CATEGORIES = [
 
 const PAGE_SIZE = 24;
 
-export default function CatalogExplorer({ initialProducts }: CatalogExplorerProps) {
+export default function CatalogExplorer({
+  initialProducts,
+  initialCategory = "All Products",
+  initialSearch = "",
+}: CatalogExplorerProps) {
   const router = useRouter();
 
   // Dynamic Product State with Client Hydration Fallback
@@ -48,7 +56,7 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
     if (initialProducts.length > products.length) {
       setProducts(initialProducts);
     }
-  }, [initialProducts]);
+  }, [initialProducts, products.length]);
 
   useEffect(() => {
     // If SSR or build only had partial/fallback products, revalidate live catalog
@@ -61,10 +69,20 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
     }
   }, [products.length]);
 
-  // Active URL State (defaulted to clean SSR values, synchronized on client mount)
-  const [activeCategory, setActiveCategory] = useState<string>("All Products");
-  const [activeSearch, setActiveSearch] = useState<string>("");
+  // Active URL State (seeded from SSR props for crawler parity, synced on client navigation)
+  const [activeCategory, setActiveCategory] = useState<string>(initialCategory || "All Products");
+  const [activeSearch, setActiveSearch] = useState<string>(initialSearch || "");
   const [urlParams, setUrlParams] = useState<URLSearchParams>(new URLSearchParams());
+
+  useEffect(() => {
+    setActiveCategory(initialCategory || "All Products");
+    setActiveSearch(initialSearch || "");
+    if (typeof window !== "undefined") {
+      try {
+        setUrlParams(new URLSearchParams(window.location.search));
+      } catch {}
+    }
+  }, [initialCategory, initialSearch]);
 
   // Direct client-side URL listener without triggering SSR Suspense mismatch
   useEffect(() => {
@@ -223,8 +241,39 @@ export default function CatalogExplorer({ initialProducts }: CatalogExplorerProp
   const hasActiveFilters =
     activeCategory !== "All Products" || activeSearch || selectedPriceRange !== 0 || sortBy !== "featured";
 
+  const seoProfile = getCategorySeoProfile(activeCategory);
+
   return (
-    <div id="catalog-section" className="space-y-3">
+    <div id="catalog-section" className="space-y-2.5 sm:space-y-3">
+      {/* Compact Semantic Storefront Header + Crawlable Internal Category Hubs */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-1">
+        <h1 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight truncate">
+          {activeSearch
+            ? `Results for "${activeSearch}"`
+            : seoProfile.headline}
+        </h1>
+        <nav aria-label="Product Categories" className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+          {CATEGORIES.map((cat) => {
+            const isSelected = activeCategory.toLowerCase() === cat.toLowerCase();
+            const href = cat === "All Products" ? "/" : `/?category=${encodeURIComponent(cat)}`;
+            return (
+              <Link
+                key={cat}
+                href={href}
+                prefetch={false}
+                className={`whitespace-nowrap px-2.5 py-1 rounded-full text-[11px] font-bold transition border ${
+                  isSelected
+                    ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-emerald-400 hover:text-emerald-700"
+                }`}
+              >
+                {cat}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
       {/* Active Filter Chips Bar (Shown cleanly only when filters are active) */}
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-2 pb-1 text-xs">

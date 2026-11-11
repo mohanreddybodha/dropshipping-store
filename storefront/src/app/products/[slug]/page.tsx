@@ -14,7 +14,12 @@ import {
 } from "../../../components/product";
 import TrackRecentlyViewed from "../../../components/product/TrackRecentlyViewed";
 import HorizontalProductRow from "../../../components/catalog/HorizontalProductRow";
-import { Truck, ShieldCheck } from "lucide-react";
+import {
+  buildProductSeoMeta,
+  buildProductJsonLdGraph,
+  SITE_NAME,
+} from "../../../lib/seo";
+import { Truck, ShieldCheck, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 
 export const dynamicParams = true;
@@ -34,13 +39,50 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) return { title: "Product Not Found" };
+  if (!product) {
+    return {
+      title: "Product Not Found | Vastire",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const seo = buildProductSeoMeta(product);
 
   return {
-    title: product.seo_meta?.meta_title || `${product.title} | Fast US Shipping — Same-Day Dispatch`,
-    description:
-      product.seo_meta?.meta_description ||
-      "Free domestic delivery with fast dispatch. Verified quality product.",
+    title: seo.title,
+    description: seo.description,
+    keywords: seo.keywords,
+    alternates: {
+      canonical: seo.canonicalUrl,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
+    },
+    openGraph: {
+      title: seo.title,
+      description: seo.description,
+      url: seo.canonicalUrl,
+      siteName: SITE_NAME,
+      type: "website",
+      images: seo.images.slice(0, 4).map((url) => ({
+        url,
+        alt: product.title,
+      })),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.title,
+      description: seo.description,
+      images: [seo.images[0]],
+    },
   };
 }
 
@@ -118,33 +160,8 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
   }
   const primaryVariant = targetVariant;
 
-  // Programmatic JSON-LD Schema
-  const productSchema = {
-    "@context": "https://schema.org/",
-    "@type": "Product",
-    "name": product.title,
-    "sku": primaryVariant?.sku || product.pid,
-    "image": product.images || [product.hero_image_url],
-    "description": product.pas_description_html?.replace(/<[^>]*>?/gm, "").slice(0, 200),
-    "brand": {
-      "@type": "Brand",
-      "name": product.brand_title || "Vastire",
-    },
-    "offers": {
-      "@type": "Offer",
-      "priceCurrency": "USD",
-      "price": primaryVariant?.retail_price_1x || 24.99,
-      "availability": "https://schema.org/InStock",
-      "shippingDetails": {
-        "@type": "OfferShippingDetails",
-        "shippingRate": { "@type": "MonetaryAmount", "value": "0.00", "currency": "USD" },
-        "deliveryTime": {
-          "@type": "ShippingDeliveryTime",
-          "transitTime": { "@type": "QuantitativeValue", "minValue": 3, "maxValue": 5, "unitCode": "DAY" },
-        },
-      },
-    },
-  };
+  // Complete Merchant-Ready JSON-LD Graph (Product + BreadcrumbList + FAQPage)
+  const productSchema = buildProductJsonLdGraph(product, primaryVariant);
 
   return (
     <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-24 sm:pb-28 md:pb-10 space-y-5 sm:space-y-8">
@@ -167,8 +184,20 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
         {/* Left Column: Visual Showcase (7 cols) */}
         <div className="lg:col-span-7 space-y-3">
-          {/* Title */}
+          {/* Semantic Breadcrumb + Title */}
           <div>
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 mb-1">
+              <Link href="/" className="hover:text-emerald-700 transition-colors">
+                Home
+              </Link>
+              <ChevronRight className="w-3 h-3 text-slate-400" />
+              <Link
+                href={`/?category=${encodeURIComponent(categoryName)}`}
+                className="text-emerald-700 hover:underline truncate"
+              >
+                {categoryName}
+              </Link>
+            </nav>
             <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-snug">
               {product.title}
             </h1>

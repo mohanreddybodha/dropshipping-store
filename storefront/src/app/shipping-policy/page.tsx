@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Shipping & Delivery Policy | Vastire",
   description: "Tracked 3-5 business day domestic US delivery with USPS. FTC Mail Order Merchandise Rule compliant.",
+  alternates: { canonical: "/shipping-policy" },
 };
 
 export default function ShippingPolicyPage() {

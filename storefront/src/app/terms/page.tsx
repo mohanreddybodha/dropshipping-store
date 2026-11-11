@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms of Service | Vastire",
   description: "Read the Vastire Terms of Service governing purchases, order acceptance, pricing, and warranties.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsOfServicePage() {

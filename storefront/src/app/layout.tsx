@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "../lib/cart";
 import { AppShell } from "../components/layout";
 import AppLaunchSplash from "../components/ui/AppLaunchSplash";
+import { buildGlobalOrganizationGraph, SITE_URL } from "../lib/seo";
 
 const brandPoppins = Poppins({
   subsets: ["latin"],
@@ -19,9 +20,28 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Vastire | Curated Home, Workspace & Living Essentials",
-  description: "Discover modern everyday essentials for home, kitchen, and workspace on Vastire (vastire.com). Fast 3–5 day tracked domestic delivery.",
-  metadataBase: new URL("https://vastire.com"),
+  title: "Vastire | Curated Home, Kitchen & Workspace Essentials — Free US Shipping",
+  description: "Discover modern everyday essentials for home, kitchen, and workspace on Vastire (vastire.com). Free 3–5 day tracked domestic US delivery and bundle savings up to 18%.",
+  metadataBase: new URL(SITE_URL),
+  keywords: [
+    "Vastire",
+    "curated home essentials",
+    "modern kitchen tools",
+    "workspace accessories",
+    "smart lighting",
+    "free US shipping",
+  ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -29,11 +49,25 @@ export const metadata: Metadata = {
     title: "Vastire",
   },
   openGraph: {
-    title: "Vastire | Curated Home, Workspace & Living Essentials",
-    description: "Discover modern everyday essentials on Vastire (vastire.com). Fast 3–5 day tracked delivery.",
-    url: "https://vastire.com",
+    title: "Vastire | Curated Home, Kitchen & Workspace Essentials",
+    description: "Discover modern everyday essentials on Vastire (vastire.com). Free 3–5 day tracked US delivery.",
+    url: SITE_URL,
     siteName: "Vastire",
     type: "website",
+    images: [
+      {
+        url: "/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "Vastire Storefront",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Vastire | Curated Home, Kitchen & Workspace Essentials",
+    description: "Free 3–5 day tracked domestic US delivery on modern home, kitchen & workspace essentials.",
+    images: ["/icon-512.png"],
   },
   icons: {
     icon: [
@@ -81,6 +115,12 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased font-sans ${brandPoppins.variable}`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(buildGlobalOrganizationGraph()),
+          }}
+        />
         <AppLaunchSplash />
         <CartProvider>
           <AppShell>{children}</AppShell>

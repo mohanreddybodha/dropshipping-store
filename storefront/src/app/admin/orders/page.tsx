@@ -76,6 +76,7 @@ export default function AdminOrdersPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [denyReason, setDenyReason] = useState<string | null>(null);
 
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -126,6 +127,8 @@ export default function AdminOrdersPage() {
       });
 
       if (res.status === 403) {
+        const errData = await res.json().catch(() => ({}));
+        setDenyReason(errData?.reason || null);
         setIsAuthorized(false);
         setOrders([]);
         return;
@@ -137,6 +140,7 @@ export default function AdminOrdersPage() {
 
       const data = await res.json();
       setOrders(data.orders || []);
+      setDenyReason(null);
       setIsAuthorized(true);
     } catch (err: any) {
       console.error("Admin order fetch error:", err);
@@ -463,7 +467,19 @@ export default function AdminOrdersPage() {
           <div className="space-y-1.5">
             <h1 className="text-lg font-extrabold text-slate-900">Access Restricted</h1>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Your Google account (<span className="text-slate-800 font-mono font-semibold">{currentUser.email}</span>) is not on the administrator whitelist.
+              {denyReason === "ADMIN_EMAILS_NOT_CONFIGURED" ? (
+                <>
+                  No <span className="text-slate-800 font-mono font-semibold">ADMIN_EMAILS</span> whitelist is active in Vercel Production environment variables. Add your email and redeploy.
+                </>
+              ) : denyReason === "FIREBASE_AUTH_FAILED" ? (
+                <>
+                  Unable to verify Google session token for <span className="text-slate-800 font-mono font-semibold">{currentUser.email}</span>. Try signing out and signing back in.
+                </>
+              ) : (
+                <>
+                  Your Google account (<span className="text-slate-800 font-mono font-semibold">{currentUser.email}</span>) is not on the administrator whitelist.
+                </>
+              )}
             </p>
           </div>
           <div className="flex items-center justify-center gap-2.5 pt-2">

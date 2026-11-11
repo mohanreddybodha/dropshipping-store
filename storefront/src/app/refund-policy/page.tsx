@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Refund & Return Policy | Vastire",
   description: "30-day money-back guarantee, hassle-free returns, and immediate damaged item replacements.",
+  alternates: { canonical: "/refund-policy" },
 };
 
 export default function RefundPolicyPage() {

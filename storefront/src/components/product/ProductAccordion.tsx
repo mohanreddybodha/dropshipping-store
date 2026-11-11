@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronDown, Check, PackageCheck, Layers, FileText, CheckCircle2 } from "lucide-react";
+import { ChevronDown, Check, PackageCheck, Layers, FileText, CheckCircle2, HelpCircle } from "lucide-react";
 import { Product, Variant } from "../../lib/types";
+import { sanitizeProductDescriptionHtml } from "../../lib/seo";
 
 interface ProductAccordionProps {
   product: Product;
@@ -43,8 +44,11 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
     return () => window.removeEventListener("product:tier_change", handleVariantChange);
   }, []);
 
-  // Clean description HTML to remove fabricated marketing claims
-  const cleanDescriptionHtml = (product.pas_description_html || "")
+  // Clean description HTML: replace raw supplier slug titles with clean product title
+  const cleanDescriptionHtml = sanitizeProductDescriptionHtml(
+    product.pas_description_html || "",
+    product.title
+  )
     .replace(/and backed by our unconditional 30-day money-back guarantee,?/gi, "")
     .replace(/backed by our unconditional 30-day money-back guarantee,?/gi, "")
     .replace(/30-day money-back guarantee/gi, "verified craftsmanship")
@@ -194,6 +198,29 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
                 })}
               </div>
             </div>
+
+            {/* Section 4: Frequently Asked Questions (Backed by FAQPage JSON-LD) */}
+            {Array.isArray(product.faq_schema) && product.faq_schema.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center gap-1.5 text-slate-900 font-bold text-[11px] uppercase tracking-wider">
+                  <HelpCircle className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Shipping & Product FAQ</span>
+                </div>
+                <div className="space-y-2">
+                  {product.faq_schema
+                    .filter((faq) => faq?.question && faq?.answer)
+                    .map((faq, idx) => (
+                      <div
+                        key={idx}
+                        className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-0.5"
+                      >
+                        <h4 className="text-[11px] font-bold text-slate-900">{faq.question}</h4>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">{faq.answer}</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
