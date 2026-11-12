@@ -58,21 +58,22 @@ export default function MobileBottomNav() {
             <Link
               key={item.label}
               href={item.href}
-              className={`flex flex-col items-center justify-center relative transition-colors duration-150 ${
+              prefetch={true}
+              className={`flex flex-col items-center justify-center relative transition-all duration-150 active:scale-90 select-none ${
                 item.isActive
                   ? "text-emerald-600 font-bold"
                   : "text-slate-500 hover:text-slate-900 font-medium"
               }`}
             >
               <div className="relative">
-                <Icon className={`w-5 h-5 ${item.isActive ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
+                <Icon className={`w-5 h-5 transition-transform duration-150 ${item.isActive ? "stroke-[2.5] scale-105" : "stroke-[1.75]"}`} />
                 {typeof item.badge === "number" && item.badge > 0 && (
                   <span className="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
                     {item.badge}
                   </span>
                 )}
               </div>
-              <span className="text-[10px] mt-0.5 tracking-tight">{item.label}</span>
+              <span className="text-[10px] mt-0.5 tracking-tight font-medium">{item.label}</span>
             </Link>
           );
         })}

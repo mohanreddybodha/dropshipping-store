@@ -387,6 +387,7 @@ export default function Navbar() {
                 {/* Watchlist Link (Desktop & Tablet) */}
                 <Link
                   href="/watchlist"
+                  prefetch={true}
                   className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative"
                   aria-label="Watchlist"
                   title="Saved Watchlist"
@@ -405,6 +406,7 @@ export default function Navbar() {
                 {/* Cart Link (Desktop & Tablet) */}
                 <Link
                   href="/cart"
+                  prefetch={true}
                   className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative"
                   aria-label="Shopping Cart"
                   title="Shopping Cart"
@@ -423,6 +425,7 @@ export default function Navbar() {
                 {/* Profile / Account Link (Desktop & Tablet) */}
                 <Link
                   href="/profile"
+                  prefetch={true}
                   className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group"
                   aria-label="Account & Orders"
                   title="Account & Orders"

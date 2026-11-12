@@ -23,10 +23,11 @@ export default function AppShell({ children }: AppShellProps) {
   // Automatic stale deployment chunk reload handler (client-side only, zero SSR DOM mutation)
   useEffect(() => {
     const handleChunkError = (e: ErrorEvent) => {
+      const message = String(e?.message || "");
       const isChunkError =
-        (e && e.message && (e.message.includes("Loading chunk") || e.message.includes("ChunkLoadError"))) ||
-        ((e?.target as HTMLElement)?.tagName === "SCRIPT" &&
-          (e?.target as HTMLScriptElement)?.src?.includes("/_next/static/"));
+        message.includes("Loading chunk") ||
+        message.includes("ChunkLoadError") ||
+        message.includes("failed to fetch dynamically imported module");
       if (isChunkError) {
         const lastReload = sessionStorage.getItem("chunk_reload_ts");
         const now = Date.now();
