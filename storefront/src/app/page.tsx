@@ -6,86 +6,48 @@ import { CatalogExplorer } from "../components/catalog";
 import {
   SITE_NAME,
   SITE_URL,
-  getCategorySeoProfile,
   buildCatalogItemListJsonLd,
 } from "../lib/seo";
 
 export const revalidate = 60;
 
-interface HomePageProps {
-  searchParams?: Promise<{ category?: string; search?: string; page?: string }>;
-}
+export const metadata: Metadata = {
+  title: "Vastire | Problem-Solving Home & Everyday Essentials",
+  description:
+    "Curated problem-solving home, kitchen, workspace, and outdoor living essentials. US domestic ground delivery within 3–5 business days.",
+  keywords: [
+    "problem-solving products",
+    "home essentials",
+    "kitchen gadgets",
+    "workspace accessories",
+    "everyday carry",
+    "US domestic ground shipping",
+  ],
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    title: "Vastire | Problem-Solving Home & Everyday Essentials",
+    description:
+      "Curated everyday essentials for home, kitchen, and workspace. US domestic dispatch with 3–5 day tracked delivery.",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    type: "website",
+    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Vastire" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Vastire | Problem-Solving Home & Everyday Essentials",
+    description:
+      "Curated everyday essentials for home, kitchen, and workspace. US domestic dispatch with 3–5 day tracked delivery.",
+    images: ["/icon-512.png"],
+  },
+};
 
-export async function generateMetadata({ searchParams }: HomePageProps): Promise<Metadata> {
-  const sp = searchParams ? await searchParams : {};
-  const category = sp.category?.trim();
-  const search = sp.search?.trim();
-  const pageNum = Math.max(1, parseInt(sp.page || "1", 10) || 1);
-
-  if (search) {
-    return {
-      title: `Search results for "${search}" | ${SITE_NAME}`,
-      description: `Browse search results for ${search} on ${SITE_NAME}.`,
-      alternates: { canonical: SITE_URL },
-      robots: { index: false, follow: true },
-    };
-  }
-
-  const profile = getCategorySeoProfile(category);
-
-  return {
-    title: pageNum > 1 ? `${profile.title} — Page ${pageNum}` : profile.title,
-    description: profile.description,
-    keywords: profile.keywords,
-    alternates: { canonical: SITE_URL },
-    ...(pageNum > 1 ? { robots: { index: false, follow: true } } : {}),
-    openGraph: {
-      title: profile.title,
-      description: profile.description,
-      url: SITE_URL,
-      siteName: SITE_NAME,
-      type: "website",
-      images: [{ url: "/icon-512.png", width: 512, height: 512, alt: profile.headline }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: profile.title,
-      description: profile.description,
-      images: ["/icon-512.png"],
-    },
-  };
-}
-
-export default async function HomePage({ searchParams }: HomePageProps) {
-  const sp = searchParams ? await searchParams : {};
-  const initialCategory = sp.category?.trim() || "All Products";
-  const initialSearch = sp.search?.trim() || "";
-  const initialPage = Math.max(1, parseInt(sp.page || "1", 10) || 1);
-
-  const allProducts: Product[] = await getAuthoritativeCatalog(2000);
-  let products = allProducts;
-
-  if (initialCategory !== "All Products") {
-    const cat = initialCategory.toLowerCase();
-    products = products.filter(
-      (p) =>
-        (p.category && p.category.toLowerCase().includes(cat)) ||
-        (p.seo_meta?.category && p.seo_meta.category.toLowerCase().includes(cat))
-    );
-  }
-  if (initialSearch) {
-    const q = initialSearch.toLowerCase();
-    products = products.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        (p.category && p.category.toLowerCase().includes(q)) ||
-        p.features?.some((f) => f.title.toLowerCase().includes(q) || f.desc.toLowerCase().includes(q))
-    );
-  }
+export default async function HomePage() {
+  const allProducts: Product[] = await getAuthoritativeCatalog(200);
 
   const itemListSchema = buildCatalogItemListJsonLd(
-    products,
-    initialCategory !== "All Products" ? initialCategory : undefined,
+    allProducts,
+    undefined,
     SITE_URL
   );
 
@@ -97,9 +59,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       />
       <CatalogExplorer
         initialProducts={allProducts}
-        initialCategory={initialCategory}
-        initialSearch={initialSearch}
-        initialPage={initialPage}
+        initialCategory="All Products"
       />
     </div>
   );

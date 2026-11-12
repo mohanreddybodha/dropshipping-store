@@ -59,6 +59,12 @@ export default function MobileBottomNav() {
               key={item.label}
               href={item.href}
               prefetch={true}
+              onClick={(e) => {
+                if (item.isActive && typeof window !== "undefined") {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
               className={`flex flex-col items-center justify-center relative transition-all duration-150 active:scale-90 select-none ${
                 item.isActive
                   ? "text-emerald-600 font-bold"
