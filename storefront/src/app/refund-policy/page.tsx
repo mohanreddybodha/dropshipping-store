@@ -46,7 +46,7 @@ export default function RefundPolicyPage() {
               <li>The item must have arrived with a <strong>verified manufacturing defect</strong>, <strong>carrier transit damage</strong>, or be an <strong>incorrect/mismatched item</strong> differing from what you purchased.</li>
               <li>Your return or replacement claim must be initiated via email within <strong>7 calendar days</strong> of the confirmed delivery date recorded by carrier tracking.</li>
               <li>You must provide clear photos or a short video demonstrating the defect or damage, along with a photo of the original shipping label on the package.</li>
-              <li>All claims are subject to inspection and verification under our supplier fulfillment claims protocol (CJ Dropshipping warehouse review). Once accepted by the fulfillment partner, an immediate replacement or full refund is issued.</li>
+              <li>All claims are subject to inspection and verification under our fulfillment partner&rsquo;s quality assurance team. Once accepted by the fulfillment partner, an immediate replacement or full refund is issued.</li>
             </ul>
           </section>
 

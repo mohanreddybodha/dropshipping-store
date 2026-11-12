@@ -93,6 +93,9 @@ export default function AppShell({ children }: AppShellProps) {
       {/* Main Content */}
       <main className="flex-1">{children}</main>
 
+      {/* Storefront Footer */}
+      <Footer />
+
       {/* Native App-Style Mobile Bottom Navigation Bar: Hidden on product pages and checkout */}
       {!isProduct && <MobileBottomNav />}
     </div>

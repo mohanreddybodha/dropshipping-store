@@ -491,7 +491,7 @@ function CheckoutContent() {
       errors.city = cityVal.error || "Please enter a valid US City.";
     }
 
-    // 6. US State / Province Selection (Mandatory for USPS domestic logistics & CJ Dropshipping)
+    // 6. US State / Province Selection (Mandatory for USPS domestic logistics)
     if (!form.province) {
       errors.province = "Please select a valid US State / Province.";
     }
@@ -1528,7 +1528,7 @@ function CheckoutContent() {
             )}
           </div>
 
-          {/* City & State / Province (Mandatory for USPS & CJ Dropshipping) */}
+          {/* City & State / Province (Mandatory for USPS domestic logistics) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-30">
             <div id="field-city">
               <label className="block mb-1">City</label>

@@ -102,7 +102,7 @@ export default function Footer() {
             </Link>
             <span>•</span>
             <Link href="/shipping-policy" className="hover:text-slate-600 transition-colors">
-              Shipping SLA
+              Shipping Policy
             </Link>
             <span>•</span>
             <Link href="/refund-policy" className="hover:text-slate-600 transition-colors">
