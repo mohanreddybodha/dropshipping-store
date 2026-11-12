@@ -117,7 +117,7 @@ export default function CatalogExplorer({
   const [pendingPriceRange, setPendingPriceRange] = useState<number>(selectedPriceRange);
   const [pendingSortBy, setPendingSortBy] = useState<string>(sortBy);
 
-  // Listen to open_filter event triggered by the top Navbar icon
+  // Listen to open_filter event triggered by the top Navbar icon or ?filter=open redirect
   useEffect(() => {
     const handleOpen = () => {
       setPendingCategory(activeCategory);
@@ -126,6 +126,17 @@ export default function CatalogExplorer({
       setIsFilterModalOpen(true);
     };
     window.addEventListener("app:open_filter", handleOpen);
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("filter") === "open") {
+        handleOpen();
+        params.delete("filter");
+        const cleanQs = params.toString();
+        window.history.replaceState(null, "", cleanQs ? `/?${cleanQs}` : "/");
+      }
+    }
+
     return () => window.removeEventListener("app:open_filter", handleOpen);
   }, [activeCategory, selectedPriceRange, sortBy]);
 
@@ -173,7 +184,7 @@ export default function CatalogExplorer({
     const range = PRICE_RANGES[selectedPriceRange];
     if (range.min !== undefined || range.max !== undefined) {
       result = result.filter((p) => {
-        const price = p.variants[0]?.retail_price_1x || 25;
+        const price = p.variants[0]?.retail_price_1x || 0;
         if (range.min !== undefined && price < range.min) return false;
         if (range.max !== undefined && price > range.max) return false;
         return true;

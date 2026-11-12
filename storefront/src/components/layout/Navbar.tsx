@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Search,
   SlidersHorizontal,
@@ -16,30 +16,39 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { Product } from "../../lib/types";
-import { getCatalog } from "../../lib/api";
+import { getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
 import { useCart } from "../../lib/cart";
 import VastireLogo from "../ui/VastireLogo";
 
 const SUGGESTED_SEARCHES = [
-  "Turbo Fans",
-  "Corner Shelf",
-  "Digital Alarm Clock",
-  "Cabinet Pulls",
-  "Kitchen Utensil Set",
-  "Casual Hooded Women",
-  "Saw Blades",
-  "Wine Stopper",
+  "Desk Fan",
+  "Alarm Clock",
   "Night Light",
-  "Rust Remover Spray",
+  "Shower Caddy",
+  "Knife Set",
+  "Desk Lamp",
+  "Power Bank",
+  "Dog Collar",
+  "Coffee Tumbler",
+  "Car Phone Mount",
 ];
+
+function stemSearchToken(token: string): string {
+  if (token.length > 3 && token.endsWith("es")) return token.slice(0, -2);
+  if (token.length > 3 && token.endsWith("s")) return token.slice(0, -1);
+  return token;
+}
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const isBrowseSurface = pathname === "/" || pathname.startsWith("/collections/");
   const { itemCount } = useCart();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [catalog, setCatalog] = useState<Product[]>([]);
+  const [catalog, setCatalog] = useState<Product[]>(FALLBACK_PRODUCTS);
   const [watchlistCount, setWatchlistCount] = useState(0);
   const [mounted, setMounted] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -82,6 +91,11 @@ export default function Navbar() {
     };
   }, []);
 
+  // Close expanded search cleanly whenever route changes (prevents stale overlay/scroll locks)
+  useEffect(() => {
+    setIsSearchExpanded(false);
+  }, [pathname]);
+
   // Lazy-load live extended catalog when search is active or focused (zero blocking network overhead on SSR)
   useEffect(() => {
     if (!isSearchExpanded && !searchQuery) return;
@@ -93,7 +107,7 @@ export default function Navbar() {
           setCatalog(res);
         }
       } catch {
-        // Fallback already assigned in initial state
+        // Fallback already populated via FALLBACK_PRODUCTS
       }
     };
     fetchCatalog();
@@ -102,14 +116,28 @@ export default function Navbar() {
     };
   }, [isSearchExpanded, searchQuery]);
 
-  // Auto-focus mobile search input when expanded
+  // Auto-focus mobile search input when expanded on mobile
   useEffect(() => {
-    if (isSearchExpanded && searchInputRef.current) {
+    if (isSearchExpanded && searchInputRef.current && window.innerWidth < 768) {
       searchInputRef.current.focus();
     }
   }, [isSearchExpanded]);
 
-  // Lock background scroll when mobile search overlay is open
+  // Support Escape key to dismiss search overlay cleanly back to page view
+  useEffect(() => {
+    if (!isSearchExpanded) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsSearchExpanded(false);
+        desktopSearchInputRef.current?.blur();
+        searchInputRef.current?.blur();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isSearchExpanded]);
+
+  // Lock background scroll when search overlay is open
   useEffect(() => {
     if (isSearchExpanded) {
       const originalOverflow = document.body.style.overflow;
@@ -120,11 +148,11 @@ export default function Navbar() {
     }
   }, [isSearchExpanded]);
 
-  // Live intelligent product matching (exact phrase match + token matches)
+  // Live intelligent product matching (exact phrase match + stemmed token matches)
   const matchingProducts = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return [];
-    const tokens = q.split(/\s+/).filter(Boolean);
+    const tokens = q.split(/\s+/).filter(Boolean).map(stemSearchToken);
 
     // 1. Exact phrase matches first
     const exact = catalog.filter((p) => {
@@ -133,7 +161,7 @@ export default function Navbar() {
       return text.includes(q) || featText.includes(q);
     });
 
-    // 2. Token / partial keyword matches
+    // 2. Token / partial keyword matches (including plural/singular stems)
     const tokenMatches = catalog.filter((p) => {
       if (exact.some((e) => e.pid === p.pid)) return false;
       const text = `${p.title} ${p.category || ""} ${p.brand_title || ""}`.toLowerCase();
@@ -143,55 +171,107 @@ export default function Navbar() {
     return [...exact, ...tokenMatches];
   }, [catalog, searchQuery]);
 
+  // Fallback similar & recommended products when search query yields zero direct matches
+  const similarProducts = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q || matchingProducts.length > 0) return catalog.slice(0, 6);
+
+    const prefixTokens = q
+      .split(/\s+/)
+      .filter((t) => t.length >= 2)
+      .map((t) => t.slice(0, Math.min(4, t.length)));
+
+    if (prefixTokens.length === 0) return catalog.slice(0, 6);
+
+    const scored = catalog
+      .map((p) => {
+        const hay = `${p.title} ${p.category || ""}`.toLowerCase();
+        const score = prefixTokens.reduce((acc, pref) => (hay.includes(pref) ? acc + 1 : acc), 0);
+        return { p, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .map((entry) => entry.p);
+
+    return scored.slice(0, 6);
+  }, [catalog, searchQuery, matchingProducts.length]);
+
   // Handle Search Submission (Pressing Enter)
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSearchExpanded(false);
+    desktopSearchInputRef.current?.blur();
+    searchInputRef.current?.blur();
     const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     if (searchQuery.trim()) {
       params.set("search", searchQuery.trim());
     } else {
       params.delete("search");
     }
+    params.delete("filter");
     params.set("page", "1");
     router.push(`/?${params.toString()}`);
   };
 
   const handleSelectSuggestion = (suggestion: string) => {
     setSearchQuery(suggestion);
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
+    setIsSearchExpanded(true);
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      desktopSearchInputRef.current?.focus();
+    } else {
+      searchInputRef.current?.focus();
     }
   };
 
   const handleViewAllResults = () => {
     setIsSearchExpanded(false);
+    desktopSearchInputRef.current?.blur();
     const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     if (searchQuery.trim()) {
       params.set("search", searchQuery.trim());
     } else {
       params.delete("search");
     }
+    params.delete("filter");
     router.push(`/?${params.toString()}`);
   };
 
   const handleCloseSearch = () => {
     setIsSearchExpanded(false);
     setSearchQuery("");
+    desktopSearchInputRef.current?.blur();
+    searchInputRef.current?.blur();
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("search")) {
+        params.delete("search");
+        params.delete("page");
+        const nextQs = params.toString();
+        router.push(nextQs ? `/?${nextQs}` : "/");
+      }
+    }
   };
 
   const handleOpenFilter = () => {
+    setIsSearchExpanded(false);
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("app:open_filter"));
+      if (isBrowseSurface) {
+        window.dispatchEvent(new CustomEvent("app:open_filter"));
+      } else {
+        router.push("/?filter=open");
+      }
     }
   };
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-200/90 shadow-2xs">
+      <header
+        className={`${
+          isHome ? "block" : "hidden md:block"
+        } sticky top-0 z-50 bg-white border-b border-slate-200/90 shadow-2xs`}
+      >
         <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-10">
           <div className="h-16 flex items-center justify-between gap-3 sm:gap-6">
-            {/* ── Mode A: Full-Width Search Input Bar (When Active on Mobile) ── */}
+            {/* ── Mode A: Full-Width Search Input Bar (When Active on Mobile Home) ── */}
             {isSearchExpanded ? (
               <form
                 onSubmit={handleSearchSubmit}
@@ -204,29 +284,18 @@ export default function Navbar() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Type product name (e.g. fans, clock, shelf)..."
-                    className="w-full bg-slate-100 hover:bg-slate-200/80 focus:bg-white text-slate-900 text-xs rounded-full pl-10 pr-9 py-2.5 border border-transparent focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition shadow-inner"
+                    placeholder="Type product name (e.g. fan, clock, shelf)..."
+                    className="w-full bg-slate-100 hover:bg-slate-200/80 focus:bg-white text-slate-900 text-xs rounded-full pl-10 pr-10 py-2.5 border border-transparent focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition shadow-inner"
                   />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-3 text-slate-400 hover:text-slate-600 transition p-1"
-                      aria-label="Clear input"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleCloseSearch}
+                    className="absolute right-2.5 w-6 h-6 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-200 flex items-center justify-center transition"
+                    aria-label="Close search and return home"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleCloseSearch}
-                  className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 hover:text-slate-900 transition flex-shrink-0 active:scale-95"
-                  aria-label="Close search bar"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </form>
             ) : null}
 
@@ -235,59 +304,58 @@ export default function Navbar() {
               {/* Left: Brand Logo & Wordmark */}
               <Link
                 href="/"
+                onClick={handleCloseSearch}
                 className="flex items-center flex-shrink-0 group focus:outline-none"
                 aria-label="Vastire Home"
               >
                 <VastireLogo size="md" />
               </Link>
 
-              {/* Center: Always-Visible Search Bar with Category Filter Trigger (Desktop/Tablet) */}
+              {/* Center: Always-Visible Search Bar (Single Search Icon + Input + Rightmost X + Right-Side Filters Trigger) */}
               <div className="hidden md:flex flex-1 max-w-2xl xl:max-w-3xl items-center relative">
                 <form
                   onSubmit={handleSearchSubmit}
                   className="w-full flex items-center bg-slate-100 hover:bg-slate-200/70 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-500/25 focus-within:border-emerald-500 rounded-full border border-slate-200/80 transition-all shadow-inner overflow-hidden"
                 >
-                  {/* Category / Filter Trigger Pill */}
-                  <button
-                    type="button"
-                    onClick={handleOpenFilter}
-                    className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-200/60 hover:bg-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold border-r border-slate-200/80 transition flex-shrink-0 select-none cursor-pointer"
-                    title="Filter catalog by category, price, or sort order"
-                  >
-                    <SlidersHorizontal className="w-3.5 h-3.5 text-slate-600" />
-                    <span className="hidden lg:inline">Filters</span>
-                  </button>
-
-                  {/* Desktop Search Input Field */}
+                  {/* Desktop Search Input Field: leading Search icon + input + rightmost X close/clear */}
                   <div className="relative flex-1 flex items-center">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
                     <input
                       ref={desktopSearchInputRef}
                       type="text"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search across all categories (e.g. fans, clock, kitchen, shelf)..."
-                      className="w-full bg-transparent text-slate-900 text-xs lg:text-sm pl-10 pr-9 py-2.5 focus:outline-none"
+                      onFocus={() => setIsSearchExpanded(true)}
+                      onClick={() => setIsSearchExpanded(true)}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        if (!isSearchExpanded) setIsSearchExpanded(true);
+                      }}
+                      placeholder="Search across all categories (e.g. fan, clock, kitchen, lamp)..."
+                      className="w-full bg-transparent text-slate-900 text-xs lg:text-sm pl-10 pr-10 py-2.5 focus:outline-none"
                     />
-                    {searchQuery && (
+                    {(isSearchExpanded || searchQuery.length > 0) && (
                       <button
                         type="button"
-                        onClick={() => setSearchQuery("")}
-                        className="absolute right-3 text-slate-400 hover:text-slate-600 transition p-1"
-                        aria-label="Clear input"
+                        onClick={handleCloseSearch}
+                        className="absolute right-2.5 w-6 h-6 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-200/80 flex items-center justify-center transition cursor-pointer"
+                        aria-label="Close search and show home screen"
+                        title="Close search"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
 
-                  {/* Search Submit Action Button */}
+                  {/* Right-Side Category / Sort Filter Trigger seamlessly styled inside the search bar */}
                   <button
-                    type="submit"
-                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center transition flex-shrink-0 active:scale-95"
-                    aria-label="Submit search"
+                    type="button"
+                    onClick={handleOpenFilter}
+                    className="flex items-center gap-1.5 px-4 py-2.5 text-slate-700 hover:text-slate-900 hover:bg-slate-200/70 text-xs font-bold border-l border-slate-200/80 transition flex-shrink-0 select-none cursor-pointer active:scale-95"
+                    title="Filter catalog by category, price, or sort order"
+                    aria-label="Open Filter and Sort options"
                   >
-                    <Search className="w-4 h-4" />
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-slate-600" />
+                    <span className="hidden lg:inline">Filters</span>
                   </button>
                 </form>
               </div>
@@ -430,10 +498,10 @@ export default function Navbar() {
                     <div className="space-y-3 pt-2">
                       <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-900">
                         <Tag className="w-4 h-4 text-emerald-600" />
-                        <span>You May Also Like:</span>
+                        <span>Similar &amp; Recommended Products:</span>
                       </div>
                       <div className="divide-y divide-slate-100 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-                        {catalog.slice(0, 6).map((product) => {
+                        {similarProducts.map((product) => {
                           const heroImg =
                             product.hero_image_url ||
                             product.images?.[0] ||
