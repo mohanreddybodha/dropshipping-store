@@ -211,7 +211,7 @@ export async function runPricingConsistencyTests(base = "http://localhost:3009")
       `got=${bp.getComparePrice1x(v.retail_price_1x)} expected=${expectedCompare1x}`
     );
 
-    for (const qty of [1, 2, 3]) {
+    for (const qty of [1, 2, 3, 4]) {
       const lineItem = bp.normalizeCartItemPricing(
         {
           product: testProd,
@@ -228,13 +228,30 @@ export async function runPricingConsistencyTests(base = "http://localhost:3009")
       const summary = bp.summarizeCartBreakdown([lineItem]);
       const net = +(summary.sellingPriceTotal - summary.sellingDiscount - summary.bundleDiscount).toFixed(2);
       assert(
-        Math.abs(net - summary.totalAmount) <= 0.01 &&
-          Math.abs(lineDisp.finalLineTotal - lineItem.totalPrice) <= 0.01 &&
-          Math.abs(summary.bundleDiscount - lineItem.savings) <= 0.01,
-        `P3-2j-qty${qty}: Display Order Summary identity sellingPrice - sellingDiscount - bundleDiscount === totalAmount`,
+        net === summary.totalAmount &&
+          lineDisp.finalLineTotal === lineItem.totalPrice &&
+          summary.bundleDiscount === lineItem.savings,
+        `P3-2j-qty${qty}: Display Order Summary exact identity sellingPrice - sellingDiscount - bundleDiscount === totalAmount`,
         JSON.stringify({ qty, lineDisp, summary, net })
       );
     }
+
+    const multiA = bp.normalizeCartItemPricing(
+      { product: testProd, variant: v, tier: "1x", quantity: 2, unitPrice: v.retail_price_1x, totalPrice: v.retail_price_1x, savings: 0 },
+      2
+    );
+    const multiB = bp.normalizeCartItemPricing(
+      { product: testProd, variant: { ...v, vid: `${v.vid}_ALT`, retail_price_1x: 19.95, bundle_2_price: 35.10, bundle_3_price: 49.07 }, tier: "1x", quantity: 3, unitPrice: 19.95, totalPrice: 19.95, savings: 0 },
+      3
+    );
+    const multiSummary = bp.summarizeCartBreakdown([multiA, multiB]);
+    const multiNet = +(multiSummary.sellingPriceTotal - multiSummary.sellingDiscount - multiSummary.bundleDiscount).toFixed(2);
+    assert(
+      multiNet === multiSummary.totalAmount &&
+        multiSummary.totalAmount === +(multiA.totalPrice + multiB.totalPrice).toFixed(2),
+      "P3-2j-multi: Multi-item cart breakdown stays exact to the cent across mixed bundle quantities",
+      JSON.stringify({ multiSummary, multiNet })
+    );
   } catch (err) {
     assert(false, "P3-2: Client pricing helper exception", err.message);
   }

@@ -2,13 +2,18 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { X, Trash2, ArrowRight, Truck, Plus, Minus } from "lucide-react";
+import { X, Trash2, ArrowRight, Truck, Plus, Minus, Tag } from "lucide-react";
 import { useCart } from "../../lib/cart";
-import { getLineSellingDisplayPrices, summarizeCartBreakdown } from "../../lib/bundlePricing";
+import {
+  getLineSellingDisplayPrices,
+  normalizeCartItemPricing,
+  summarizeCartBreakdown,
+} from "../../lib/bundlePricing";
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity } = useCart();
-  const breakdown = summarizeCartBreakdown(items);
+  const normalizedItems = items.map((item) => normalizeCartItemPricing(item));
+  const breakdown = summarizeCartBreakdown(normalizedItems);
 
   // Prevent background scroll when cart drawer is active
   useEffect(() => {
@@ -71,7 +76,7 @@ export default function CartDrawer() {
                 </button>
               </div>
             ) : (
-              items.map((item) => {
+              normalizedItems.map((item) => {
                 const maxStock =
                   item.variant?.us_warehouse_stock && item.variant.us_warehouse_stock > 0
                     ? Math.min(99, item.variant.us_warehouse_stock)
@@ -167,9 +172,6 @@ export default function CartDrawer() {
                           <Plus className="w-3 h-3" />
                         </button>
                       </div>
-                      <span className="text-[11px] bg-slate-200/80 text-slate-800 px-2 py-0.5 rounded font-medium">
-                        {item.tier === "1x" ? "1x Standard" : `Bundle: ${item.tier.toUpperCase()}`}
-                      </span>
                     </div>
                     <div className="text-right">
                       {(() => {
@@ -187,8 +189,9 @@ export default function CartDrawer() {
                               )}
                             </div>
                             {lp.sellingLineTotal > lp.discounted20LineTotal && (
-                              <p className="text-[10px] text-emerald-700 font-bold">
-                                Save 20%
+                              <p className="inline-flex items-center justify-end gap-1 text-[10px] text-emerald-700 font-bold">
+                                <Tag className="w-2.5 h-2.5" />
+                                <span>Save 20%</span>
                               </p>
                             )}
                           </>

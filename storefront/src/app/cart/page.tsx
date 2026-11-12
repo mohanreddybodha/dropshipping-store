@@ -14,9 +14,10 @@ import {
   Plus,
   Minus,
   ArrowRight,
-ShoppingBag,
+  ShoppingBag,
   Truck,
   Zap,
+  Tag,
 } from "lucide-react";
 import { Product } from "../../lib/types";
 import { getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
@@ -26,7 +27,8 @@ import { showToast } from "../../components/ui/Toast";
 export default function CartPage() {
   const router = useRouter();
   const { items, removeItem, updateQuantity, clearCart } = useCart();
-  const breakdown = summarizeCartBreakdown(items);
+  const normalizedItems = items.map((item) => normalizeCartItemPricing(item));
+  const breakdown = summarizeCartBreakdown(normalizedItems);
   const [mounted, setMounted] = useState(false);
   const [watchlistItems, setWatchlistItems] = useState<Product[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
@@ -77,18 +79,6 @@ export default function CartPage() {
     setSuggestedItems(suggested);
   }, [items]);
 
-
-  // Dynamic unit text that accurately reflects exact units without double multiplication
-  const getUnitText = (quantity: number, tier: string) => {
-    const q = Number(quantity) || 1;
-    if (tier === "2x") {
-      return `${q} Units (Double Pack Bundle)`;
-    }
-    if (tier === "3x") {
-      return `${q} Units (Family Pack Bundle)`;
-    }
-    return q === 1 ? "1 Unit" : `${q} Units`;
-  };
 
   // Flipkart-style Buy Now: checks out only this specific product at the user's selected quantity
   const handleBuyNow = (item: (typeof items)[0]) => {
@@ -213,8 +203,7 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         {/* Left Column: Cart Items List (Mobile-Optimized Flipkart Card Layout) */}
         <div className="lg:col-span-8 space-y-3.5">
-          {items.map((rawItem) => {
-            const item = normalizeCartItemPricing(rawItem);
+          {normalizedItems.map((item) => {
             const linePrices = getLineSellingDisplayPrices(item);
             const heroImg =
               item.variant?.image_url ||
@@ -228,22 +217,28 @@ export default function CartPage() {
 
             const upsellText =
               item.quantity === 1
-                ? "Add 1 more item to keep saving 12%"
+                ? "Add 1 more item to avail 12% discount"
                 : item.quantity === 2
-                ? "Add 1 more item to keep saving 18%"
-                : "Add 1 more unit to keep saving 18% bundle discount";
+                ? "Add 1 more item to avail 18% discount"
+                : "Add 1 more item to keep saving 18% bundle discount";
+
+            const hasVariantFallbackSpec =
+              !item.selectedSize &&
+              !item.selectedColor &&
+              item.variant?.variant_name &&
+              item.variant.variant_name.toLowerCase() !== "default";
 
             return (
               <div
                 key={`${item.variant.vid}-${item.selectedSize || ""}-${item.selectedColor || ""}`}
                 className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-5 shadow-xs transition hover:border-slate-300 space-y-3"
               >
-                {/* Top Section: Thumbnail + Title, Variations & 20% Selling Price Display */}
+                {/* Top Section: Thumbnail + Title (1 line) -> Price below Title -> Specifications below Price */}
                 <div className="flex items-start gap-3.5 sm:gap-4">
                   <Link
                     href={`/products/${item.product.slug}`}
                     prefetch={true}
-                    className="w-14 h-14 sm:w-20 sm:h-20 min-w-[3.5rem] min-h-[3.5rem] sm:min-w-[5rem] sm:min-h-[5rem] rounded-lg sm:rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 p-1 flex items-center justify-center flex-shrink-0 group block"
+                    className="w-16 h-16 sm:w-20 sm:h-20 min-w-[4rem] min-h-[4rem] sm:min-w-[5rem] sm:min-h-[5rem] rounded-lg sm:rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 p-1 flex items-center justify-center flex-shrink-0 group block"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -253,96 +248,55 @@ export default function CartPage() {
                     />
                   </Link>
 
-                  {/* Main Product Info */}
+                  {/* Main Product Info: 1-line truncated Title -> Price Row -> Specifications */}
                   <div className="flex-1 min-w-0 space-y-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <Link
-                        href={`/products/${item.product.slug}`}
-                        prefetch={true}
-                        className="text-xs sm:text-sm font-bold text-slate-900 hover:text-emerald-700 transition line-clamp-2 leading-snug"
-                      >
-                        {item.product.title}
-                      </Link>
-                      <div className="text-right flex-shrink-0">
-                        <div className="flex items-baseline justify-end gap-1.5">
-                          <span className="text-sm sm:text-base font-black text-slate-900">
-                            ${linePrices.discounted20LineTotal.toFixed(2)}
+                    <Link
+                      href={`/products/${item.product.slug}`}
+                      prefetch={true}
+                      title={item.product.title}
+                      className="block truncate text-xs sm:text-sm font-bold text-slate-900 hover:text-emerald-700 transition leading-snug"
+                    >
+                      {item.product.title}
+                    </Link>
+
+                    {/* Original Price (struck out) + 20% Discounted Price + Save 20% badge below Title */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm sm:text-base font-black text-slate-900">
+                        ${linePrices.discounted20LineTotal.toFixed(2)}
+                      </span>
+                      {linePrices.sellingLineTotal > linePrices.discounted20LineTotal && (
+                        <>
+                          <span className="text-xs sm:text-sm text-slate-400 line-through">
+                            ${linePrices.sellingLineTotal.toFixed(2)}
                           </span>
-                          {linePrices.sellingLineTotal > linePrices.discounted20LineTotal && (
-                            <span className="text-[11px] sm:text-xs text-slate-400 line-through">
-                              ${linePrices.sellingLineTotal.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                        {linePrices.sellingLineTotal > linePrices.discounted20LineTotal && (
-                          <span className="inline-block mt-0.5 text-[9px] sm:text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase tracking-tight">
-                            Save 20%
+                          <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase tracking-tight">
+                            <Tag className="w-2.5 h-2.5" />
+                            <span>Save 20%</span>
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Specifications below Price (Sizes / Colors only; units live in the stepper below) */}
+                    {(item.selectedSize || item.selectedColor || hasVariantFallbackSpec) && (
+                      <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-xs text-slate-500">
+                        {item.selectedSize && (
+                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
+                            Size: {item.selectedSize}
+                          </span>
+                        )}
+                        {item.selectedColor && (
+                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
+                            Color: {item.selectedColor}
+                          </span>
+                        )}
+                        {hasVariantFallbackSpec && (
+                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
+                            {item.variant.variant_name}
                           </span>
                         )}
                       </div>
-                    </div>
-
-                    {/* Variation tags */}
-                    <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-xs text-slate-500">
-                      {item.selectedSize && (
-                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
-                          Size: {item.selectedSize}
-                        </span>
-                      )}
-                      {item.selectedColor && (
-                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
-                          Color: {item.selectedColor}
-                        </span>
-                      )}
-                      <span className="text-slate-500 font-medium">
-                        {getUnitText(item.quantity, item.tier)}
-                      </span>
-                    </div>
-
-                    {/* Quick-Select Bundle Tiers (Moved from PDP cleanly onto Cart) */}
-                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                      {(
-                        [
-                          { tier: "1x" as const, qty: 1, label: "1x Standard" },
-                          { tier: "2x" as const, qty: 2, label: "2x Pack • Save 12%" },
-                          { tier: "3x" as const, qty: 3, label: "3x Bundle • Save 18%" },
-                        ]
-                      ).map((opt) => {
-                        const isActive =
-                          opt.tier === "3x"
-                            ? item.quantity >= 3
-                            : item.quantity === opt.qty;
-                        const isDisabled = opt.qty > maxStock;
-                        return (
-                          <button
-                            key={opt.tier}
-                            type="button"
-                            disabled={isDisabled}
-                            onClick={() =>
-                              updateQuantity(
-                                item.variant.vid,
-                                item.tier,
-                                opt.qty,
-                                item.selectedSize,
-                                item.selectedColor
-                              )
-                            }
-                            className={`px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                              isActive
-                                ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
-                                : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        );
-                      })}
-                      {item.savings > 0 && (
-                        <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
-                          Bundle -${item.savings.toFixed(2)}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
 
@@ -414,26 +368,9 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                {/* Dynamic Bundle Upsell Banner Below Each Cart Card */}
-                <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-1.5 flex items-center justify-between gap-2 text-[11px] text-emerald-800 font-semibold">
+                {/* Bundle Upsell Note Below Each Cart Card */}
+                <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-1.5 text-[11px] text-emerald-800 font-semibold">
                   <span>{upsellText}</span>
-                  {item.quantity < maxStock && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateQuantity(
-                          item.variant.vid,
-                          item.tier,
-                          item.quantity + 1,
-                          item.selectedSize,
-                          item.selectedColor
-                        )
-                      }
-                      className="text-[10px] font-black text-emerald-700 hover:text-emerald-900 bg-white border border-emerald-200 px-2 py-0.5 rounded-md transition active:scale-95 flex-shrink-0 cursor-pointer"
-                    >
-                      + Add 1
-                    </button>
-                  )}
                 </div>
               </div>
             );

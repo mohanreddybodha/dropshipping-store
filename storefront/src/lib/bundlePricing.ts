@@ -247,11 +247,12 @@ export function getLineSellingDisplayPrices(
   const sellingLineTotal = roundCents(unitCompare * qty);
   const discounted20LineTotal = roundCents(unitRetail * qty);
   const selling20Discount = roundCents(Math.max(0, sellingLineTotal - discounted20LineTotal));
-  const bundleDiscount = Math.max(0, roundCents(Number(item.savings) || 0));
+  const rawSavings = Math.max(0, roundCents(Number(item.savings) || 0));
   const finalLineTotal =
     Number(item.totalPrice) > 0
       ? roundCents(Number(item.totalPrice))
-      : roundCents(Math.max(0, discounted20LineTotal - bundleDiscount));
+      : roundCents(Math.max(0, discounted20LineTotal - rawSavings));
+  const bundleDiscount = roundCents(Math.max(0, discounted20LineTotal - finalLineTotal));
 
   return {
     unitRetail,

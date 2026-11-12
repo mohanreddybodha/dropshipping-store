@@ -41,6 +41,7 @@ import {
   Clock,
   Send,
   Package,
+  Tag,
 } from "lucide-react";
 
 const US_STATES: ThemedDropdownOption[] = [
@@ -1006,7 +1007,7 @@ function CheckoutContent() {
       <section className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-6 space-y-4 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <h2 className="text-base font-black text-slate-900">
-            Order Summary ({checkoutItems.reduce((acc, i) => acc + i.quantity, 0)} {checkoutItems.reduce((acc, i) => acc + i.quantity, 0) === 1 ? "Unit" : "Units"})
+            Order Summary
           </h2>
         </div>
 
@@ -1055,7 +1056,7 @@ function CheckoutContent() {
                 <Link
                   href={`/products/${item.product.slug}`}
                   prefetch={true}
-                  className="flex gap-3 items-center flex-1 min-w-0 group cursor-pointer"
+                  className="flex gap-3 items-start flex-1 min-w-0 group cursor-pointer"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -1065,11 +1066,32 @@ function CheckoutContent() {
                   />
                   <div className="flex-1 min-w-0 space-y-1">
                     {/* Line 1: Product Name strictly in 1 line with ellipsis */}
-                    <h3 className="font-bold text-xs sm:text-sm text-slate-900 truncate group-hover:text-emerald-700 transition">
+                    <h3
+                      title={item.product.title}
+                      className="font-bold text-xs sm:text-sm text-slate-900 truncate group-hover:text-emerald-700 transition"
+                    >
                       {item.product.title}
                     </h3>
 
-                    {/* Line 2: Selected Specification / Size / Color (no bundle tags per item) */}
+                    {/* Line 2: 20% Discounted Price + Original Struck Price + 20% Discount Icon Badge */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-black text-sm text-slate-900 whitespace-nowrap">
+                        ${linePrices.discounted20LineTotal.toFixed(2)}
+                      </span>
+                      {linePrices.sellingLineTotal > linePrices.discounted20LineTotal && (
+                        <>
+                          <span className="text-[11px] text-slate-400 line-through whitespace-nowrap">
+                            ${linePrices.sellingLineTotal.toFixed(2)}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase">
+                            <Tag className="w-2.5 h-2.5" />
+                            <span>Save 20%</span>
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Line 3: Selected Specification / Size / Color below Price */}
                     <div className="text-[11px] font-semibold line-clamp-1">
                       {hasCustomSpec ? (
                         <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] inline-block font-bold">
@@ -1082,7 +1104,7 @@ function CheckoutContent() {
                   </div>
                 </Link>
 
-                <div className="flex items-center justify-between sm:justify-end gap-3 pl-15 sm:pl-0 flex-shrink-0">
+                <div className="flex items-center justify-end pl-15 sm:pl-0 flex-shrink-0">
                   <div className="flex items-center border border-slate-200 rounded-lg bg-slate-50 overflow-hidden shadow-inner">
                     <button
                       type="button"
@@ -1105,24 +1127,6 @@ function CheckoutContent() {
                     >
                       <Plus className="w-3 h-3" />
                     </button>
-                  </div>
-
-                  <div className="text-right min-w-[5.25rem]">
-                    <div className="flex items-baseline justify-end gap-1.5">
-                      <span className="font-black text-sm text-slate-900 whitespace-nowrap">
-                        ${linePrices.discounted20LineTotal.toFixed(2)}
-                      </span>
-                      {linePrices.sellingLineTotal > linePrices.discounted20LineTotal && (
-                        <span className="text-[11px] text-slate-400 line-through whitespace-nowrap">
-                          ${linePrices.sellingLineTotal.toFixed(2)}
-                        </span>
-                      )}
-                    </div>
-                    {linePrices.sellingLineTotal > linePrices.discounted20LineTotal && (
-                      <span className="inline-block mt-0.5 text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase">
-                        Save 20%
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
