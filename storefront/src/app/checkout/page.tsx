@@ -1056,8 +1056,11 @@ function CheckoutContent() {
         </p>
       </div>
 
-      {/* TOP: ORDER SUMMARY */}
-      <section className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-6 space-y-4 shadow-sm">
+      {/* ── STEP 1: SUMMARY & ADDRESS (Items + Price Breakdown + Delivery Address Form) ── */}
+      {checkoutStep === "address" && (
+        <>
+          {/* TOP: ORDER SUMMARY */}
+          <section className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-6 space-y-4 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <h2 className="text-base font-black text-slate-900">
             Order Summary
@@ -1709,106 +1712,16 @@ function CheckoutContent() {
         </div>
 
         {/* Step 1 Action: Continue Button to Payment */}
-        {checkoutStep === "address" && (
-          <div className="pt-3 border-t border-slate-100 space-y-2">
-            <button
-              type="button"
-              onClick={handleContinueToPayment}
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-600/25 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>Continue to Payment</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <p className="text-[11px] text-center text-slate-400">
-              Select payment method on the next step. You will have a chance to review before placing your order.
-            </p>
-          </div>
-        )}
-
-        {/* Step 2: Payment Section (Shown ONLY when checkoutStep is payment) */}
-        {checkoutStep === "payment" && (
-          <div className="pt-3 border-t border-slate-100 space-y-4 relative z-10 animate-in fade-in duration-200">
-            {/* Verified Address Summary with Change Option */}
-            <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl flex items-start justify-between gap-3">
-              <div className="space-y-0.5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 block">
-                  Delivering to:
-                </span>
-                <p className="text-xs font-bold text-slate-900">
-                  {form.name || "Valued Customer"}
-                </p>
-                <p className="text-xs text-slate-600">
-                  {form.address1}, {form.city}, {form.province} {form.zip_code}
-                </p>
-                {form.phone && (
-                  <p className="text-[11px] text-slate-500">Phone: {form.phone}</p>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setCheckoutStep("address")}
-                className="px-3 py-1 bg-white hover:bg-slate-50 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 transition cursor-pointer active:scale-95 flex-shrink-0"
-              >
-                Change
-              </button>
-            </div>
-
-            {/* Official PayPal Smart Button Integration */}
-            <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-3">
-              <div className="text-xs text-slate-600 pb-1 border-b border-slate-200/60 flex items-center justify-between">
-                <span className="font-bold text-slate-800">Select Payment Method:</span>
-                <span className="text-[11px] text-slate-500">PayPal, Debit or Credit Card</span>
-              </div>
-
-              <PayPalButton
-                amount={finalAmount}
-                internalOrderNumber={checkoutOrderNumber}
-                customerDetails={{
-                  name: form.name.trim() || auth.currentUser?.displayName || "Valued Customer",
-                  email:
-                    form.email.trim().toLowerCase() ||
-                    auth.currentUser?.email?.toLowerCase() ||
-                    "",
-                  phone: form.phone,
-                  address1: form.address1,
-                  city: form.city,
-                  province: form.province,
-                  zip_code: form.zip_code,
-                  country_code: form.country_code,
-                }}
-                orderItems={checkoutItems.map((item) => ({
-                  title: item.product.title,
-                  product_title: item.product.title,
-                  pid: item.product.pid,
-                  slug: item.product.slug,
-                  vid: item.variant?.vid,
-                  tier: item.tier,
-                  image_url: item.variant?.image_url || item.product.hero_image_url || item.product.images?.[0] || "",
-                  quantity: item.quantity,
-                  unit_price: item.unitPrice,
-                  price: item.unitPrice,
-                  total_price: item.totalPrice,
-                  size: item.selectedSize,
-                  color: item.selectedColor,
-                }))}
-                firebaseUid={auth.currentUser?.uid}
-                onValidate={validateDeliveryDetails}
-                onProcessingChange={(val) => setIsPaymentProcessing(val)}
-                onSuccess={handlePayPalSuccess}
-                onError={(msg) => setErrorMessage(msg)}
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setCheckoutStep("address")}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Address & Summary</span>
-            </button>
-          </div>
-        )}
+        <div className="pt-3 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={handleContinueToPayment}
+            className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-600/25 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>Continue to Payment</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
 
         {errorMessage && (
           <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-800 font-semibold">
@@ -1818,6 +1731,143 @@ function CheckoutContent() {
         )}
 
       </form>
+    </>
+  )}
+
+  {/* ── STEP 2: PAYMENT (Compact Price Summary -> Delivering To Card with Change -> Payment Methods) ── */}
+  {checkoutStep === "payment" && (
+    <>
+      {/* 1. COMPACT PRICES-ONLY ORDER SUMMARY */}
+      <section className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-6 space-y-4 shadow-sm animate-in fade-in duration-150">
+        <div className="border-b border-slate-100 pb-3">
+          <h2 className="text-base font-black text-slate-900">
+            Order Summary
+          </h2>
+        </div>
+
+        <div className="space-y-1.5 text-xs text-slate-600">
+          <div className="flex justify-between">
+            <span>Selling Price</span>
+            <span className="font-semibold text-slate-900">${checkoutBreakdown.sellingPriceTotal.toFixed(2)}</span>
+          </div>
+          {checkoutBreakdown.sellingDiscount > 0 && (
+            <div className="flex justify-between text-emerald-700 font-semibold">
+              <span>Discount on Selling Price (20%)</span>
+              <span>-${checkoutBreakdown.sellingDiscount.toFixed(2)}</span>
+            </div>
+          )}
+          {checkoutBreakdown.bundleDiscount > 0 && (
+            <div className="flex justify-between text-emerald-700 font-semibold">
+              <span>Bundle Discounts</span>
+              <span>-${checkoutBreakdown.bundleDiscount.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span>Domestic Shipping</span>
+            <span className="text-emerald-700 font-bold">Free</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Estimated Sales Tax</span>
+            <span className="font-semibold text-slate-900">$0.00</span>
+          </div>
+          <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-100">
+            <span>Total Amount</span>
+            <span>${finalAmount.toFixed(2)} USD</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. DELIVERING ADDRESS CARD (WITH TOP-RIGHT CHANGE LINK) */}
+      <section className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-2.5 animate-in fade-in duration-150">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+            <MapPin className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <span>Delivering to</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setCheckoutStep("address");
+              if (typeof window !== "undefined") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+            className="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline transition cursor-pointer"
+          >
+            Change
+          </button>
+        </div>
+        <div className="text-xs text-slate-700 space-y-0.5 pt-0.5">
+          <p className="font-bold text-slate-900">{form.name || "Valued Customer"}</p>
+          <p className="text-slate-600">
+            {form.address1}
+            {form.address2 ? `, ${form.address2}` : ""}
+          </p>
+          <p className="text-slate-600">
+            {form.city}, {form.province} {form.zip_code}
+          </p>
+          {form.phone && (
+            <p className="text-[11px] text-slate-500 pt-0.5">Phone: {form.phone}</p>
+          )}
+        </div>
+      </section>
+
+      {/* 3. SELECT PAYMENT METHOD CARD */}
+      <section className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-6 shadow-sm space-y-4 animate-in fade-in duration-150">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h2 className="text-base font-black text-slate-900">
+            Select Payment Method
+          </h2>
+          <span className="text-[11px] text-slate-500 font-medium">PayPal, Debit or Credit Card</span>
+        </div>
+
+        <PayPalButton
+          amount={finalAmount}
+          internalOrderNumber={checkoutOrderNumber}
+          customerDetails={{
+            name: form.name.trim() || auth.currentUser?.displayName || "Valued Customer",
+            email:
+              form.email.trim().toLowerCase() ||
+              auth.currentUser?.email?.toLowerCase() ||
+              "",
+            phone: form.phone,
+            address1: form.address1,
+            city: form.city,
+            province: form.province,
+            zip_code: form.zip_code,
+            country_code: form.country_code,
+          }}
+          orderItems={checkoutItems.map((item) => ({
+            title: item.product.title,
+            product_title: item.product.title,
+            pid: item.product.pid,
+            slug: item.product.slug,
+            vid: item.variant?.vid,
+            tier: item.tier,
+            image_url: item.variant?.image_url || item.product.hero_image_url || item.product.images?.[0] || "",
+            quantity: item.quantity,
+            unit_price: item.unitPrice,
+            price: item.unitPrice,
+            total_price: item.totalPrice,
+            size: item.selectedSize,
+            color: item.selectedColor,
+          }))}
+          firebaseUid={auth.currentUser?.uid}
+          onValidate={validateDeliveryDetails}
+          onProcessingChange={(val) => setIsPaymentProcessing(val)}
+          onSuccess={handlePayPalSuccess}
+          onError={(msg) => setErrorMessage(msg)}
+        />
+
+        {errorMessage && (
+          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-800 font-semibold">
+            <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+      </section>
+    </>
+  )}
     </div>
   );
 }
