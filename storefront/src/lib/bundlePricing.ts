@@ -21,6 +21,14 @@ export function roundCents(value: number): number {
 }
 
 /**
+ * Compute struck-through pre-discount "Selling Price" matching ProductCard (`retail_price_1x * 1.25`),
+ * so displayed 20% savings reconcile identically across ProductCard, PDP, Cart, and Checkout.
+ */
+export function getComparePrice1x(retailPrice1x: number): number {
+  return roundCents(retailPrice1x * 1.25);
+}
+
+/**
  * Authoritative 2x Value Bundle formula matching `calculate_pricing` in `src/models/database.py`:
  *   ROUND(retail_1x * 2.0 * 0.88, 2) - 0.01  (12% volume discount)
  */
@@ -201,6 +209,93 @@ export function summarizeCartTotals(items: Array<Pick<CartItem, "totalPrice" | "
   return {
     totalAmount: roundCents(totalAmount),
     totalSavings: roundCents(totalSavings),
+    itemCount,
+  };
+}
+
+export interface LineSellingDisplayPrices {
+  unitRetail: number;
+  unitCompare: number;
+  sellingLineTotal: number;
+  discounted20LineTotal: number;
+  selling20Discount: number;
+  bundleDiscount: number;
+  finalLineTotal: number;
+}
+
+export interface CartBreakdownSummary {
+  sellingPriceTotal: number;
+  retailSubtotal: number;
+  sellingDiscount: number;
+  bundleDiscount: number;
+  totalAmount: number;
+  itemCount: number;
+}
+
+/**
+ * Compute per-line selling display breakdown:
+ *   sellingLineTotal (comparePrice * qty) - selling20Discount (20% off) - bundleDiscount = finalLineTotal
+ */
+export function getLineSellingDisplayPrices(
+  item: Pick<CartItem, "variant" | "unitPrice" | "quantity" | "totalPrice" | "savings">
+): LineSellingDisplayPrices {
+  const qty = Math.max(1, Math.floor(Number(item.quantity) || 1));
+  const unitRetail =
+    getVariantBundlePrices(item.variant, item.unitPrice).price1x ||
+    roundCents(Number(item.unitPrice) || 0);
+  const unitCompare = getComparePrice1x(unitRetail);
+  const sellingLineTotal = roundCents(unitCompare * qty);
+  const discounted20LineTotal = roundCents(unitRetail * qty);
+  const selling20Discount = roundCents(Math.max(0, sellingLineTotal - discounted20LineTotal));
+  const bundleDiscount = Math.max(0, roundCents(Number(item.savings) || 0));
+  const finalLineTotal =
+    Number(item.totalPrice) > 0
+      ? roundCents(Number(item.totalPrice))
+      : roundCents(Math.max(0, discounted20LineTotal - bundleDiscount));
+
+  return {
+    unitRetail,
+    unitCompare,
+    sellingLineTotal,
+    discounted20LineTotal,
+    selling20Discount,
+    bundleDiscount,
+    finalLineTotal,
+  };
+}
+
+/** Compute full Order Summary breakdown for Cart and Checkout UI. */
+export function summarizeCartBreakdown(
+  items: Array<Pick<CartItem, "variant" | "unitPrice" | "quantity" | "totalPrice" | "savings">>
+): CartBreakdownSummary {
+  let sellingPriceTotal = 0;
+  let retailSubtotal = 0;
+  let bundleDiscount = 0;
+  let totalAmount = 0;
+  let itemCount = 0;
+
+  for (const item of items) {
+    const line = getLineSellingDisplayPrices(item);
+    const qty = Math.max(0, Math.floor(Number(item.quantity) || 0));
+    sellingPriceTotal += line.sellingLineTotal;
+    retailSubtotal += line.discounted20LineTotal;
+    bundleDiscount += line.bundleDiscount;
+    totalAmount += line.finalLineTotal;
+    itemCount += qty;
+  }
+
+  const roundedSelling = roundCents(sellingPriceTotal);
+  const roundedRetail = roundCents(retailSubtotal);
+  const roundedSellingDiscount = roundCents(Math.max(0, roundedSelling - roundedRetail));
+  const roundedBundle = roundCents(bundleDiscount);
+  const roundedTotal = roundCents(totalAmount);
+
+  return {
+    sellingPriceTotal: roundedSelling,
+    retailSubtotal: roundedRetail,
+    sellingDiscount: roundedSellingDiscount,
+    bundleDiscount: roundedBundle,
+    totalAmount: roundedTotal,
     itemCount,
   };
 }

@@ -202,6 +202,39 @@ export async function runPricingConsistencyTests(base = "http://localhost:3009")
       "P3-2i: Different variant specifications stay distinct line items in cart",
       `len=${twoVariantCart.length}`
     );
+
+    // Display breakdown identity: sellingPriceTotal - sellingDiscount - bundleDiscount === totalAmount
+    const expectedCompare1x = +(v.retail_price_1x * 1.25).toFixed(2);
+    assert(
+      bp.getComparePrice1x(v.retail_price_1x) === expectedCompare1x,
+      "P3-2j-1: getComparePrice1x matches ProductCard 1.25x compare price",
+      `got=${bp.getComparePrice1x(v.retail_price_1x)} expected=${expectedCompare1x}`
+    );
+
+    for (const qty of [1, 2, 3]) {
+      const lineItem = bp.normalizeCartItemPricing(
+        {
+          product: testProd,
+          variant: v,
+          tier: "1x",
+          quantity: qty,
+          unitPrice: v.retail_price_1x,
+          totalPrice: v.retail_price_1x,
+          savings: 0,
+        },
+        qty
+      );
+      const lineDisp = bp.getLineSellingDisplayPrices(lineItem);
+      const summary = bp.summarizeCartBreakdown([lineItem]);
+      const net = +(summary.sellingPriceTotal - summary.sellingDiscount - summary.bundleDiscount).toFixed(2);
+      assert(
+        Math.abs(net - summary.totalAmount) <= 0.01 &&
+          Math.abs(lineDisp.finalLineTotal - lineItem.totalPrice) <= 0.01 &&
+          Math.abs(summary.bundleDiscount - lineItem.savings) <= 0.01,
+        `P3-2j-qty${qty}: Display Order Summary identity sellingPrice - sellingDiscount - bundleDiscount === totalAmount`,
+        JSON.stringify({ qty, lineDisp, summary, net })
+      );
+    }
   } catch (err) {
     assert(false, "P3-2: Client pricing helper exception", err.message);
   }

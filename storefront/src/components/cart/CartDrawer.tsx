@@ -4,9 +4,11 @@ import React, { useEffect } from "react";
 import Link from "next/link";
 import { X, Trash2, ArrowRight, Truck, Plus, Minus } from "lucide-react";
 import { useCart } from "../../lib/cart";
+import { getLineSellingDisplayPrices, summarizeCartBreakdown } from "../../lib/bundlePricing";
 
 export default function CartDrawer() {
-  const { items, isOpen, closeCart, removeItem, updateQuantity, totalAmount, totalSavings } = useCart();
+  const { items, isOpen, closeCart, removeItem, updateQuantity } = useCart();
+  const breakdown = summarizeCartBreakdown(items);
 
   // Prevent background scroll when cart drawer is active
   useEffect(() => {
@@ -170,14 +172,28 @@ export default function CartDrawer() {
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-base font-bold text-slate-900">
-                        ${item.totalPrice.toFixed(2)}
-                      </span>
-                      {item.savings > 0 && (
-                        <p className="text-[10px] text-emerald-600 font-semibold">
-                          Saved ${item.savings.toFixed(2)}
-                        </p>
-                      )}
+                      {(() => {
+                        const lp = getLineSellingDisplayPrices(item);
+                        return (
+                          <>
+                            <div className="flex items-baseline justify-end gap-1.5">
+                              <span className="text-base font-bold text-slate-900">
+                                ${lp.discounted20LineTotal.toFixed(2)}
+                              </span>
+                              {lp.sellingLineTotal > lp.discounted20LineTotal && (
+                                <span className="text-xs text-slate-400 line-through">
+                                  ${lp.sellingLineTotal.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                            {lp.sellingLineTotal > lp.discounted20LineTotal && (
+                              <p className="text-[10px] text-emerald-700 font-bold">
+                                Save 20%
+                              </p>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -191,18 +207,32 @@ export default function CartDrawer() {
             <div className="p-5 border-t border-slate-200 bg-white space-y-4">
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between text-slate-600">
-                  <span>Shipping</span>
-                  <span className="font-semibold text-emerald-600">FREE</span>
+                  <span>Selling Price</span>
+                  <span className="font-semibold text-slate-900">${breakdown.sellingPriceTotal.toFixed(2)}</span>
                 </div>
-                {totalSavings > 0 && (
+                {breakdown.sellingDiscount > 0 && (
                   <div className="flex justify-between text-emerald-600 font-semibold">
-                    <span>Bundle Savings</span>
-                    <span>-${totalSavings.toFixed(2)}</span>
+                    <span>Discount on Selling Price (20%)</span>
+                    <span>-${breakdown.sellingDiscount.toFixed(2)}</span>
                   </div>
                 )}
+                {breakdown.bundleDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-600 font-semibold">
+                    <span>Bundle Discounts</span>
+                    <span>-${breakdown.bundleDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-slate-600">
+                  <span>Domestic Shipping</span>
+                  <span className="font-semibold text-emerald-600">Free</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>Estimated Sales Tax</span>
+                  <span className="font-semibold text-slate-900">$0.00</span>
+                </div>
                 <div className="flex justify-between text-base font-bold text-slate-900 pt-2 border-t border-slate-100">
-                  <span>Subtotal</span>
-                  <span>${totalAmount.toFixed(2)}</span>
+                  <span>Total Amount</span>
+                  <span>${breakdown.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
 

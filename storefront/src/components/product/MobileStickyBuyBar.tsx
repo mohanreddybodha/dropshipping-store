@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ShoppingBag, ArrowRight, Check } from "lucide-react";
 import { BundleTier, Product, Variant } from "../../lib/types";
 import { useCart } from "../../lib/cart";
-import { getVariantBundlePrices } from "../../lib/bundlePricing";
+import { getComparePrice1x, getVariantBundlePrices } from "../../lib/bundlePricing";
 import { showToast } from "../ui/Toast";
 
 interface MobileStickyBuyBarProps {
@@ -86,23 +86,27 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
     showToast("Added to Cart", "cart-add");
   };
 
-  const tierLabel =
-    currentTier === "1x"
-      ? "1 Unit"
-      : currentTier === "2x"
-      ? "2 Units (Save 12%)"
-      : "3 Units (Save 18%)";
+  const comparePrice = getComparePrice1x(currentPrice);
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 p-2.5 px-4 flex items-center justify-between shadow-2xl pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
       <div>
-        <span className="text-[10px] text-slate-500 font-bold block">{tierLabel}</span>
         <div className="flex items-baseline gap-1.5">
           <span className="text-lg font-black text-slate-900">${currentPrice.toFixed(2)}</span>
-          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-            Free Delivery
-          </span>
+          {comparePrice > currentPrice && (
+            <span className="text-xs text-slate-400 line-through font-semibold">
+              ${comparePrice.toFixed(2)}
+            </span>
+          )}
+          {comparePrice > currentPrice && (
+            <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200/80 uppercase">
+              Save 20%
+            </span>
+          )}
         </div>
+        <span className="text-[10px] font-semibold text-emerald-700 block">
+          Free Delivery
+        </span>
       </div>
 
       {/* Morphing Button: Add to Cart -> View Cart */}

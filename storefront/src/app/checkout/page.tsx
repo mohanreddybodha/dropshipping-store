@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "../../lib/cart";
 import {
+  getLineSellingDisplayPrices,
   normalizeCartItemPricing,
-  summarizeCartTotals,
+  summarizeCartBreakdown,
 } from "../../lib/bundlePricing";
 import {
   getUserAuthState,
@@ -427,8 +428,8 @@ function CheckoutContent() {
     }
   };
 
-  const { totalAmount: finalAmount, totalSavings: finalSavings } =
-    summarizeCartTotals(checkoutItems);
+  const checkoutBreakdown = summarizeCartBreakdown(checkoutItems);
+  const finalAmount = checkoutBreakdown.totalAmount;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -1044,6 +1045,7 @@ function CheckoutContent() {
                 );
               }
             };
+            const linePrices = getLineSellingDisplayPrices(item);
 
             return (
               <div
@@ -1061,47 +1063,22 @@ function CheckoutContent() {
                     alt={item.product.title}
                     className="w-12 h-12 object-contain rounded-lg border border-slate-200 p-0.5 flex-shrink-0 bg-white group-hover:scale-105 transition-transform"
                   />
-                  <div className="flex-1 min-w-0 space-y-0.5">
-                    {/* Line 1: Product Name */}
-                    <h3 className="font-bold text-xs sm:text-sm text-slate-900 line-clamp-1 group-hover:text-emerald-700 transition">
+                  <div className="flex-1 min-w-0 space-y-1">
+                    {/* Line 1: Product Name strictly in 1 line with ellipsis */}
+                    <h3 className="font-bold text-xs sm:text-sm text-slate-900 truncate group-hover:text-emerald-700 transition">
                       {item.product.title}
                     </h3>
 
-                    {hasCustomSpec ? (
-                      <>
-                        {/* Line 2: Specification Badge (dedicated line for long spec text) */}
-                        <div className="text-[11px] text-emerald-800 font-semibold line-clamp-1 flex items-center gap-1.5 flex-wrap">
-                          <span className="bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] inline-block font-bold">
-                            {specText}
-                          </span>
-                          {item.savings > 0 && (
-                            <span className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                              {item.tier === "2x" ? "2x Bundle (-12%)" : "3x Bundle (-18%)"} • Save ${item.savings.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                        {/* Line 3: Selected Units and Price per unit */}
-                        <div className="text-[11px] text-slate-500 font-medium">
-                          <span>{item.quantity} {item.quantity === 1 ? "Unit" : "Units"}</span>
-                          <span className="mx-1.5">•</span>
-                          <span>${item.unitPrice.toFixed(2)}/Unit</span>
-                        </div>
-                      </>
-                    ) : (
-                      /* If user didn't select custom specification: Standard + units + price in second line */
-                      <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 flex-wrap">
-                        <span className="text-slate-600 font-semibold">Standard</span>
-                        <span>•</span>
-                        <span>{item.quantity} {item.quantity === 1 ? "Unit" : "Units"}</span>
-                        <span>•</span>
-                        <span>${item.unitPrice.toFixed(2)}/Unit</span>
-                        {item.savings > 0 && (
-                          <span className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                            {item.tier === "2x" ? "2x Bundle (-12%)" : "3x Bundle (-18%)"} • Save ${item.savings.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {/* Line 2: Selected Specification / Size / Color (no bundle tags per item) */}
+                    <div className="text-[11px] font-semibold line-clamp-1">
+                      {hasCustomSpec ? (
+                        <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] inline-block font-bold">
+                          {specText}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500 font-medium">Standard Specification</span>
+                      )}
+                    </div>
                   </div>
                 </Link>
 
@@ -1130,9 +1107,23 @@ function CheckoutContent() {
                     </button>
                   </div>
 
-                  <span className="font-black text-sm text-slate-900 whitespace-nowrap min-w-[4.5rem] text-right">
-                    ${item.totalPrice.toFixed(2)}
-                  </span>
+                  <div className="text-right min-w-[5.25rem]">
+                    <div className="flex items-baseline justify-end gap-1.5">
+                      <span className="font-black text-sm text-slate-900 whitespace-nowrap">
+                        ${linePrices.discounted20LineTotal.toFixed(2)}
+                      </span>
+                      {linePrices.sellingLineTotal > linePrices.discounted20LineTotal && (
+                        <span className="text-[11px] text-slate-400 line-through whitespace-nowrap">
+                          ${linePrices.sellingLineTotal.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                    {linePrices.sellingLineTotal > linePrices.discounted20LineTotal && (
+                      <span className="inline-block mt-0.5 text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase">
+                        Save 20%
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -1141,17 +1132,31 @@ function CheckoutContent() {
 
         <div className="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
           <div className="flex justify-between">
-            <span>USPS Tracked Shipping</span>
-            <span className="text-emerald-700 font-bold">FREE ($0.00)</span>
+            <span>Selling Price</span>
+            <span className="font-semibold text-slate-900">${checkoutBreakdown.sellingPriceTotal.toFixed(2)}</span>
           </div>
-          {finalSavings > 0 && (
-            <div className="flex justify-between text-emerald-700 font-bold">
-              <span>Bundle Discount</span>
-              <span>-${finalSavings.toFixed(2)}</span>
+          {checkoutBreakdown.sellingDiscount > 0 && (
+            <div className="flex justify-between text-emerald-700 font-semibold">
+              <span>Discount on Selling Price (20%)</span>
+              <span>-${checkoutBreakdown.sellingDiscount.toFixed(2)}</span>
             </div>
           )}
+          {checkoutBreakdown.bundleDiscount > 0 && (
+            <div className="flex justify-between text-emerald-700 font-semibold">
+              <span>Bundle Discounts</span>
+              <span>-${checkoutBreakdown.bundleDiscount.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span>Domestic Shipping</span>
+            <span className="text-emerald-700 font-bold">Free</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Estimated Sales Tax</span>
+            <span className="font-semibold text-slate-900">$0.00</span>
+          </div>
           <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-100">
-            <span>Total</span>
+            <span>Total Amount</span>
             <span>${finalAmount.toFixed(2)} USD</span>
           </div>
         </div>

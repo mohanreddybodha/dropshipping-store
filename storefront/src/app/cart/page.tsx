@@ -4,7 +4,11 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "../../lib/cart";
-import { normalizeCartItemPricing } from "../../lib/bundlePricing";
+import {
+  getLineSellingDisplayPrices,
+  normalizeCartItemPricing,
+  summarizeCartBreakdown,
+} from "../../lib/bundlePricing";
 import {
   Trash2,
   Plus,
@@ -21,7 +25,8 @@ import { showToast } from "../../components/ui/Toast";
 
 export default function CartPage() {
   const router = useRouter();
-  const { items, removeItem, updateQuantity, clearCart, totalAmount, totalSavings } = useCart();
+  const { items, removeItem, updateQuantity, clearCart } = useCart();
+  const breakdown = summarizeCartBreakdown(items);
   const [mounted, setMounted] = useState(false);
   const [watchlistItems, setWatchlistItems] = useState<Product[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
@@ -210,6 +215,7 @@ export default function CartPage() {
         <div className="lg:col-span-8 space-y-3.5">
           {items.map((rawItem) => {
             const item = normalizeCartItemPricing(rawItem);
+            const linePrices = getLineSellingDisplayPrices(item);
             const heroImg =
               item.variant?.image_url ||
               item.product.hero_image_url ||
@@ -220,14 +226,20 @@ export default function CartPage() {
                 ? Math.min(99, item.variant.us_warehouse_stock)
                 : 99;
 
+            const upsellText =
+              item.quantity === 1
+                ? "Add 1 more item to keep saving 12%"
+                : item.quantity === 2
+                ? "Add 1 more item to keep saving 18%"
+                : "Add 1 more unit to keep saving 18% bundle discount";
+
             return (
               <div
                 key={`${item.variant.vid}-${item.selectedSize || ""}-${item.selectedColor || ""}`}
                 className="bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-5 shadow-xs transition hover:border-slate-300 space-y-3"
               >
-                {/* Top Section: High-Fidelity Thumbnail + Product Details & Pricing */}
+                {/* Top Section: Thumbnail + Title, Variations & 20% Selling Price Display */}
                 <div className="flex items-start gap-3.5 sm:gap-4">
-                  {/* Clean, Non-distorted Image Container (Compact on mobile) */}
                   <Link
                     href={`/products/${item.product.slug}`}
                     prefetch={true}
@@ -242,7 +254,7 @@ export default function CartPage() {
                   </Link>
 
                   {/* Main Product Info */}
-                  <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex-1 min-w-0 space-y-1.5">
                     <div className="flex items-start justify-between gap-2">
                       <Link
                         href={`/products/${item.product.slug}`}
@@ -251,13 +263,27 @@ export default function CartPage() {
                       >
                         {item.product.title}
                       </Link>
-                      <span className="text-sm sm:text-base font-black text-slate-900 flex-shrink-0">
-                        ${item.totalPrice.toFixed(2)}
-                      </span>
+                      <div className="text-right flex-shrink-0">
+                        <div className="flex items-baseline justify-end gap-1.5">
+                          <span className="text-sm sm:text-base font-black text-slate-900">
+                            ${linePrices.discounted20LineTotal.toFixed(2)}
+                          </span>
+                          {linePrices.sellingLineTotal > linePrices.discounted20LineTotal && (
+                            <span className="text-[11px] sm:text-xs text-slate-400 line-through">
+                              ${linePrices.sellingLineTotal.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                        {linePrices.sellingLineTotal > linePrices.discounted20LineTotal && (
+                          <span className="inline-block mt-0.5 text-[9px] sm:text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase tracking-tight">
+                            Save 20%
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Variation tags & Real-Time Dynamic Unit Badge */}
-                    <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 pt-0.5">
+                    {/* Variation tags */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-xs text-slate-500">
                       {item.selectedSize && (
                         <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
                           Size: {item.selectedSize}
@@ -268,27 +294,60 @@ export default function CartPage() {
                           Color: {item.selectedColor}
                         </span>
                       )}
-                      {/* Dynamic Unit Badge updating immediately on quantity changes */}
-                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-100/80 px-2 py-0.5 rounded-md font-bold">
+                      <span className="text-slate-500 font-medium">
                         {getUnitText(item.quantity, item.tier)}
                       </span>
-                      <span className="text-slate-400">
-                        (${item.unitPrice.toFixed(2)}/unit)
-                      </span>
+                    </div>
+
+                    {/* Quick-Select Bundle Tiers (Moved from PDP cleanly onto Cart) */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      {(
+                        [
+                          { tier: "1x" as const, qty: 1, label: "1x Standard" },
+                          { tier: "2x" as const, qty: 2, label: "2x Pack • Save 12%" },
+                          { tier: "3x" as const, qty: 3, label: "3x Bundle • Save 18%" },
+                        ]
+                      ).map((opt) => {
+                        const isActive =
+                          opt.tier === "3x"
+                            ? item.quantity >= 3
+                            : item.quantity === opt.qty;
+                        const isDisabled = opt.qty > maxStock;
+                        return (
+                          <button
+                            key={opt.tier}
+                            type="button"
+                            disabled={isDisabled}
+                            onClick={() =>
+                              updateQuantity(
+                                item.variant.vid,
+                                item.tier,
+                                opt.qty,
+                                item.selectedSize,
+                                item.selectedColor
+                              )
+                            }
+                            className={`px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                              isActive
+                                ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+                                : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                       {item.savings > 0 && (
-                        <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-bold">
-                          Save ${item.savings.toFixed(2)}
+                        <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
+                          Bundle -${item.savings.toFixed(2)}
                         </span>
                       )}
                     </div>
-
-
                   </div>
                 </div>
 
-                {/* Bottom Action Bar: Flipkart Style (Quantity Stepper + Buy Now + Remove) */}
+                {/* Bottom Action Bar: Quantity Stepper + Buy Now + Remove */}
                 <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
-                  {/* Quantity Stepper */}
                   <div className="flex items-center border border-slate-200 rounded-lg bg-slate-50 overflow-hidden shadow-inner">
                     <button
                       type="button"
@@ -328,9 +387,8 @@ export default function CartPage() {
                     </button>
                   </div>
 
-                  {/* Actions: Buy Now (Flipkart style) + Remove */}
+                  {/* Actions: Buy Now + Remove */}
                   <div className="flex items-center gap-2">
-                    {/* Application-Theme Emerald "Buy Now" button placed before Remove */}
                     <button
                       type="button"
                       onClick={() => handleBuyNow(item)}
@@ -341,7 +399,6 @@ export default function CartPage() {
                       <span>Buy Now</span>
                     </button>
 
-                    {/* Remove Action Button */}
                     <button
                       type="button"
                       onClick={() => {
@@ -355,6 +412,28 @@ export default function CartPage() {
                       <span>Remove</span>
                     </button>
                   </div>
+                </div>
+
+                {/* Dynamic Bundle Upsell Banner Below Each Cart Card */}
+                <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl px-3 py-1.5 flex items-center justify-between gap-2 text-[11px] text-emerald-800 font-semibold">
+                  <span>{upsellText}</span>
+                  {item.quantity < maxStock && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateQuantity(
+                          item.variant.vid,
+                          item.tier,
+                          item.quantity + 1,
+                          item.selectedSize,
+                          item.selectedColor
+                        )
+                      }
+                      className="text-[10px] font-black text-emerald-700 hover:text-emerald-900 bg-white border border-emerald-200 px-2 py-0.5 rounded-md transition active:scale-95 flex-shrink-0 cursor-pointer"
+                    >
+                      + Add 1
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -370,19 +449,25 @@ export default function CartPage() {
 
             <div className="space-y-2.5 text-xs sm:text-sm text-slate-600">
               <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span className="font-bold text-slate-900">${totalAmount.toFixed(2)}</span>
+                <span>Selling Price:</span>
+                <span className="font-semibold text-slate-900">${breakdown.sellingPriceTotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Domestic Shipping:</span>
-                <span className="font-bold text-emerald-600">Free (48 US States)</span>
-              </div>
-              {totalSavings > 0 && (
+              {breakdown.sellingDiscount > 0 && (
                 <div className="flex justify-between text-emerald-700 font-semibold">
-                  <span>Bundle Discounts:</span>
-                  <span>-${totalSavings.toFixed(2)}</span>
+                  <span>Discount on Selling Price (20%):</span>
+                  <span>-${breakdown.sellingDiscount.toFixed(2)}</span>
                 </div>
               )}
+              {breakdown.bundleDiscount > 0 && (
+                <div className="flex justify-between text-emerald-700 font-semibold">
+                  <span>Bundle Discounts:</span>
+                  <span>-${breakdown.bundleDiscount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>Domestic Shipping:</span>
+                <span className="font-bold text-emerald-600">Free</span>
+              </div>
               <div className="flex justify-between">
                 <span>Estimated Sales Tax:</span>
                 <span className="font-bold text-slate-900">$0.00</span>
@@ -390,9 +475,9 @@ export default function CartPage() {
             </div>
 
             <div className="pt-3 border-t border-slate-200 flex justify-between items-baseline">
-              <span className="text-xs sm:text-sm font-bold text-slate-900">Total Due:</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-900">Total Amount:</span>
               <span className="text-2xl font-black text-slate-900">
-                ${totalAmount.toFixed(2)}
+                ${breakdown.totalAmount.toFixed(2)}
               </span>
             </div>
 
