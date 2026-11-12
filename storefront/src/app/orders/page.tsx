@@ -29,10 +29,17 @@ import {
 } from "@/lib/api";
 import { CustomerOrder } from "@/lib/types";
 import ThemedDropdown, { ThemedDropdownOption } from "@/components/ui/ThemedDropdown";
+import {
+  validateUsPhone,
+  validateUsZip,
+  validateUsStreetAddress,
+  validateUsCity,
+  formatUsPhoneInput,
+} from "@/lib/usAddressValidation";
 
 const US_STATES: ThemedDropdownOption[] = [
   { value: "AL", label: "Alabama (AL)" },
-  { value: "AK", label: "Alaska (AK) — Contiguous US Only", disabled: true },
+  { value: "AK", label: "Alaska (AK) — Contiguous US Only", badge: "Unavailable", disabled: true },
   { value: "AZ", label: "Arizona (AZ)" },
   { value: "AR", label: "Arkansas (AR)" },
   { value: "CA", label: "California (CA)" },
@@ -41,7 +48,7 @@ const US_STATES: ThemedDropdownOption[] = [
   { value: "DE", label: "Delaware (DE)" },
   { value: "FL", label: "Florida (FL)" },
   { value: "GA", label: "Georgia (GA)" },
-  { value: "HI", label: "Hawaii (HI) — Contiguous US Only", disabled: true },
+  { value: "HI", label: "Hawaii (HI) — Contiguous US Only", badge: "Unavailable", disabled: true },
   { value: "ID", label: "Idaho (ID)" },
   { value: "IL", label: "Illinois (IL)" },
   { value: "IN", label: "Indiana (IN)" },
@@ -170,6 +177,7 @@ function OrdersContent() {
     shipping_zip: "",
     shipping_phone: "",
   });
+  const [addressFieldErrors, setAddressFieldErrors] = useState<Record<string, string>>({});
   const [addressSubmitting, setAddressSubmitting] = useState(false);
   const [addressError, setAddressError] = useState<string | null>(null);
   const [addressSuccess, setAddressSuccess] = useState(false);
@@ -382,15 +390,58 @@ function OrdersContent() {
       shipping_zip: item.shippingZip || "",
       shipping_phone: item.shippingPhone || "",
     });
+    setAddressFieldErrors({});
     setAddressError(null);
     setAddressSuccess(false);
     setIsEditingAddress(true);
+  }
+
+  // Validate Address Form before submission
+  function validateOrderAddressForm(): boolean {
+    const errors: Record<string, string> = {};
+
+    if (!addressForm.shipping_name.trim()) {
+      errors.shipping_name = "Please enter your Full Name.";
+    }
+
+    const streetVal = validateUsStreetAddress(addressForm.shipping_address);
+    if (!streetVal.isValid) {
+      errors.shipping_address = streetVal.error || "Please enter a valid US Street Address.";
+    }
+
+    const cityVal = validateUsCity(addressForm.shipping_city);
+    if (!cityVal.isValid) {
+      errors.shipping_city = cityVal.error || "Please enter a valid US City.";
+    }
+
+    if (!addressForm.shipping_province || addressForm.shipping_province === "AK" || addressForm.shipping_province === "HI") {
+      errors.shipping_province = "Delivery is restricted strictly to the 48 Contiguous US States.";
+    }
+
+    const zipVal = validateUsZip(addressForm.shipping_zip, addressForm.shipping_province);
+    if (!zipVal.isValid) {
+      errors.shipping_zip = zipVal.error || "Please enter a valid 5-digit US PIN / ZIP code.";
+    }
+
+    if (addressForm.shipping_phone.trim()) {
+      const phoneVal = validateUsPhone(addressForm.shipping_phone);
+      if (!phoneVal.isValid) {
+        errors.shipping_phone = phoneVal.error || "Please enter a valid 10-digit US mobile number.";
+      }
+    }
+
+    setAddressFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   }
 
   // Save Address via Server API
   async function handleSaveAddress(e: React.FormEvent) {
     e.preventDefault();
     if (!activeItemModal) return;
+
+    if (!validateOrderAddressForm()) {
+      return;
+    }
 
     setAddressSubmitting(true);
     setAddressError(null);
@@ -871,40 +922,105 @@ function OrdersContent() {
                       <label className="block mb-0.5 text-[11px] font-semibold text-slate-600">Full Name</label>
                       <input
                         type="text"
-                        required
                         value={addressForm.shipping_name}
-                        onChange={(e) => setAddressForm({ ...addressForm, shipping_name: e.target.value })}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-emerald-500"
+                        onChange={(e) => {
+                          setAddressForm({ ...addressForm, shipping_name: e.target.value });
+                          if (addressFieldErrors.shipping_name) {
+                            setAddressFieldErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.shipping_name;
+                              return next;
+                            });
+                          }
+                        }}
+                        className={`w-full px-2.5 py-1.5 rounded-lg border text-xs focus:ring-1 focus:outline-none ${
+                          addressFieldErrors.shipping_name
+                            ? "border-rose-500 bg-rose-50/20 text-slate-900"
+                            : "border-slate-200 focus:ring-emerald-500"
+                        }`}
                       />
+                      {addressFieldErrors.shipping_name && (
+                        <p className="text-[10px] text-rose-600 font-semibold mt-0.5">
+                          {addressFieldErrors.shipping_name}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block mb-0.5 text-[11px] font-semibold text-slate-600">Street Address</label>
                       <input
                         type="text"
-                        required
                         value={addressForm.shipping_address}
-                        onChange={(e) => setAddressForm({ ...addressForm, shipping_address: e.target.value })}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-emerald-500"
+                        onChange={(e) => {
+                          setAddressForm({ ...addressForm, shipping_address: e.target.value });
+                          if (addressFieldErrors.shipping_address) {
+                            setAddressFieldErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.shipping_address;
+                              return next;
+                            });
+                          }
+                        }}
+                        className={`w-full px-2.5 py-1.5 rounded-lg border text-xs focus:ring-1 focus:outline-none ${
+                          addressFieldErrors.shipping_address
+                            ? "border-rose-500 bg-rose-50/20 text-slate-900"
+                            : "border-slate-200 focus:ring-emerald-500"
+                        }`}
                       />
+                      {addressFieldErrors.shipping_address && (
+                        <p className="text-[10px] text-rose-600 font-semibold mt-0.5">
+                          {addressFieldErrors.shipping_address}
+                        </p>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block mb-0.5 text-[11px] font-semibold text-slate-600">City</label>
                         <input
                           type="text"
-                          required
                           value={addressForm.shipping_city}
-                          onChange={(e) => setAddressForm({ ...addressForm, shipping_city: e.target.value })}
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-emerald-500"
+                          onChange={(e) => {
+                            setAddressForm({ ...addressForm, shipping_city: e.target.value });
+                            if (addressFieldErrors.shipping_city) {
+                              setAddressFieldErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.shipping_city;
+                                return next;
+                              });
+                            }
+                          }}
+                          className={`w-full px-2.5 py-1.5 rounded-lg border text-xs focus:ring-1 focus:outline-none ${
+                            addressFieldErrors.shipping_city
+                              ? "border-rose-500 bg-rose-50/20 text-slate-900"
+                              : "border-slate-200 focus:ring-emerald-500"
+                          }`}
                         />
+                        {addressFieldErrors.shipping_city && (
+                          <p className="text-[10px] text-rose-600 font-semibold mt-0.5">
+                            {addressFieldErrors.shipping_city}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block mb-0.5 text-[11px] font-semibold text-slate-600">State</label>
                         <ThemedDropdown
                           options={US_STATES}
                           value={addressForm.shipping_province}
-                          onChange={(val) => setAddressForm({ ...addressForm, shipping_province: val })}
+                          onChange={(val) => {
+                            setAddressForm({ ...addressForm, shipping_province: val });
+                            if (addressFieldErrors.shipping_province) {
+                              setAddressFieldErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.shipping_province;
+                                return next;
+                              });
+                            }
+                          }}
                         />
+                        {addressFieldErrors.shipping_province && (
+                          <p className="text-[10px] text-rose-600 font-semibold mt-0.5">
+                            {addressFieldErrors.shipping_province}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -912,21 +1028,56 @@ function OrdersContent() {
                         <label className="block mb-0.5 text-[11px] font-semibold text-slate-600">ZIP Code</label>
                         <input
                           type="text"
-                          required
                           maxLength={5}
                           value={addressForm.shipping_zip}
-                          onChange={(e) => setAddressForm({ ...addressForm, shipping_zip: e.target.value })}
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-emerald-500"
+                          onChange={(e) => {
+                            setAddressForm({ ...addressForm, shipping_zip: e.target.value });
+                            if (addressFieldErrors.shipping_zip) {
+                              setAddressFieldErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.shipping_zip;
+                                return next;
+                              });
+                            }
+                          }}
+                          className={`w-full px-2.5 py-1.5 rounded-lg border text-xs focus:ring-1 focus:outline-none ${
+                            addressFieldErrors.shipping_zip
+                              ? "border-rose-500 bg-rose-50/20 text-slate-900"
+                              : "border-slate-200 focus:ring-emerald-500"
+                          }`}
                         />
+                        {addressFieldErrors.shipping_zip && (
+                          <p className="text-[10px] text-rose-600 font-semibold mt-0.5">
+                            {addressFieldErrors.shipping_zip}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="block mb-0.5 text-[11px] font-semibold text-slate-600">Phone</label>
                         <input
                           type="tel"
                           value={addressForm.shipping_phone}
-                          onChange={(e) => setAddressForm({ ...addressForm, shipping_phone: e.target.value })}
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-1 focus:ring-emerald-500"
+                          onChange={(e) => {
+                            setAddressForm({ ...addressForm, shipping_phone: formatUsPhoneInput(e.target.value) });
+                            if (addressFieldErrors.shipping_phone) {
+                              setAddressFieldErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.shipping_phone;
+                                return next;
+                              });
+                            }
+                          }}
+                          className={`w-full px-2.5 py-1.5 rounded-lg border text-xs focus:ring-1 focus:outline-none ${
+                            addressFieldErrors.shipping_phone
+                              ? "border-rose-500 bg-rose-50/20 text-slate-900"
+                              : "border-slate-200 focus:ring-emerald-500"
+                          }`}
                         />
+                        {addressFieldErrors.shipping_phone && (
+                          <p className="text-[10px] text-rose-600 font-semibold mt-0.5">
+                            {addressFieldErrors.shipping_phone}
+                          </p>
+                        )}
                       </div>
                     </div>
 

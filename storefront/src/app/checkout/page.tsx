@@ -161,6 +161,7 @@ function CheckoutContent() {
   });
 
   const [isAuthenticatedUser, setIsAuthenticatedUser] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState<"address" | "payment">("address");
   const [savedAddresses, setSavedAddresses] = useState<UserSavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | "new">("new");
   const [saveAddressLabel, setSaveAddressLabel] = useState<"Home" | "Office" | "New" | null>(null);
@@ -529,6 +530,15 @@ function CheckoutContent() {
 
     setFieldErrors({});
     return true;
+  };
+
+  const handleContinueToPayment = () => {
+    if (validateDeliveryDetails()) {
+      setCheckoutStep("payment");
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
   };
 
   const selectedSavedAddressObj = savedAddresses.find((a) => a.id === selectedAddressId);
@@ -978,6 +988,49 @@ function CheckoutContent() {
           <span>⚠️ Network Offline: You are currently disconnected from the internet. Reconnecting to finalize payment...</span>
         </div>
       )}
+
+      {/* ── 2-STEP CHECKOUT PROGRESS INDICATOR (Amazon / Flipkart Style) ── */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setCheckoutStep("address")}
+          className={`flex items-center gap-2 text-xs font-bold transition ${
+            checkoutStep === "address"
+              ? "text-emerald-700"
+              : "text-slate-600 hover:text-slate-900 cursor-pointer"
+          }`}
+        >
+          <div
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
+              checkoutStep === "payment"
+                ? "bg-emerald-600 text-white"
+                : "bg-emerald-100 text-emerald-800"
+            }`}
+          >
+            {checkoutStep === "payment" ? "✓" : "1"}
+          </div>
+          <span>1. Summary & Address</span>
+        </button>
+
+        <div className="flex-1 h-0.5 bg-slate-200 mx-2" />
+
+        <div
+          className={`flex items-center gap-2 text-xs font-bold ${
+            checkoutStep === "payment" ? "text-emerald-700" : "text-slate-400"
+          }`}
+        >
+          <div
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
+              checkoutStep === "payment"
+                ? "bg-emerald-600 text-white"
+                : "bg-slate-100 text-slate-400 border border-slate-200"
+            }`}
+          >
+            2
+          </div>
+          <span>2. Payment</span>
+        </div>
+      </div>
 
       <Link
         href="/"
@@ -1655,54 +1708,107 @@ function CheckoutContent() {
           })()}
         </div>
 
-        {/* Payment Section */}
-        <div className="pt-3 border-t border-slate-100 space-y-3 relative z-10">
+        {/* Step 1 Action: Continue Button to Payment */}
+        {checkoutStep === "address" && (
+          <div className="pt-3 border-t border-slate-100 space-y-2">
+            <button
+              type="button"
+              onClick={handleContinueToPayment}
+              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-600/25 transition active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>Continue to Payment</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <p className="text-[11px] text-center text-slate-400">
+              Select payment method on the next step. You will have a chance to review before placing your order.
+            </p>
+          </div>
+        )}
 
-          {/* Official PayPal Smart Button Integration */}
-          <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-3">
-            <div className="text-xs text-slate-600 pb-1 border-b border-slate-200/60">
-              <span className="font-semibold">Pay with PayPal, Pay Later, or Card:</span>
+        {/* Step 2: Payment Section (Shown ONLY when checkoutStep is payment) */}
+        {checkoutStep === "payment" && (
+          <div className="pt-3 border-t border-slate-100 space-y-4 relative z-10 animate-in fade-in duration-200">
+            {/* Verified Address Summary with Change Option */}
+            <div className="p-3.5 bg-emerald-50/60 border border-emerald-200/80 rounded-xl flex items-start justify-between gap-3">
+              <div className="space-y-0.5">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 block">
+                  Delivering to:
+                </span>
+                <p className="text-xs font-bold text-slate-900">
+                  {form.name || "Valued Customer"}
+                </p>
+                <p className="text-xs text-slate-600">
+                  {form.address1}, {form.city}, {form.province} {form.zip_code}
+                </p>
+                {form.phone && (
+                  <p className="text-[11px] text-slate-500">Phone: {form.phone}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setCheckoutStep("address")}
+                className="px-3 py-1 bg-white hover:bg-slate-50 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 transition cursor-pointer active:scale-95 flex-shrink-0"
+              >
+                Change
+              </button>
             </div>
 
-            <PayPalButton
-              amount={finalAmount}
-              internalOrderNumber={checkoutOrderNumber}
-              customerDetails={{
-                name: form.name.trim() || auth.currentUser?.displayName || "Valued Customer",
-                email:
-                  form.email.trim().toLowerCase() ||
-                  auth.currentUser?.email?.toLowerCase() ||
-                  "",
-                phone: form.phone,
-                address1: form.address1,
-                city: form.city,
-                province: form.province,
-                zip_code: form.zip_code,
-                country_code: form.country_code,
-              }}
-              orderItems={checkoutItems.map((item) => ({
-                title: item.product.title,
-                product_title: item.product.title,
-                pid: item.product.pid,
-                slug: item.product.slug,
-                vid: item.variant?.vid,
-                tier: item.tier,
-                image_url: item.variant?.image_url || item.product.hero_image_url || item.product.images?.[0] || "",
-                quantity: item.quantity,
-                unit_price: item.unitPrice,
-                price: item.unitPrice,
-                total_price: item.totalPrice,
-                size: item.selectedSize,
-                color: item.selectedColor,
-              }))}
-              firebaseUid={auth.currentUser?.uid}
-              onValidate={validateDeliveryDetails}
-              onProcessingChange={(val) => setIsPaymentProcessing(val)}
-              onSuccess={handlePayPalSuccess}
-              onError={(msg) => setErrorMessage(msg)}
-            />
+            {/* Official PayPal Smart Button Integration */}
+            <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-2xl space-y-3">
+              <div className="text-xs text-slate-600 pb-1 border-b border-slate-200/60 flex items-center justify-between">
+                <span className="font-bold text-slate-800">Select Payment Method:</span>
+                <span className="text-[11px] text-slate-500">PayPal, Debit or Credit Card</span>
+              </div>
+
+              <PayPalButton
+                amount={finalAmount}
+                internalOrderNumber={checkoutOrderNumber}
+                customerDetails={{
+                  name: form.name.trim() || auth.currentUser?.displayName || "Valued Customer",
+                  email:
+                    form.email.trim().toLowerCase() ||
+                    auth.currentUser?.email?.toLowerCase() ||
+                    "",
+                  phone: form.phone,
+                  address1: form.address1,
+                  city: form.city,
+                  province: form.province,
+                  zip_code: form.zip_code,
+                  country_code: form.country_code,
+                }}
+                orderItems={checkoutItems.map((item) => ({
+                  title: item.product.title,
+                  product_title: item.product.title,
+                  pid: item.product.pid,
+                  slug: item.product.slug,
+                  vid: item.variant?.vid,
+                  tier: item.tier,
+                  image_url: item.variant?.image_url || item.product.hero_image_url || item.product.images?.[0] || "",
+                  quantity: item.quantity,
+                  unit_price: item.unitPrice,
+                  price: item.unitPrice,
+                  total_price: item.totalPrice,
+                  size: item.selectedSize,
+                  color: item.selectedColor,
+                }))}
+                firebaseUid={auth.currentUser?.uid}
+                onValidate={validateDeliveryDetails}
+                onProcessingChange={(val) => setIsPaymentProcessing(val)}
+                onSuccess={handlePayPalSuccess}
+                onError={(msg) => setErrorMessage(msg)}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setCheckoutStep("address")}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Address & Summary</span>
+            </button>
           </div>
-        </div>
+        )}
 
         {errorMessage && (
           <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-800 font-semibold">
