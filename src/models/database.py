@@ -376,6 +376,18 @@ def get_engine(database_url: Optional[str] = None) -> Engine:
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
 
+    # If standard postgresql:// is provided without explicit driver, default to psycopg2 or psycopg3
+    if url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        try:
+            import psycopg2  # noqa: F401
+            url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        except ImportError:
+            try:
+                import psycopg  # noqa: F401
+                url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+            except ImportError:
+                pass
+
     if url.startswith("sqlite:///"):
         # Ensure SQLite data folder exists
         db_file = url.replace("sqlite:///", "")
