@@ -1032,33 +1032,26 @@ function CheckoutContent() {
         </div>
       </div>
 
-      <Link
-        href="/"
-        className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 transition active:scale-95"
-      >
-        <ArrowLeft className="w-4 h-4" /> Continue Shopping
-      </Link>
-
-      {/* ── PROMINENT CONTIGUOUS US DELIVERY BANNER ── */}
-      <div className="bg-emerald-950 text-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-emerald-900 space-y-1.5">
-        <div className="flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0 truncate">
-            <span className="text-[11px] sm:text-xs font-black uppercase tracking-tight text-emerald-400 truncate">
-              Contiguous 48 US States Only
-            </span>
-          </div>
-          <span className="text-[9px] sm:text-[10px] bg-emerald-800/90 text-emerald-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex-shrink-0">
-            US Domestic Ground (Est. 3–5 Days)
-          </span>
-        </div>
-        <p className="text-[11px] sm:text-xs text-emerald-200/90 leading-relaxed">
-          Orders dispatch from domestic US fulfillment centers via tracked ground couriers (USPS / UPS / FedEx, est. 3–5 business days). <strong>Delivery is serviced strictly to physical street addresses across the 48 Contiguous US States (No P.O. Boxes, Military APO/FPO, Alaska, Hawaii, or US Territories).</strong>
-        </p>
-      </div>
-
-      {/* ── STEP 1: SUMMARY & ADDRESS (Items + Price Breakdown + Delivery Address Form) ── */}
+      {/* ── STEP 1: SUMMARY & ADDRESS (Contiguous US Banner + Items + Price Breakdown + Delivery Address Form) ── */}
       {checkoutStep === "address" && (
         <>
+          {/* ── PROMINENT CONTIGUOUS US DELIVERY BANNER ── */}
+          <div className="bg-emerald-950 text-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-emerald-900 space-y-1.5">
+            <div className="flex items-center justify-between gap-2 whitespace-nowrap min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0 truncate">
+                <span className="text-[11px] sm:text-xs font-black uppercase tracking-tight text-emerald-400 truncate">
+                  Contiguous 48 US States Only
+                </span>
+              </div>
+              <span className="text-[9px] sm:text-[10px] bg-emerald-800/90 text-emerald-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex-shrink-0">
+                US Domestic Ground (Est. 3–5 Days)
+              </span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-emerald-200/90 leading-relaxed">
+              Orders dispatch from domestic US fulfillment centers via tracked ground couriers (USPS / UPS / FedEx, est. 3–5 business days). <strong>Delivery is serviced strictly to physical street addresses across the 48 Contiguous US States (No P.O. Boxes, Military APO/FPO, Alaska, Hawaii, or US Territories).</strong>
+            </p>
+          </div>
+
           {/* TOP: ORDER SUMMARY */}
           <section className="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-6 space-y-4 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">

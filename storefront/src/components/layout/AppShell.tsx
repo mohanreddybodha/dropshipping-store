@@ -71,8 +71,7 @@ export default function AppShell({ children }: AppShellProps) {
 
         {/* Minimal Checkout Compliance Footer */}
         <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-400 bg-white">
-          <p>© 2026 Vastire (vastire.com). All rights reserved.</p>
-          <p className="mt-1">
+          <p>
             Need assistance with your order? Contact{" "}
             <a href="mailto:support@vastire.com" className="text-slate-600 underline">
               support@vastire.com
