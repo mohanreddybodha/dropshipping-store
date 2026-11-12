@@ -993,11 +993,11 @@ function CheckoutContent() {
             </span>
           </div>
           <span className="text-[9px] sm:text-[10px] bg-emerald-800/90 text-emerald-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex-shrink-0">
-            USPS Domestic Ground (3–5 Days)
+            US Domestic Ground (Est. 3–5 Days)
           </span>
         </div>
         <p className="text-[11px] sm:text-xs text-emerald-200/90 leading-relaxed">
-          Orders are dispatched directly from domestic fulfillment centers via tracked USPS ground (3–5 business days). <strong>Delivery is serviced strictly to physical street addresses across the 48 Contiguous US States (No P.O. Boxes, Military APO/FPO, Alaska, Hawaii, or US Island Territories).</strong>
+          Orders dispatch from domestic US fulfillment centers via tracked ground couriers (USPS / UPS / FedEx, est. 3–5 business days). <strong>Delivery is serviced strictly to physical street addresses across the 48 Contiguous US States (No P.O. Boxes, Military APO/FPO, Alaska, Hawaii, or US Territories).</strong>
         </p>
       </div>
 

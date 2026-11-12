@@ -51,7 +51,11 @@ function buildItemDescription(product: Product): string {
     .map((f) => `${f.title.trim()}: ${f.desc.trim()}`)
     .join(" | ");
 
-  const combined = [overview, featureBullets, "Free 3-5 day tracked US shipping via USPS."]
+  const combined = [
+    overview,
+    featureBullets,
+    "Free tracked US ground shipping (est. 3-5 business days, 48 contiguous US states physical street addresses only).",
+  ]
     .filter(Boolean)
     .join(" ");
 
@@ -154,7 +158,7 @@ export async function GET() {
         ...(sizeVal ? [`      <g:size>${escapeXml(sizeVal.slice(0, 100))}</g:size>`] : []),
         "      <g:shipping>",
         "        <g:country>US</g:country>",
-        "        <g:service>USPS Ground Advantage</g:service>",
+        "        <g:service>US Domestic Ground</g:service>",
         "        <g:price>0.00 USD</g:price>",
         "        <g:min_handling_time>1</g:min_handling_time>",
         "        <g:max_handling_time>2</g:max_handling_time>",

@@ -247,7 +247,7 @@ export function getCategorySeoProfile(category?: string | null): CategorySeoProf
   return {
     headline: label,
     title: `${label} | ${SITE_NAME} — Free US Shipping`,
-    description: `Browse ${label} essentials on ${SITE_NAME}. Dispatched from US domestic centers with free 3–5 day tracked USPS delivery and multi-pack bundle savings.`,
+    description: `Browse ${label} essentials on ${SITE_NAME}. Dispatched from US domestic centers with free estimated 3–5 day tracked domestic ground delivery (48 contiguous states) and multi-pack bundle savings.`,
     keywords: [label, SITE_NAME, `${label} online`, "fast US shipping"],
   };
 }
@@ -359,7 +359,7 @@ export function buildProductSeoMeta(product: Product): ProductSeoMetadataResult 
       ...featureTerms,
       ...variantTerms,
       "free US shipping",
-      "tracked USPS delivery",
+      "tracked US ground delivery",
     ])
   );
 
@@ -414,7 +414,7 @@ const SHARED_US_RETURN_POLICY = {
   "@type": "MerchantReturnPolicy",
   applicableCountry: "US",
   returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-  merchantReturnDays: 30,
+  merchantReturnDays: 7,
   returnMethod: "https://schema.org/ReturnByMail",
   returnFees: "https://schema.org/FreeReturn",
 };

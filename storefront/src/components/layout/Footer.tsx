@@ -15,8 +15,8 @@ export default function Footer() {
           <div className="flex items-center gap-2.5 text-slate-700">
             <Truck className="w-5 h-5 text-emerald-600 flex-shrink-0" />
             <div>
-              <p className="font-bold text-slate-900">3–5 Day Tracked Delivery</p>
-              <p className="text-[11px] text-slate-500">Fast USPS ground shipping</p>
+              <p className="font-bold text-slate-900">Est. 3–5 Day Delivery</p>
+              <p className="text-[11px] text-slate-500">48 US states • Street addresses</p>
             </div>
           </div>
           <div className="flex items-center gap-2.5 text-slate-700">

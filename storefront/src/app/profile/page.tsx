@@ -896,17 +896,17 @@ export default function ProfilePage() {
                   <FaqAccordionItem
                     defaultOpen={false}
                     question="How long does shipping take?"
-                    answer="Orders are packaged and dispatched from domestic distribution centers within 24 business hours. Tracked USPS Ground Advantage delivery takes 3 to 5 business days anywhere in the United States."
+                    answer="Orders are typically processed from domestic US fulfillment centers within 1–2 business days. Estimated tracked domestic ground delivery (USPS / UPS / FedEx) takes 3–5 business days to physical street addresses within the 48 contiguous United States."
                   />
                   <FaqAccordionItem
                     defaultOpen={false}
                     question="How do I track my package?"
-                    answer="As soon as USPS scans your parcel, you will receive an email confirmation with your live door-to-door USPS tracking link. You can also look up current milestone updates anytime in Track Order using your email and ZIP code."
+                    answer="As soon as the domestic carrier scans your parcel, you will receive an email confirmation with your live door-to-door tracking link. You can also look up current milestone updates anytime in Track Order using your email and ZIP code."
                   />
                   <FaqAccordionItem
                     defaultOpen={false}
                     question="Can I deliver to a PO Box or military address?"
-                    answer="Yes. Because we ship exclusively through the United States Postal Service (USPS), standard PO Boxes, residential addresses, and APO/FPO military bases are fully supported."
+                    answer="No. Because our domestic US fulfillment centers dispatch through commercial ground couriers (UPS, FedEx, and USPS ground), we only deliver to physical residential or commercial street addresses within the 48 contiguous United States (plus D.C.). P.O. Boxes, military APO/FPO/DPO addresses, Alaska, Hawaii, and US territories are not supported."
                   />
                   <FaqAccordionItem
                     defaultOpen={false}
@@ -925,13 +925,13 @@ export default function ProfilePage() {
                   />
                   <FaqAccordionItem
                     defaultOpen={false}
-                    question="Do you ship internationally?"
-                    answer="Currently, Vastire ships exclusively to addresses within the domestic United States. This guarantees fast 3–5 day delivery with zero unexpected customs or tariff charges."
+                    question="Do you ship internationally or to Alaska/Hawaii?"
+                    answer="Currently, Vastire ships exclusively to physical street addresses within the 48 contiguous United States (plus D.C.). Alaska, Hawaii, US territories, P.O. Boxes, military APO/FPO/DPO addresses, and international destinations are not supported. Estimated domestic transit is 3–5 business days with zero unexpected customs or tariff charges."
                   />
                   <FaqAccordionItem
                     defaultOpen={false}
                     question="How do I reach customer support?"
-                    answer="You can email our customer support team directly at support@vastire.com with your order number. We respond to all inquiries within 24 business hours (Monday through Saturday, 9:00 AM – 6:00 PM EST)."
+                    answer="You can email our customer support team directly at support@vastire.com with your order number. Support inquiries are handled Monday through Saturday (9:00 AM – 6:00 PM EST) with a 1–2 business day response target."
                   />
                 </div>
               )}
@@ -950,7 +950,7 @@ export default function ProfilePage() {
                     <div>
                       <h4 className="font-bold text-slate-900">Transparent Pricing</h4>
                       <p className="text-slate-600 leading-relaxed">
-                        All prices are in USD ($). We guarantee zero hidden surcharges, zero unexpected customs duties, and free domestic shipping on all orders.
+                        All prices are in USD ($). Every order includes free tracked domestic ground shipping across the 48 contiguous US states with zero hidden checkout or customs fees.
                       </p>
                     </div>
 
@@ -1011,24 +1011,24 @@ export default function ProfilePage() {
                 <div className="space-y-3.5 text-xs sm:text-sm">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-0.5">
-                      <span className="text-xs font-bold uppercase text-slate-400">Processing SLA</span>
+                      <span className="text-xs font-bold uppercase text-slate-400">Processing Window</span>
                       <p className="text-sm sm:text-base font-black text-slate-900">1–2 Business Days</p>
                     </div>
                     <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 space-y-0.5">
-                      <span className="text-xs font-bold uppercase text-emerald-700">Transit Window</span>
+                      <span className="text-xs font-bold uppercase text-emerald-700">Estimated Transit</span>
                       <p className="text-sm sm:text-base font-black text-emerald-950">3–5 Business Days</p>
                     </div>
                   </div>
 
                   <div className="space-y-2 text-slate-600">
                     <p>
-                      <strong>Free Domestic Shipping:</strong> 100% free tracked shipping across all 50 US states.
+                      <strong>Free Contiguous US Shipping:</strong> Free tracked ground shipping across the 48 contiguous United States (plus Washington, D.C.).
                     </p>
                     <p>
-                      <strong>Carrier Tracking:</strong> Every parcel includes door-to-door USPS tracking emailed upon carrier intake.
+                      <strong>Carrier Tracking:</strong> Orders dispatch via tracked US domestic ground carriers (USPS / UPS / FedEx) with tracking emailed upon carrier intake.
                     </p>
                     <p>
-                      <strong>PO Boxes & Military:</strong> PO Boxes, residential addresses, and APO/FPO military bases are fully supported.
+                      <strong>Physical Street Addresses Only:</strong> P.O. Boxes, military APO/FPO/DPO addresses, Alaska, Hawaii, and US territories are not supported.
                     </p>
                   </div>
                 </div>
@@ -1088,7 +1088,7 @@ export default function ProfilePage() {
                   <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                     <span className="text-xs uppercase font-bold text-slate-400 block">Support Hours & SLA</span>
                     <p className="font-bold text-slate-900 text-sm">Monday – Saturday: 9:00 AM – 6:00 PM EST</p>
-                    <p className="text-xs sm:text-sm text-slate-500">24-hour response SLA guarantee for all inquiries.</p>
+                    <p className="text-xs sm:text-sm text-slate-500">1–2 business day response target for all inquiries.</p>
                   </div>
                 </div>
               )}

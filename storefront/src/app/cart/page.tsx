@@ -129,7 +129,7 @@ export default function CartPage() {
               Your Cart is Empty
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
-              Discover domestic essentials dispatched directly from US warehouses with fast 3–5 day tracked delivery.
+              Discover domestic essentials dispatched from US warehouses with estimated 3–5 business day tracked delivery to physical street addresses in the 48 contiguous US states.
             </p>
           </div>
           <div className="pt-1">
@@ -375,7 +375,7 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between">
                 <span>Domestic Shipping:</span>
-                <span className="font-bold text-emerald-600">Free (USPS Tracked)</span>
+                <span className="font-bold text-emerald-600">Free (48 US States)</span>
               </div>
               {totalSavings > 0 && (
                 <div className="flex justify-between text-emerald-700 font-semibold">

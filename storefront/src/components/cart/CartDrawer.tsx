@@ -51,7 +51,7 @@ export default function CartDrawer() {
           {/* Free Shipping Alert Bar */}
           <div className="bg-emerald-50 px-5 py-3 border-b border-emerald-100 flex items-center gap-3 text-xs text-emerald-800 font-medium">
             <Truck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <span>You qualify for <strong>FREE 3–5 Day US Domestic Shipping!</strong></span>
+            <span>You qualify for <strong>FREE Est. 3–5 Day Contiguous US Shipping!</strong></span>
           </div>
 
           {/* Cart Items List */}

@@ -206,7 +206,7 @@ function getDynamicInclusionsText(variant: Variant, product: Product): string {
   }
 
   // Generic fallback
-  return `Includes 1x verified ${getVariantLabel(variant)} specification. US domestic warehouse dispatch via USPS Priority (3-5 days).`;
+  return `Includes 1x verified ${getVariantLabel(variant)} specification. Dispatched from US domestic warehouses via tracked ground carrier (est. 3–5 business days, 48 contiguous US states street addresses).`;
 }
 
 export default function SizeSelector({
@@ -469,10 +469,10 @@ export default function SizeSelector({
           </div>
           <p className="text-[11px] text-slate-600">
             {isPetProduct
-              ? "Verified pet carrier specifications. Dispatched from US domestic fulfillment center via USPS Priority (3-5 days delivery)."
+              ? "Verified pet carrier specifications. Dispatched from US domestic hubs via tracked ground delivery (est. 3–5 business days, 48 contiguous US street addresses only)."
               : isApparel
-              ? "US Standard Sizing. Dispatched from US domestic fulfillment center via USPS Priority (3-5 days delivery)."
-              : "Verified specifications. Dispatched from US domestic fulfillment center via USPS Priority (3-5 days delivery)."}
+              ? "US Standard Sizing. Dispatched from US domestic hubs via tracked ground delivery (est. 3–5 business days, 48 contiguous US street addresses only)."
+              : "Verified specifications. Dispatched from US domestic hubs via tracked ground delivery (est. 3–5 business days, 48 contiguous US street addresses only)."}
           </p>
         </div>
       </div>

@@ -49,7 +49,7 @@ export default function TermsOfServicePage() {
             <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs sm:text-sm flex items-start gap-2.5 text-amber-900">
               <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
               <span>
-                <strong>United States Only:</strong> We strictly sell and ship to physical addresses located within the fifty (50) United States, the District of Columbia, and verified APO/FPO military addresses. We do not support international shipments or forwarding addresses.
+                <strong>48 Contiguous United States Only:</strong> We strictly sell and ship to verified physical residential or commercial street addresses located within the forty-eight (48) contiguous United States and the District of Columbia. We do not deliver to P.O. Boxes, APO/FPO/DPO military addresses, Alaska, Hawaii, US territories, international destinations, or forwarding addresses.
               </span>
             </div>
           </section>

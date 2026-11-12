@@ -292,21 +292,21 @@ def generate_clean_consumer_copy(
     Most standard mass-market options use weak materials that degrade after brief use. The <strong>{title}</strong> is precision-engineered with durable materials to deliver long-lasting everyday reliability right out of the box.
   </p>
   <p class="leading-relaxed">
-    Stocked in our domestic US fulfillment centers and backed by our unconditional 30-day money-back guarantee, it delivers fast, dependable performance with zero guesswork.
+    Stocked in domestic US fulfillment centers with tracked ground delivery across the 48 contiguous states and covered for verified defects or transit damage within 7 days of delivery.
   </p>
 </div>"""
 
     features = [
-        {"icon": "truck", "title": "Fast Domestic Delivery", "desc": "Dispatched quickly via tracked USPS with delivery in 3–5 business days."},
-        {"icon": "shield-check", "title": "30-Day Money-Back Guarantee", "desc": "Try it completely risk-free with our no-hassle return and replacement policy."},
+        {"icon": "truck", "title": "Tracked Domestic Delivery", "desc": "Dispatched via tracked US ground carriers (est. 3–5 business days across the 48 contiguous states, physical street addresses only)."},
+        {"icon": "shield-check", "title": "7-Day Defect Protection", "desc": "Replacement or refund coverage within 7 days of delivery for verified defects, transit damage, or wrong items."},
         {"icon": "sparkles", "title": "Premium Durability", "desc": "Constructed from high-grade materials built for rigorous daily home and office use."},
         {"icon": "wrench", "title": "Quick Tool-Free Setup", "desc": "Designed to function effortlessly straight out of the box in under 60 seconds."},
         {"icon": "tags", "title": "Tiered Bundle Discounts", "desc": "Save up to 18% when ordering 2 or 3 units for family or multiple rooms."},
     ]
 
     seo_meta = {
-        "meta_title": f"{title} | Fast US Shipping & 30-Day Guarantee",
-        "meta_description": f"Shop the {title}. Fast tracked US domestic delivery, 30-day money-back guarantee, and multi-unit bundle savings.",
+        "meta_title": f"{title} | Fast Contiguous US Shipping",
+        "meta_description": f"Shop the {title}. Tracked domestic ground delivery across 48 US states, 7-day defect support, and multi-unit bundle savings.",
         "slug": slug,
         "category": category,
         "rating": rating,
@@ -314,8 +314,8 @@ def generate_clean_consumer_copy(
     }
 
     faq_schema = [
-        {"question": "How quickly will my order arrive?", "answer": "All orders are processed immediately from our domestic US fulfillment centers and arrive in 3 to 5 business days via tracked USPS."},
-        {"question": "What is the return policy?", "answer": "We offer a 100% money-back guarantee within 30 days of delivery. If you are not completely satisfied, return it for a prompt refund."},
+        {"question": "How quickly will my order arrive & where do you ship?", "answer": "Orders dispatch from domestic US fulfillment centers and typically arrive in an estimated 3 to 5 business days via tracked ground delivery to physical street addresses in the 48 contiguous US states. P.O. Boxes, APO/FPO military bases, Alaska, Hawaii, and US territories are not supported."},
+        {"question": "What is the return policy?", "answer": "We provide a 30-minute post-checkout cancellation window, plus replacement or refund support within 7 calendar days of delivery exclusively for defective, damaged, or incorrect items."},
         {"question": "How do bundle discounts work?", "answer": "Selecting the 2-pack saves you 12%, and the 3-pack saves 18% with zero extra shipping charges."}
     ]
 

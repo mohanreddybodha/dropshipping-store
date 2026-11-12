@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Shipping & Delivery Policy | Vastire",
-  description: "Tracked 3-5 business day domestic US delivery with USPS. FTC Mail Order Merchandise Rule compliant.",
+  description: "Estimated 3-5 business day tracked domestic ground delivery across the 48 contiguous US states (physical street addresses only).",
   alternates: { canonical: "/shipping-policy" },
 };
 
@@ -42,10 +42,10 @@ export default function ShippingPolicyPage() {
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
               <div className="flex items-center gap-2 text-slate-900 font-bold text-xs sm:text-sm">
                 <Truck className="w-4 h-4 text-emerald-600" />
-                <span>Transit Window</span>
+                <span>Estimated Transit</span>
               </div>
               <p className="text-lg font-black text-slate-900">3–5 Business Days</p>
-              <p className="text-xs text-slate-500">Fast USPS Ground Advantage delivery</p>
+              <p className="text-xs text-slate-500">Tracked domestic ground (48 US states)</p>
             </div>
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
               <div className="flex items-center gap-2 text-slate-900 font-bold text-xs sm:text-sm">
@@ -72,9 +72,12 @@ export default function ShippingPolicyPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-bold text-slate-900">3. Carrier Partnerships & Real-Time Tracking</h2>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">3. Eligible Delivery Scope (48 Contiguous US States)</h2>
             <p>
-              We partner predominantly with the <strong>United States Postal Service (USPS)</strong> utilizing tracked USPS Ground Advantage and Priority Mail services. Select bulky items may ship via domestic ground couriers (FedEx / UPS).
+              We ship strictly to <strong>physical residential or commercial street addresses within the 48 contiguous United States and Washington, D.C.</strong> Orders are dispatched via tracked US domestic ground carriers (<strong>USPS, UPS Ground, or FedEx Ground</strong> depending on warehouse routing and parcel size).
+            </p>
+            <p>
+              <strong>Exclusions:</strong> Because commercial ground couriers cannot deliver to postal boxes or military mail gateways, we do <strong>not</strong> ship to P.O. Boxes, military APO/FPO/DPO addresses, Alaska, Hawaii, US territories (PR, VI, GU, AS, MP), or international destinations.
             </p>
             <p>
               As soon as your parcel is labeled and scanned into the carrier network, you will receive an automated email confirmation containing your official carrier tracking number. You can also view live tracking milestones at any time in your Account tab.
@@ -99,7 +102,7 @@ export default function ShippingPolicyPage() {
           <section className="space-y-2">
             <h2 className="text-base sm:text-lg font-bold text-slate-900">5. Undeliverable & Returned Packages</h2>
             <p>
-              Please verify your shipping address carefully before submitting payment. Customers are responsible for providing valid US Postal addresses. If a package is returned to our fulfillment warehouse marked &ldquo;Undeliverable as Addressed&rdquo; or &ldquo;Refused,&rdquo; our customer support team will contact you to verify the address and arrange reshipment.
+              Please verify your physical street address carefully before submitting payment. Customers are responsible for providing valid street delivery addresses within the 48 contiguous US states. If a package is returned to our fulfillment warehouse marked &ldquo;Undeliverable as Addressed&rdquo; or &ldquo;Refused,&rdquo; our customer support team will contact you to verify the address and arrange reshipment.
             </p>
           </section>
 

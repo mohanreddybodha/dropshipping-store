@@ -140,7 +140,7 @@ Every active variant must satisfy **all** of the following:
 | **QA-03** | **Multi-Image Gallery (`>= 2` Images)** | Require **at least 2 valid HTTPS images** (`http://` normalized to `https://`, target 3–6 images). Reject products relying on `/placeholder.jpg` or missing hero/variant photos. |
 | **QA-04** | **Human-Readable Variant Labels** | Raw supplier keys (`1PC`, `Beige-Us-1PCS`, `White-1PC`) must map to clean `display_name` values while retaining raw `variant_name` / `vid` / `sku` for CJ API fulfillment. Never misparse substrings like `USB` / `US` as apparel size `S`. |
 | **QA-05** | **Required Specifications (`specs_json`)** | Non-empty `specs_json` object containing truthful, garble-free keys (`Material`, `Power Source` / `Build`, `Package Weight`, `In the Box`) with **zero** CJ dot/character encoding artifacts (`·` garble) and **zero** medical/false warranty claims. |
-| **QA-06** | **Benefits, PAS Copy & FAQs** | Minimum **4** benefit objects in `features_json`, clean sanitized `pas_description_html` (Problem–Agitation–Solution, replacing `"money-back guarantee"` with `"30-day defect replacement & return support"` in feeds/schemas), and **4+** product-specific entries in `faq_schema_json`. |
+| **QA-06** | **Benefits, PAS Copy & FAQs** | Minimum **4** benefit objects in `features_json`, clean sanitized `pas_description_html` (Problem–Agitation–Solution, aligning return copy with 7-day defect/damage/mismatch replacement & return support and 48 contiguous US states physical street delivery — no P.O. Boxes or APO/FPO military bases), and entries in `faq_schema_json`. |
 
 ---
 

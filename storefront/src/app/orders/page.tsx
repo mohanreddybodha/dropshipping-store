@@ -32,7 +32,7 @@ import ThemedDropdown, { ThemedDropdownOption } from "@/components/ui/ThemedDrop
 
 const US_STATES: ThemedDropdownOption[] = [
   { value: "AL", label: "Alabama (AL)" },
-  { value: "AK", label: "Alaska (AK)" },
+  { value: "AK", label: "Alaska (AK) — Contiguous US Only", disabled: true },
   { value: "AZ", label: "Arizona (AZ)" },
   { value: "AR", label: "Arkansas (AR)" },
   { value: "CA", label: "California (CA)" },
@@ -41,7 +41,7 @@ const US_STATES: ThemedDropdownOption[] = [
   { value: "DE", label: "Delaware (DE)" },
   { value: "FL", label: "Florida (FL)" },
   { value: "GA", label: "Georgia (GA)" },
-  { value: "HI", label: "Hawaii (HI)" },
+  { value: "HI", label: "Hawaii (HI) — Contiguous US Only", disabled: true },
   { value: "ID", label: "Idaho (ID)" },
   { value: "IL", label: "Illinois (IL)" },
   { value: "IN", label: "Indiana (IN)" },
