@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, ArrowRight, Check } from "lucide-react";
+import { ShoppingBag, ArrowRight, Check, ArrowDown } from "lucide-react";
 import { BundleTier, Product, Variant } from "../../lib/types";
 import { useCart } from "../../lib/cart";
 import { getComparePrice1x, getVariantBundlePrices } from "../../lib/bundlePricing";
@@ -99,8 +99,9 @@ export default function MobileStickyBuyBar({ product, variant }: MobileStickyBuy
             </span>
           )}
           {comparePrice > currentPrice && (
-            <span className="text-[9px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200/80 uppercase">
-              Save 20%
+            <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200/80 uppercase">
+              <ArrowDown className="w-2 h-2 stroke-[2.5]" />
+              <span>20%</span>
             </span>
           )}
         </div>

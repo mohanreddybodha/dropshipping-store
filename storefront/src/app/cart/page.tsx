@@ -18,6 +18,7 @@ import {
   Truck,
   Zap,
   Tag,
+  ArrowDown,
 } from "lucide-react";
 import { Product } from "../../lib/types";
 import { getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
@@ -269,9 +270,9 @@ export default function CartPage() {
                           <span className="text-xs sm:text-sm text-slate-400 line-through">
                             ${linePrices.sellingLineTotal.toFixed(2)}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase tracking-tight">
-                            <Tag className="w-2.5 h-2.5" />
-                            <span>Save 20%</span>
+                          <span className="inline-flex items-center gap-0.5 text-[9px] sm:text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase tracking-tight">
+                            <ArrowDown className="w-2.5 h-2.5 stroke-[2.5]" />
+                            <span>20%</span>
                           </span>
                         </>
                       )}

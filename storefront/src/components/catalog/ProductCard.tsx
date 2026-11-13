@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart } from "lucide-react";
+import { Heart, ArrowDown } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../ui/Toast";
 import { auth } from "../../lib/firebase";
@@ -111,16 +111,16 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div
       onMouseEnter={prefetchProduct}
       onPointerDown={prefetchProduct}
-      className="group relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between active:scale-[0.985] transition-transform duration-100"
+      className="group relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-2 sm:p-3 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between active:scale-[0.985] transition-transform duration-100"
     >
       {/* Clickable Card Body */}
       <Link
         href={productHref}
         prefetch={true}
-        className="block space-y-2.5 sm:space-y-3"
+        className="block space-y-1.5 sm:space-y-2"
       >
-        {/* 1:1 Aspect Ratio Image Stage */}
-        <div className="relative w-full aspect-square bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center">
+        {/* 1:1 Aspect Ratio Image Stage (No background/border box for seamless float) */}
+        <div className="relative w-full aspect-square rounded-lg sm:rounded-xl overflow-hidden flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imgSrc}
@@ -136,7 +136,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Fixed 2-Line Title Container ensuring all cards match in height */}
-        <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 h-9 sm:h-10 leading-snug">
+        <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 h-8 sm:h-9 leading-snug">
           {product.title}
         </h3>
       </Link>
@@ -147,7 +147,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         onClick={toggleWatchlist}
         aria-label={isSaved ? "Remove from watchlist" : "Add to watchlist"}
         title={isSaved ? "In Watchlist" : "Add to Watchlist"}
-        className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-white transition-all duration-150 active:scale-90 border border-slate-100"
+        className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-white transition-all duration-150 active:scale-90 border border-slate-100"
       >
         <Heart
           className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${
@@ -160,7 +160,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link
         href={productHref}
         prefetch={true}
-        className="pt-2 sm:pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between block"
+        className="pt-1.5 sm:pt-2 mt-1.5 border-t border-slate-100 flex items-center justify-between block"
       >
         <div className="flex items-baseline gap-1.5 min-w-0">
           <span className="text-sm sm:text-base font-black text-slate-900">
@@ -171,8 +171,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-1.5 sm:px-2 py-0.5 rounded-full uppercase tracking-tight whitespace-nowrap flex-shrink-0">
-          Save 20%
+        <span className="inline-flex items-center gap-0.5 text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-1.5 sm:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+          <ArrowDown className="w-2.5 h-2.5 stroke-[2.5]" />
+          <span>20%</span>
         </span>
       </Link>
     </div>

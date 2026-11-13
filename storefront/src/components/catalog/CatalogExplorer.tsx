@@ -458,7 +458,7 @@ export default function CatalogExplorer({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 min-[1920px]:grid-cols-6 gap-2.5 sm:gap-4 lg:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 min-[1920px]:grid-cols-6 gap-2 sm:gap-3 lg:gap-3.5">
           {visibleProducts.map((product) => (
             <ProductCard key={product.pid} product={product} />
           ))}

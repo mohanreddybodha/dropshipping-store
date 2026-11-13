@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { X, Trash2, ArrowRight, Truck, Plus, Minus, Tag } from "lucide-react";
+import { X, Trash2, ArrowRight, Truck, Plus, Minus, Tag, ArrowDown } from "lucide-react";
 import { useCart } from "../../lib/cart";
 import {
   getLineSellingDisplayPrices,
@@ -189,9 +189,9 @@ export default function CartDrawer() {
                               )}
                             </div>
                             {lp.sellingLineTotal > lp.discounted20LineTotal && (
-                              <p className="inline-flex items-center justify-end gap-1 text-[10px] text-emerald-700 font-bold">
-                                <Tag className="w-2.5 h-2.5" />
-                                <span>Save 20%</span>
+                              <p className="inline-flex items-center justify-end gap-0.5 text-[10px] text-emerald-700 font-bold">
+                                <ArrowDown className="w-2.5 h-2.5 stroke-[2.5]" />
+                                <span>20%</span>
                               </p>
                             )}
                           </>

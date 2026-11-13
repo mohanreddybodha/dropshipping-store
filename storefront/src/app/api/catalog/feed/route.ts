@@ -15,7 +15,7 @@ function escapeXml(unsafe: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function stripHtml(html: string): string {
+function stripHtml(html?: string): string {
   return (html || "")
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { BundleTier, Product, Variant } from "../../lib/types";
 import { useCart } from "../../lib/cart";
 import { getComparePrice1x, getVariantBundlePrices } from "../../lib/bundlePricing";
-import { ShoppingBag, ArrowRight, Check } from "lucide-react";
+import { ShoppingBag, ArrowRight, Check, ArrowDown } from "lucide-react";
 import SizeSelector, { parseApparelVariant } from "./SizeSelector";
 import { showToast } from "../ui/Toast";
 
@@ -148,8 +148,9 @@ export default function ProductInteractivePanel({
           )}
         </div>
         {comparePrice1x > currentPrice && (
-          <span className="text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2.5 py-1 rounded-full uppercase tracking-wider whitespace-nowrap flex-shrink-0">
-            Save 20%
+          <span className="inline-flex items-center gap-0.5 text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap flex-shrink-0">
+            <ArrowDown className="w-3 h-3 stroke-[2.5]" />
+            <span>20%</span>
           </span>
         )}
       </div>

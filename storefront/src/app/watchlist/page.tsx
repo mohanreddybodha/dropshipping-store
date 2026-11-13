@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, Trash2, ArrowLeft, ShoppingBag } from "lucide-react";
+import { Heart, Trash2, ArrowLeft, ShoppingBag, ArrowDown } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../../components/ui/Toast";
 import { auth, onAuthStateChanged } from "../../lib/firebase";
@@ -17,10 +17,10 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
   const heroImage = product.hero_image_url || product.images?.[0] || "/placeholder.jpg";
 
   return (
-    <div className="group block bg-white border border-slate-200/80 rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-xl hover:border-rose-300 transition-all duration-200 flex flex-col justify-between">
+    <div className="group block bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-2 sm:p-3 shadow-sm hover:shadow-xl hover:border-rose-300 transition-all duration-200 flex flex-col justify-between">
       {/* Image Stage */}
-      <Link href={`/products/${product.slug}`} prefetch={true} className="block">
-        <div className="relative w-full aspect-square bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center mb-3">
+      <Link href={`/products/${product.slug}`} prefetch={true} className="block space-y-1.5 sm:space-y-2">
+        <div className="relative w-full aspect-square rounded-lg sm:rounded-xl overflow-hidden flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={heroImage}
@@ -38,21 +38,21 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
               onRemove();
             }}
             aria-label="Remove from watchlist"
-            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all duration-150 active:scale-90"
+            className="absolute top-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all duration-150 active:scale-90"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
 
         {/* Fixed 2-Line Title Container ensuring all cards match in height */}
-        <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-rose-700 transition line-clamp-2 h-9 sm:h-10 leading-snug">
+        <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-900 group-hover:text-rose-700 transition line-clamp-2 h-8 sm:h-9 leading-snug">
           {product.title}
         </h3>
       </Link>
 
       {/* Price & Discount Row (Total consistency with ProductCard, no bag icon) */}
-      <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between">
-        <div className="flex items-baseline gap-1.5">
+      <div className="pt-1.5 sm:pt-2 mt-1.5 border-t border-slate-100 flex items-center justify-between">
+        <div className="flex items-baseline gap-1.5 min-w-0">
           <span className="text-sm sm:text-base font-black text-slate-900">
             ${retailPrice.toFixed(2)}
           </span>
@@ -60,8 +60,9 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
             ${comparePrice.toFixed(2)}
           </span>
         </div>
-        <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-2 py-0.5 rounded-full uppercase tracking-tight">
-          Save 20%
+        <span className="inline-flex items-center gap-0.5 text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/90 px-1.5 sm:px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+          <ArrowDown className="w-2.5 h-2.5 stroke-[2.5]" />
+          <span>20%</span>
         </span>
       </div>
     </div>
@@ -239,7 +240,7 @@ export default function WatchlistPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 min-[1920px]:grid-cols-6 gap-2.5 sm:gap-4 lg:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 min-[1920px]:grid-cols-6 gap-2 sm:gap-3 lg:gap-3.5">
           {items.map((product) => (
             <WatchlistCard
               key={product.slug}

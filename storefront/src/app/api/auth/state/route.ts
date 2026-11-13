@@ -3,14 +3,14 @@ import { getDb, DbOrder, DbUser, DbCartItem } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-function maskStreet(address?: string): string {
+function maskStreet(address?: string | null): string {
   if (!address) return "";
   const parts = address.trim().split(" ");
   if (parts.length <= 1) return "***";
   return `*** ${parts.slice(1).join(" ")}`;
 }
 
-function maskPhone(phone?: string): string {
+function maskPhone(phone?: string | null): string {
   if (!phone) return "";
   const digits = phone.replace(/\D/g, "");
   if (digits.length < 4) return "***";

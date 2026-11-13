@@ -42,6 +42,7 @@ import {
   Send,
   Package,
   Tag,
+  ArrowDown,
 } from "lucide-react";
 
 const US_STATES: ThemedDropdownOption[] = [
@@ -1132,9 +1133,9 @@ function CheckoutContent() {
                           <span className="text-[11px] text-slate-400 line-through whitespace-nowrap">
                             ${linePrices.sellingLineTotal.toFixed(2)}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase">
-                            <Tag className="w-2.5 h-2.5" />
-                            <span>Save 20%</span>
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-1.5 py-0.5 rounded-full uppercase">
+                            <ArrowDown className="w-2.5 h-2.5 stroke-[2.5]" />
+                            <span>20%</span>
                           </span>
                         </>
                       )}

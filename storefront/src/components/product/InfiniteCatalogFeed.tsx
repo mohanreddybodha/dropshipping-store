@@ -62,7 +62,7 @@ export default function InfiniteCatalogFeed({
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-3.5">
         {visibleProducts.map((item) => (
           <ProductCard key={item.slug} product={item} />
         ))}
