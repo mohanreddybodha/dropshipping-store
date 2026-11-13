@@ -125,7 +125,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   };
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-0 space-y-3">
+    <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-[82px] md:pb-6 space-y-3">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

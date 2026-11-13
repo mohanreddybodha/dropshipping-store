@@ -112,7 +112,7 @@ export default function CartPage() {
   // ── EMPTY CART VIEW ──
   if (items.length === 0) {
     return (
-      <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-0 space-y-3 sm:space-y-4">
+      <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-[82px] md:pb-6 space-y-3 sm:space-y-4">
 
 
         {/* Centered Empty Cart Card */}
@@ -172,7 +172,7 @@ export default function CartPage() {
 
   // ── ACTIVE CART VIEW ──
   return (
-    <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-0 space-y-3 sm:space-y-4">
+    <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-[82px] md:pb-6 space-y-3 sm:space-y-4">
       {/* Cart Title Bar */}
       <div className="flex items-center justify-between border-b border-slate-200 pb-2">
         <div>

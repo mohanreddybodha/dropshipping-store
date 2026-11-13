@@ -20,6 +20,7 @@ import re
 import sys
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from dotenv import load_dotenv
@@ -496,7 +497,7 @@ def run_bulk_seed(target: int = 150) -> int:
         "clock", "audio", "grill", "tent", "hammock", "blanket", "compass"
     ]
     queries = (
-        [{"page": p, "keyword": None, "stock": MIN_INGESTION_US_STOCK} for p in range(1, 45)] +
+        [{"page": p, "keyword": None, "stock": MIN_INGESTION_US_STOCK} for p in range(1, 52)] +
         [{"page": p, "keyword": kw, "stock": MIN_INGESTION_US_STOCK} for kw in keywords for p in range(1, 8)]
     )
 
@@ -515,8 +516,6 @@ def run_bulk_seed(target: int = 150) -> int:
                 candidates = client.query_us_warehouse_products(
                     page=pg,
                     size=50,
-                    min_price=3.0,
-                    max_price=22.0,
                     min_warehouse_stock=stk,
                     keyword=kw,
                 )
@@ -563,33 +562,51 @@ def run_bulk_seed(target: int = 150) -> int:
 
                     hero_image = gallery_images[0]
 
-                    # Pick suitable primary variant ($3.00 - $22.00 wholesale)
+                    # Pick suitable variant ($2.50 - $26.00 wholesale) that has physical US stock >= 50, domestic SLA <= 7d, and positive margins
                     eligible_vars = [
                         v for v in variants
-                        if 3.0 <= float(v.get("variantSellPrice") or 0.0) <= 22.0
+                        if 2.5 <= float(v.get("variantSellPrice") or 0.0) <= 26.0
                     ]
                     if not eligible_vars:
                         continue
-                    selected_variant = eligible_vars[0]
-                    wholesale = float(selected_variant.get("variantSellPrice") or 10.0)
-                    vid = str(selected_variant.get("vid"))
-                    sku = str(selected_variant.get("variantSku") or vid)
 
-                    # Verify real physical US warehouse stock (>= 50 units on fresh ingest; never fabricate stock)
-                    live_us_stock = client.get_verified_us_stock(vid)
-                    if live_us_stock < MIN_INGESTION_US_STOCK:
-                        logger.info("Skipping PID %s (VID %s): physical US stock %d < %d", pid, vid, live_us_stock, MIN_INGESTION_US_STOCK)
-                        continue
+                    selected_variant = None
+                    live_us_stock = 0
+                    carrier_name = None
+                    actual_freight = 0.0
+                    delivery_aging = ""
+                    pricing = None
+                    wholesale = 0.0
+                    vid = ""
+                    sku = ""
 
-                    # Verify live US domestic freight SLA <= 7 days & true freight cost
-                    carrier_name, actual_freight, delivery_aging, max_days = client.get_cheapest_domestic_shipping(vid)
-                    if not carrier_name or max_days > MAX_DELIVERY_SLA_DAYS:
-                        logger.info("Skipping PID %s (VID %s): US carrier=%s transit=%dd (>%dd limit)", pid, vid, carrier_name, max_days, MAX_DELIVERY_SLA_DAYS)
-                        continue
+                    for cand_v in eligible_vars:
+                        cand_vid = str(cand_v.get("vid"))
+                        cand_stock = client.get_verified_us_stock(cand_vid)
+                        if cand_stock < MIN_INGESTION_US_STOCK:
+                            continue
 
-                    pricing = calculate_pricing(wholesale, actual_freight)
-                    if not pricing["is_viable"]:
-                        logger.info("Skipping PID %s (VID %s): margin/profit gate failed (net=$%.2f, %.1f%%)", pid, vid, pricing["net_profit"], pricing["net_margin_pct"])
+                        cand_carrier, cand_freight, cand_aging, max_days = client.get_cheapest_domestic_shipping(cand_vid)
+                        if not cand_carrier or max_days > MAX_DELIVERY_SLA_DAYS:
+                            continue
+
+                        cand_wholesale = float(cand_v.get("variantSellPrice") or 10.0)
+                        cand_pricing = calculate_pricing(cand_wholesale, cand_freight)
+                        if not cand_pricing["is_viable"]:
+                            continue
+
+                        selected_variant = cand_v
+                        live_us_stock = cand_stock
+                        carrier_name = cand_carrier
+                        actual_freight = cand_freight
+                        delivery_aging = cand_aging
+                        pricing = cand_pricing
+                        wholesale = cand_wholesale
+                        vid = cand_vid
+                        sku = str(cand_v.get("variantSku") or cand_vid)
+                        break
+
+                    if not selected_variant or not pricing:
                         continue
 
                     retail_1x = pricing["retail_price_1x"]
@@ -645,6 +662,11 @@ def run_bulk_seed(target: int = 150) -> int:
                         "Ingested [%d/%d] [%s] '%s' ($%.2f retail, $%.2f freight, %d images, %d US stock)",
                         items_ingested, target, category, title, retail_1x, actual_freight, len(gallery_images), live_us_stock
                     )
+                    if items_ingested % 15 == 0:
+                        try:
+                            export_catalog_to_json()
+                        except Exception:
+                            pass
 
                 except Exception as item_err:
                     try:

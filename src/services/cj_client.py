@@ -190,10 +190,10 @@ class CJClient:
     def query_us_warehouse_products(
         self,
         page: int = 1,
-        size: int = 25,
-        min_price: float = 3.0,
-        max_price: float = 22.0,
-        min_warehouse_stock: int = 50,
+        size: int = 50,
+        min_price: Optional[float] = None,
+        max_price: Optional[float] = None,
+        min_warehouse_stock: Optional[int] = 50,
         keyword: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Query catalog filtering for US domestic warehouses and approved price bounds."""
@@ -205,10 +205,13 @@ class CJClient:
             "page": page,
             "size": size,
             "countryCode": "US",
-            "startSellPrice": min_price,
-            "endSellPrice": max_price,
-            "startWarehouseInventory": min_warehouse_stock,
         }
+        if min_price is not None:
+            params["startSellPrice"] = min_price
+        if max_price is not None:
+            params["endSellPrice"] = max_price
+        if min_warehouse_stock is not None:
+            params["startWarehouseInventory"] = min_warehouse_stock
         if keyword:
             params["keyWord"] = keyword
 

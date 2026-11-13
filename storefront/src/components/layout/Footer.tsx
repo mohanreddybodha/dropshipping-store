@@ -11,6 +11,12 @@ export default function Footer() {
   const pathname = usePathname();
   const isHome = pathname === "/";
 
+  // Only keep the footer on the homepage.
+  // On Watchlist, Cart, Profile, Product pages, and other subpages, do not render at the bottom of the page.
+  if (!isHome) {
+    return null;
+  }
+
   return (
     <footer className="bg-white border-t border-slate-200/90 text-slate-600 text-xs mt-3 sm:mt-5 pb-[82px] md:pb-6">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-4">
