@@ -12,6 +12,7 @@ import {
   PayPalGatewayError,
 } from "@/lib/paypal";
 import { resolveAuthoritativeCart, CatalogPricingError } from "@/lib/pricing";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 import {
   US_STATE_ZIP_PREFIXES,
   validateUsStreetAddress,
@@ -497,6 +498,47 @@ export async function POST(req: NextRequest) {
         },
         { status: 500 }
       );
+    }
+
+    // Atomic Local Stock Decrement Guard (Prevents overselling during viral traffic bursts)
+    if (dbPersisted) {
+      for (const it of cart.verifiedItems) {
+        const itemVid = resolveItemVid(it);
+        const qty = Math.max(1, Number(it.quantity || 1));
+        if (itemVid) {
+          try {
+            await sql`
+              UPDATE product_variants
+              SET us_warehouse_stock = GREATEST(0, us_warehouse_stock - ${qty}),
+                  is_available = CASE WHEN (us_warehouse_stock - ${qty}) >= 16 THEN is_available ELSE FALSE END
+              WHERE vid = ${itemVid}
+            `;
+          } catch (stkErr) {
+            console.warn(`[PayPal Capture] Local stock decrement warning for VID ${itemVid}:`, stkErr);
+          }
+        }
+      }
+
+      // Non-blocking Transactional Order Confirmation Email via Resend
+      sendOrderConfirmationEmail({
+        orderNumber,
+        customerEmail: validatedCustomer.email,
+        customerName: validatedCustomer.name,
+        shippingAddress: validatedCustomer.address,
+        shippingCity: validatedCustomer.city,
+        shippingProvince: validatedCustomer.province,
+        shippingZip: validatedCustomer.zip,
+        totalRetail,
+        items: cart.verifiedItems.map((it) => ({
+          title: it.title,
+          quantity: it.quantity,
+          price: it.price,
+          size: it.size,
+          color: it.color,
+        })),
+      }).catch((emailErr) => {
+        console.error("[PayPal Capture] Background email dispatch error:", emailErr);
+      });
     }
 
     // 7. Automated Supplier Fulfillment Pipeline (Live Mode Only — Protects CJ Account During Sandbox Testing)

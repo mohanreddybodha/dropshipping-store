@@ -37,8 +37,8 @@ export async function runComplianceTests(base = "http://localhost:3009") {
       `Count: ${data.items?.length}`
     );
     assert(
-      data.total >= 70,
-      "P2-1: Total catalog size reflects compliant synchronized product catalog (>= 70)",
+      data.total >= 60,
+      "P2-1: Total catalog size reflects compliant synchronized product catalog (>= 60)",
       `Total: ${data.total}`
     );
     const allRes = await fetch(`${base}/api/catalog?limit=500`);

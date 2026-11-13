@@ -11,6 +11,7 @@
  */
 
 import { FALLBACK_PRODUCTS } from "./api";
+import { redis, isRedisConfigured } from "./redis";
 
 const CJ_BASE_URL = "https://developers.cjdropshipping.com/api2.0/v1";
 
@@ -57,11 +58,26 @@ export async function getCjAccessToken(forceRefresh = false): Promise<string | n
   }
 
   const now = Date.now();
-  // Reuse existing token if valid for at least 5 more minutes
+  // 1. Check local in-memory token cache first (0ms latency)
   if (!forceRefresh && cachedAccessToken && now < tokenExpiresAt - 5 * 60 * 1000) {
     return cachedAccessToken;
   }
 
+  // 2. Check distributed Upstash Redis cache across multi-lambda serverless instances
+  if (!forceRefresh && isRedisConfigured && redis) {
+    try {
+      const distributedToken = await redis.get<string>("cj_access_token");
+      if (distributedToken && typeof distributedToken === "string" && distributedToken.length > 20) {
+        cachedAccessToken = distributedToken;
+        tokenExpiresAt = now + 14 * 24 * 60 * 60 * 1000;
+        return cachedAccessToken;
+      }
+    } catch (redisErr) {
+      console.warn("[CJ Client] Redis token lookup warning, falling back to CJ auth:", redisErr);
+    }
+  }
+
+  // 3. Obtain fresh token from CJ authentication API (safely guarded)
   try {
     const res = await fetch(`${CJ_BASE_URL}/authentication/getAccessToken`, {
       method: "POST",
@@ -78,8 +94,16 @@ export async function getCjAccessToken(forceRefresh = false): Promise<string | n
     const json = await res.json();
     if ((json.code === 200 || json.result === true) && json.data?.accessToken) {
       cachedAccessToken = json.data.accessToken;
-      // Default to 15 days expiry buffer
-      tokenExpiresAt = now + 15 * 24 * 60 * 60 * 1000;
+      // Default to 14 days expiry buffer
+      tokenExpiresAt = now + 14 * 24 * 60 * 60 * 1000;
+
+      // Broadcast fresh token to distributed Redis store so all concurrent lambdas reuse it
+      if (isRedisConfigured && redis) {
+        redis.set("cj_access_token", cachedAccessToken, { ex: 14 * 24 * 60 * 60 }).catch((e) => {
+          console.warn("[CJ Client] Redis token set warning:", e);
+        });
+      }
+
       return cachedAccessToken;
     }
 

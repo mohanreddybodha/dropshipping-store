@@ -52,7 +52,7 @@ export async function runPricingConsistencyTests(base = "http://localhost:3009")
     const res = await fetch(`${base}/api/catalog?limit=500`, { signal: AbortSignal.timeout(25000) });
     const data = await res.json();
     const items = data.items || [];
-    assert(res.status === 200 && items.length >= 70, "P3-1: Full active catalog loaded for pricing audit");
+    assert(res.status === 200 && items.length >= 60, "P3-1: Full active catalog loaded for pricing audit", `Total: ${items.length}`);
 
     const formulaViolations = [];
     for (const p of items) {

@@ -11,7 +11,16 @@ export async function POST(req: NextRequest) {
 
     if (!cleanEmail || !cleanZip) {
       return NextResponse.json(
-        { error: "Email and Zip Code are required for dual-factor verification" },
+        { error: "Email and 5-digit US ZIP Code are required for dual-factor verification." },
+        { status: 400 }
+      );
+    }
+
+    // Require valid 5-digit ZIP to prevent single-character wildcard enumeration
+    const zipPrefix = cleanZip.slice(0, 5);
+    if (!/^\d{5}$/.test(zipPrefix)) {
+      return NextResponse.json(
+        { error: "A valid 5-digit US ZIP Code is required." },
         { status: 400 }
       );
     }
@@ -20,7 +29,7 @@ export async function POST(req: NextRequest) {
     const rows = (await sql`
       SELECT * FROM orders
       WHERE LOWER(customer_email) = ${cleanEmail}
-        AND shipping_zip LIKE ${"%" + cleanZip + "%"}
+        AND LEFT(shipping_zip, 5) = ${zipPrefix}
       ORDER BY created_at DESC
       LIMIT 50
     `) as DbOrder[];

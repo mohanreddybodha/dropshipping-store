@@ -300,6 +300,23 @@ export async function runSecurityTests(base = "http://localhost:3009") {
     assert(false, "P0-5: Admin sync header spoof check exception", err.message);
   }
 
+  // TEST 6: P0-6 Order Lookup Wildcard Enumeration Prevention
+  try {
+    const res = await fetch(`${base}/api/orders/lookup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "victim@example.com", zip_code: "9" }),
+    });
+    const data = await res.json().catch(() => ({}));
+    assert(
+      res.status === 400 && data.error && /5-digit/i.test(data.error),
+      "P0-6: Order lookup strictly rejects single-digit or wildcard ZIP enumeration (HTTP 400)",
+      `Status: ${res.status}, body: ${JSON.stringify(data)}`
+    );
+  } catch (err) {
+    assert(false, "P0-6: Order lookup ZIP enumeration check exception", err.message);
+  }
+
   console.log(`Phase P0 Results: ${passed} passed, ${failed} failed.`);
   return { passed, failed };
 }

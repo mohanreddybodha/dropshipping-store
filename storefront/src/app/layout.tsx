@@ -82,6 +82,11 @@ export const metadata: Metadata = {
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
+  other: {
+    ...(process.env.PINTEREST_DOMAIN_VERIFY
+      ? { "p:domain_verify": process.env.PINTEREST_DOMAIN_VERIFY }
+      : {}),
+  },
 };
 
 export default function RootLayout({
@@ -92,14 +97,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preload" as="image" href="/brand-emblem.png" />
-        <link rel="preload" as="image" href="/splash-part-ground.png" />
-        <link rel="preload" as="image" href="/splash-part-wheel-left.png" />
-        <link rel="preload" as="image" href="/splash-part-wheel-right.png" />
-        <link rel="preload" as="image" href="/splash-part-body.png" />
-        <link rel="preload" as="image" href="/splash-part-streaks.png" />
-        <link rel="preload" as="image" href="/splash-part-handle.png" />
-        <link rel="preload" as="image" href="/splash-part-roof.png" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

@@ -83,6 +83,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         alt: product.title,
       })),
     },
+    other: {
+      "og:price:amount": (product.variants?.[0]?.retail_price_1x || 0).toFixed(2),
+      "og:price:currency": "USD",
+      "product:price:amount": (product.variants?.[0]?.retail_price_1x || 0).toFixed(2),
+      "product:price:currency": "USD",
+      "product:availability": "in stock",
+      "product:condition": "new",
+      "product:brand": product.brand_title || "Vastire",
+    },
     twitter: {
       card: "summary_large_image",
       title: seo.title,
