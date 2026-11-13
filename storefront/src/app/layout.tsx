@@ -83,9 +83,7 @@ export const metadata: Metadata = {
     ],
   },
   other: {
-    ...(process.env.PINTEREST_DOMAIN_VERIFY
-      ? { "p:domain_verify": process.env.PINTEREST_DOMAIN_VERIFY }
-      : {}),
+    "p:domain_verify": "9e0471cb8ca202c5260ff1e2886a6d9a",
   },
 };
 
@@ -97,6 +95,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="p:domain_verify" content="9e0471cb8ca202c5260ff1e2886a6d9a" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
