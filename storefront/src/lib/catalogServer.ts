@@ -168,23 +168,105 @@ export async function getAuthoritativeProductBySlug(
   const normalizedHyphen = decoded.replace(/\s+/g, "-");
 
   const catalog = await getAuthoritativeCatalog(timeoutMs);
-  return (
-    catalog.find((p) => {
-      const candidates = [p.slug, p.legacy_slug, toSeoProductSlug(p.title)]
-        .filter((s): s is string => Boolean(s))
-        .map((s) => s.toLowerCase());
-      if (
-        candidates.some(
-          (c) =>
-            c === decoded ||
-            c === normalizedHyphen ||
-            c.replace(/-/g, " ") === decoded ||
-            decoded.replace(/-/g, " ") === c.replace(/-/g, " ")
-        )
-      ) {
-        return true;
+
+  // 1. Direct candidate matching (active catalog)
+  const directMatch = catalog.find((p) => {
+    const candidates = [p.slug, p.legacy_slug, toSeoProductSlug(p.title)]
+      .filter((s): s is string => Boolean(s))
+      .map((s) => s.toLowerCase());
+    return (
+      candidates.some(
+        (c) =>
+          c === decoded ||
+          c === normalizedHyphen ||
+          c.replace(/-/g, " ") === decoded ||
+          decoded.replace(/-/g, " ") === c.replace(/-/g, " ")
+      ) ||
+      String(p.id) === decoded ||
+      String(p.pid) === decoded
+    );
+  });
+  if (directMatch) return directMatch;
+
+  // 2. Cross-reference seed data aliases (maps legacy seed slugs to live DB products)
+  const seedMatch = (seedData as unknown as Product[]).find((sp) => {
+    const seedCandidates = [
+      sp.slug,
+      sp.legacy_slug,
+      toSeoProductSlug(sp.title),
+      toSeoProductSlug(sp.legacy_slug || ""),
+    ]
+      .filter((s): s is string => Boolean(s))
+      .map((s) => s.toLowerCase());
+
+    return (
+      seedCandidates.some(
+        (c) =>
+          c === decoded ||
+          c === normalizedHyphen ||
+          c.replace(/-/g, " ") === decoded
+      ) ||
+      String(sp.pid) === decoded ||
+      String(sp.id) === decoded
+    );
+  });
+
+  if (seedMatch) {
+    const matchedLive = catalog.find(
+      (p) =>
+        (seedMatch.pid && String(p.pid) === String(seedMatch.pid)) ||
+        (seedMatch.id && String(p.id) === String(seedMatch.id))
+    );
+    if (matchedLive) return matchedLive;
+  }
+
+  // 3. Keyword / Token overlap matching (recovers titles that were truncated or cleaned)
+  const getKeywords = (str: string) =>
+    str
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(" ")
+      .filter(
+        (w) =>
+          w.length > 3 &&
+          !["with", "pack", "piece", "sets", "home", "portable", "high"].includes(w)
+      );
+
+  const targetKeywords = getKeywords(decoded);
+  if (targetKeywords.length >= 2) {
+    let bestMatch: Product | null = null;
+    let maxOverlap = 0;
+    for (const p of catalog) {
+      const pWords = new Set([
+        ...getKeywords(p.title),
+        ...getKeywords(p.slug || ""),
+        ...getKeywords(p.legacy_slug || ""),
+      ]);
+      const overlap = targetKeywords.filter((w) => pWords.has(w)).length;
+      if (overlap >= 2 && overlap > maxOverlap) {
+        maxOverlap = overlap;
+        bestMatch = p;
       }
-      return String(p.id) === decoded || String(p.pid) === decoded;
-    }) || null
-  );
+    }
+    if (bestMatch && maxOverlap >= 2) {
+      return bestMatch;
+    }
+  }
+
+  // 4. Normalized title fuzzy containment
+  const fuzzyMatch = catalog.find((p) => {
+    const pSlug = toSeoProductSlug(p.title);
+    return (
+      (pSlug.length >= 8 && decoded.includes(pSlug)) ||
+      (decoded.length >= 8 && pSlug.includes(decoded))
+    );
+  });
+  if (fuzzyMatch) return fuzzyMatch;
+
+  // 5. Fallback to seed catalog if database has omitted it
+  if (seedMatch) {
+    return seedMatch;
+  }
+
+  return null;
 }

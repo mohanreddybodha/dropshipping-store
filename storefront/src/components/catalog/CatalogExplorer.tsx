@@ -8,6 +8,7 @@ import { Product } from "../../lib/types";
 import { getCatalog } from "../../lib/api";
 import { getCategorySeoProfile } from "../../lib/seo";
 import ProductCard from "./ProductCard";
+import { getPersonalizedFeaturedProducts } from "../../lib/recommendations";
 
 interface CatalogExplorerProps {
   initialProducts: Product[];
@@ -192,6 +193,10 @@ export default function CatalogExplorer({
     }
 
     // 4. Sort
+    if (sortBy === "featured" && !activeSearch.trim()) {
+      return getPersonalizedFeaturedProducts(result);
+    }
+
     result.sort((a, b) => {
       const priceA = a.variants[0]?.retail_price_1x || 0;
       const priceB = b.variants[0]?.retail_price_1x || 0;

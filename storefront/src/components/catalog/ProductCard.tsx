@@ -8,6 +8,7 @@ import { Product } from "../../lib/types";
 import { showToast } from "../ui/Toast";
 import { auth } from "../../lib/firebase";
 import { toggleUserWatchlist } from "../../lib/api";
+import { recordCategoryAffinity } from "../../lib/recommendations";
 
 interface ProductCardProps {
   product: Product;
@@ -117,6 +118,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link
         href={productHref}
         prefetch={true}
+        onClick={() => recordCategoryAffinity(product.category || "General")}
         className="block space-y-1.5 sm:space-y-2"
       >
         {/* 1:1 Aspect Ratio Image Stage (No background/border box for seamless float) */}

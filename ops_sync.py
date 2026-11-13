@@ -590,7 +590,14 @@ def run_bulk_seed(target: int = 150) -> int:
                     )
 
                 except Exception as item_err:
-                    session.rollback()
+                    try:
+                        session.rollback()
+                    except Exception:
+                        try:
+                            session.close()
+                        except Exception:
+                            pass
+                        session = get_session(engine)
                     logger.warning("Failed processing product PID %s: %s", pid, item_err)
                     errors.append({"pid": pid, "error": str(item_err)})
 

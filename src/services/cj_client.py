@@ -68,7 +68,11 @@ class CJClient:
     PROHIBITED_KEYWORDS = [
         # Medical, cosmetic, facial, skincare, ingestible, and supplement liabilities
         "facial", "blackhead", "pore", "cleansing strip", "cleanser", "skincare",
-        "cosmetic", "beauty device", "microcurrent",
+        "cosmetic", "beauty device", "microcurrent", "venom", "skin", "wrinkle",
+        "dark circle", "eye bag", "pigment", "freckle", "melanin", "topical",
+        "ointment", "balm", "pomade", "wax", "treatment", "remedy", "anti-wrinkle",
+        "aging", "lifting", "firming", "hyaluronic", "retinol", "niacinamide",
+        "face care", "skin care", "complexion", "pore minimizer", "blackhead extractor",
         "cream", "serum", "collagen", "lotion", "gel", "moisturizer",
         "patch", "capsule", "pill", "supplement", "vitamin", "tea",
         "oil", "mask", "whitening", "anti-aging", "anti aging", "slimming",

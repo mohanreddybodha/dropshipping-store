@@ -1,10 +1,10 @@
 # Architecture Decision Records — US Dropshipping Platform
 
 > **Project:** Headless US Dropshipping Platform  
-> **Stack:** Next.js 15 (Vercel) · Supabase/Neon PostgreSQL · FastAPI Order Router · Antigravity Agentic Cron  
+> **Stack:** Next.js 15 App Router (Vercel) · Neon PostgreSQL · PayPal REST API v2 · CJ API v2.0 TS Client · Firebase Auth  
 > **Supplier:** CJ Dropshipping — US Domestic Warehouses Only  
 > **Maintainer:** CEO + Principal Architect (Antigravity)  
-> **Last Updated:** 2024-10-25
+> **Last Updated:** 2026-11-14
 
 ---
 
@@ -17,6 +17,11 @@
 | [ADR-003](#adr-003-logisticsmiss-guard-as-a-mandatory-order-confirmation-gate) | logisticsMiss Guard as a Mandatory Order Confirmation Gate | Accepted |
 | [ADR-004](#adr-004-agentic-local-cron-over-cloud-scheduler-for-ai-content-generation) | Agentic Local Cron Over Cloud Scheduler for AI Content Generation | Accepted |
 | [ADR-005](#adr-005-hybrid-checkout-with-affiliate-fallback-for-out-of-stock-products) | Hybrid Checkout with Affiliate Fallback for Out-of-Stock Products | Accepted |
+| [ADR-006](#adr-006-unified-vercel-nextjs-15-full-stack-backend-option-a) | Unified Vercel Next.js 15 Full-Stack Backend (Retirement of Render Backend) | Accepted |
+| [ADR-007](#adr-007-exclusivity-of-paypal-rest-api-v2-and-deprecation-of-striperazorpay) | Exclusivity of PayPal REST API v2 & Deprecation of Stripe/Razorpay | Accepted |
+| [ADR-008](#adr-008-48-contiguous-us-states-geographic-boundary-and-strict-address-validation) | 48 Contiguous US States Geographic Boundary & Strict Address Validation | Accepted |
+| [ADR-009](#adr-009-firebase-authentication-for-customer-accounts-and-admin-verification) | Firebase Authentication for Customer Accounts & Admin Verification | Accepted |
+| [ADR-010](#adr-010-postgres-embedded-dead-letter-queue-dlq-and-30-minute-grace-window) | Postgres-Embedded Dead-Letter Queue (DLQ) & 30-Minute Grace Window | Accepted |
 
 ---
 
@@ -911,6 +916,171 @@ def process_stock_updates(products: list[dict]):
                       f"No affiliate URL set. Consider adding one:\n"
                       f"   Amazon search: https://www.amazon.com/s?k={quote(product['name'])}\n")
 ```
+
+---
+
+## ADR-006: Unified Vercel Next.js 15 Full-Stack Backend (Option A)
+
+**Status:** Accepted & Implemented  
+**Date:** 2026-11-05  
+**Deciders:** Solo Operator / CEO, Principal Architect (Antigravity)  
+
+---
+
+### Context
+
+Prior to this architectural consolidation, the platform suffered from a critical split-brain design:
+1. **Frontend / Next.js on Vercel:** The storefront made direct calls to Next.js route handlers (`/api/orders`, `/api/orders/checkout`, `/api/orders/paypal/*`), writing order records to PostgreSQL but completely omitting fulfillment calls to suppliers.
+2. **Backend / FastAPI on Render:** The Python backend contained a robust `CJClient` and `OrderRouter`, but was completely bypassed by the live customer journey because `NEXT_PUBLIC_API_URL` defaulted to `/api` (same-origin Next.js).
+3. **Double Failure Surface:** The business was forced to maintain, monitor, and pay for two separate cloud platforms (Vercel + Render), two separate runtime environments (Node.js + Python), and two disjoint database connection pools, while customers experienced zero automated fulfillment.
+
+### Decision Drivers
+
+- **Eliminate Split-Brain Routing:** Consolidate all order processing, payment verification, and fulfillment onto a single authoritative backend runtime.
+- **Automated Fulfillment:** Orders captured via PayPal must automatically trigger supplier order creation on CJ Dropshipping without manual operator intervention.
+- **Zero Idle Infrastructure Bills:** Retiring the Python service on Render eliminates cold-start delays, pinging keepalives, and unnecessary hosting costs.
+- **Single Source of Truth:** A unified Next.js 15 App Router backend manages all routes (`/api/orders/*`, `/api/admin/*`, `/api/cron/*`, `/api/auth/*`) in a single repo and deployment artifact.
+
+### Decision
+
+Authoritatively consolidate onto **Option A: Vercel-Unified Full-Stack Architecture**:
+- The Next.js 15 App Router serverless backend serves as the sole authoritative production backend.
+- The Render Python backend is retired and decommissioned from production traffic.
+- Supplier fulfillment (CJ Dropshipping API v2.0) is implemented natively in TypeScript serverless functions (`storefront/src/lib/cjClient.ts`).
+- Payment capture automatically triggers domestic order creation on CJ Dropshipping (`/shopping/order/createOrderV2`) with defensive `logisticsMiss` assertion gates.
+- A Dead-Letter Queue (DLQ) state machine is embedded directly in PostgreSQL (`fulfillment_status`, `fulfillment_error`, `dlq_retry_count`) with a 1-click retry interface in the Admin Command Center (`/admin/orders`).
+
+### Consequences & Tradeoffs
+
+- **Positive:** Single deployment target on Vercel; zero split-brain routing; automated domestic fulfillment on payment capture; zero idle hosting bills.
+- **Negative:** Requires CJ Dropshipping client logic to be maintained in TypeScript as well as Python (for offline tools like `ops_sync.py`).
+
+---
+
+## ADR-007: Exclusivity of PayPal REST API v2 & Deprecation of Stripe/Razorpay
+
+**Status:** Accepted & Implemented  
+**Date:** 2026-11-10  
+**Deciders:** Solo Operator / CEO, Principal Architect (Antigravity)  
+
+---
+
+### Context
+
+Initial planning documents evaluated Stripe Elements, hosted PayPal buttons, and Razorpay as checkout options. During real-world testing:
+1. **Stripe Elements & Underwriting:** Dropshipping businesses face intense underwriting friction, rolling reserves (10–25%), and aggressive dispute risk freezes under Stripe Radar when using supplier-dispatched fulfillment.
+2. **Razorpay International:** Multi-currency international routing introduced high FX conversion losses, failed North American address validations, and customer drop-offs.
+3. **PayPal Market Dominance:** For US impulse e-commerce, PayPal is the gold standard of buyer trust. PayPal Smart Buttons natively support PayPal Balance, Venmo, Pay in 4 (Buy Now Pay Later), and standard Credit/Debit card entry without requiring customer account registration.
+
+### Decision
+
+Designate **PayPal REST API v2 exclusively** as the sole payment processing engine for Vastire:
+- Stripe and Razorpay integrations are retired and deprecated from the active production codebase.
+- Checkout integrates PayPal Smart Buttons via `PayPalButton.tsx`, requesting authoritative client credentials from `/api/orders/paypal/config`.
+- Server-side cryptographic HMAC-SHA256 commitments in `purchase_units[0].custom_id` protect against client-side price tampering.
+- Order captures require settlement verification (`captures[0].status === 'COMPLETED'`) and currency lock (`USD`). Any tampering automatically triggers an instant PayPal refund.
+- A cryptographically verified webhook receiver (`/api/orders/paypal/webhook`) listens for out-of-band refunds, disputes, and chargebacks using PayPal's official signature verification API.
+
+### Consequences & Tradeoffs
+
+- **Positive:** Massive reduction in payment codebase surface area; zero friction with multiple processor rules; unified refund and dispute management; high US customer conversion.
+- **Negative:** Dependent on PayPal merchant standing; transaction fees are 3.49% + $0.49 per captured order.
+
+---
+
+## ADR-008: 48 Contiguous US States Geographic Boundary & Strict Address Validation
+
+**Status:** Accepted & Implemented  
+**Date:** 2026-11-06  
+**Deciders:** Solo Operator / CEO, Principal Architect (Antigravity)  
+
+---
+
+### Context
+
+CJ Dropshipping US domestic warehouses partner with domestic commercial couriers (USPS Ground Advantage, UPS Ground, FedEx Ground). These contracts feature hard geographic and operational boundaries:
+1. **Alaska (AK) & Hawaii (HI):** Incur massive freight surcharges ($8–$15+) and experience 7–14 day transit times, violating the 3–5 day storefront delivery promise and destroying gross margins.
+2. **Offshore Territories (Puerto Rico, Guam, USVI, etc.):** Are treated as maritime freight or international packages by domestic logistics lines, causing `logisticsMiss = true` failures on CJ API calls.
+3. **Military APO/FPO/DPO Installations:** Commercial ground couriers cannot enter Department of Defense postal routing.
+4. **P.O. Boxes:** CJ warehouse couriers require physical residential or commercial street addresses; deliveries to P.O. Boxes result in returned shipments and carrier disposal fees.
+
+### Decision
+
+Implement strict pre-authorization address validation (`storefront/src/lib/usAddressValidation.ts`) enforcing:
+- Delivery restricted strictly to the **48 Contiguous United States and Washington, D.C.**
+- Hard-blocking Alaska (`AK`), Hawaii (`HI`), Puerto Rico (`PR`), Guam (`GU`), U.S. Virgin Islands (`VI`), American Samoa (`AS`), and Northern Mariana Islands (`MP`).
+- Rejection of military ZIP prefixes (`090–098`, `340`, `962–966`).
+- Rejection of P.O. Box address strings (`P.O. Box`, `PO Box`, `Box 123`).
+- Rejection of non-US phone numbers and Indian 6-digit postal codes.
+
+### Consequences & Tradeoffs
+
+- **Positive:** 100% of accepted orders can be fulfilled by standard US domestic ground lines; eliminates undeliverable freight charges, return-to-sender loops, and customer complaints.
+- **Negative:** Small fraction of US domestic demand (AK/HI/territories) cannot be served.
+
+---
+
+## ADR-009: Firebase Authentication for Customer Accounts & Admin Verification
+
+**Status:** Accepted & Implemented  
+**Date:** 2026-11-08  
+**Deciders:** Solo Operator / CEO, Principal Architect (Antigravity)  
+
+---
+
+### Context
+
+A headless e-commerce store requires two distinct authentication surfaces:
+1. **Customer Accounts:** Frictionless sign-in (Google Sign-In), session persistence, saved addresses, and multi-device cart/watchlist synchronization.
+2. **Admin Command Center:** High-security access to order history, live grace period countdowns, and manual fulfillment triggers without public registration paths.
+
+Building a custom authentication system (passwords, hashing, email verification, password reset tokens) introduces extensive security liabilities and compliance obligations.
+
+### Decision
+
+Adopt **Firebase Authentication (Google Identity Toolkit)** paired with server-side Neon PostgreSQL persistence:
+- **Customer Sign-In:** One-click Google Sign-In via Firebase Web SDK. Upon sign-in, `/api/auth/sync` upserts the customer profile in `users` and merges local guest carts and watchlists into `user_carts` and `user_watchlists`.
+- **Admin Verification:** Admin endpoints (`/api/admin/orders/*`) enforce dual Zero-Trust verification:
+  - Timing-safe `ADMIN_API_KEY` verification using `crypto.timingSafeEqual`.
+  - Cryptographic Firebase ID Token verification via Google Identity Toolkit, validating that the authenticated user's email exists in the authorized `ADMIN_EMAILS` whitelist.
+
+### Consequences & Tradeoffs
+
+- **Positive:** Zero password storage liability; instant Google Sign-In for shoppers; multi-device cart persistence; strict zero-trust admin security.
+- **Negative:** Client depends on Firebase JS SDK bundle (~20KB gzipped).
+
+---
+
+## ADR-010: Postgres-Embedded Dead-Letter Queue (DLQ) & 30-Minute Grace Window
+
+**Status:** Accepted & Implemented  
+**Date:** 2026-11-09  
+**Deciders:** Solo Operator / CEO, Principal Architect (Antigravity)  
+
+---
+
+### Context
+
+In automated dropshipping, two critical customer experience challenges arise:
+1. **Accidental Orders & Buyer Regret:** Customers often notice an incorrect shipping address or want to cancel immediately after checkout. If orders are instantly dispatched to the supplier warehouse, cancellations become impossible and trigger costly returns.
+2. **Supplier API Glitches:** Network timeouts, transient CJ API outages, or unexpected carrier mapping issues can cause individual order submissions to fail. Without a dead-letter queue, failed orders silently vanish from operational sight while customer funds remain captured.
+
+### Decision
+
+Implement an **embedded PostgreSQL state machine** governing order lifecycles:
+1. **30-Minute Pre-Fulfillment Grace Window:**
+   - Orders remain in `ORDER_PLACED` status for 30 minutes.
+   - Customers have self-serve cancellation access via `/api/orders/cancel`. If invoked within 30 minutes, an instant, full refund is issued via PayPal's Refund API and the order is marked `CANCELLED`.
+   - Customers can update their shipping address via `/api/orders/address` during this grace period.
+2. **Postgres-Embedded Dead-Letter Queue (DLQ):**
+   - The `orders` table includes `fulfillment_status`, `fulfillment_error`, and `dlq_retry_count`.
+   - If CJ Dropshipping submission fails, the order status is set to `FULFILLMENT_FAILED` and raw diagnostic errors are saved to `fulfillment_error`.
+   - The Admin Command Center (`/admin/orders`) flags failed orders and provides a **1-click "Retry Fulfillment" button** calling `/api/admin/orders/retry-fulfillment`.
+
+### Consequences & Tradeoffs
+
+- **Positive:** Radical reduction in customer disputes and chargebacks; transparent buyer-centric cancellation policy; zero lost or abandoned paid orders during supplier downtime.
+- **Negative:** Introduces a state machine that must be tracked across order life cycles.
 
 ---
 

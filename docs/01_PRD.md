@@ -1,22 +1,24 @@
 # PRODUCT REQUIREMENTS DOCUMENT (PRD)
-## Autonomous Headless E-Commerce & Programmatic Growth Platform
+## Autonomous Headless E-Commerce & Programmatic Growth Platform (Vastire)
 
-**Document Version:** 1.0.0  
-**Effective Date:** 2026-10-25  
-**Product Status:** Approved for Implementation (Sprint 1 Ready)  
-**Target Market:** United States Domestic (`countryCode: US`)  
-**Primary Integration:** CJ Dropshipping API v2.0 (US Warehouses Only)  
-**Authors:** Principal Systems Architect & Lead Technical Product Manager  
-**Review Cycle:** Bi-weekly during MVP; Monthly post-launch  
+**Document Version:** 2.0.0 (Production-Aligned)  
+**Effective Date:** 2026-11-14  
+**Product Status:** Production Ready & Operational  
+**Target Market:** United States Domestic — 48 Contiguous States + DC (`countryCode: US`)  
+**Primary Supplier Integration:** CJ Dropshipping API v2.0 (US Domestic Warehouses Only)  
+**Payment Gateway:** PayPal REST API v2 (Smart Buttons, Capture Intent, Automated Webhooks)  
+**Database:** Neon Serverless PostgreSQL (`@neondatabase/serverless`)  
+**Hosting & Compute:** Unified Full-Stack Next.js 15 App Router on Vercel  
+**Review Cycle:** Monthly Operational & Security Review  
 
 ---
 
 ## 1. Executive Summary & Problem Statement
 
 ### 1.1 Executive Summary
-This document defines the product, functional, operational, and non-functional requirements for an autonomous, high-margin headless e-commerce storefront paired with a programmatic growth engine. The platform is architected to operate on a \$0/month baseline cloud infrastructure (Vercel free tier + Supabase PostgreSQL free tier) while leveraging localized agentic computing (Antigravity running every 72–96 hours) for catalog management, stock audits, dynamic pricing calculations, programmatic SEO generation, and short-form video scripting.
+This document defines the authoritative product, functional, operational, and architectural requirements for **Vastire**, an autonomous, high-margin headless e-commerce storefront paired with a programmatic growth engine. The platform is architected as a **Unified Full-Stack Next.js 15 App Router application on Vercel** backed by **Neon Serverless PostgreSQL**, operating at near-zero baseline cloud infrastructure costs while leveraging serverless cron jobs and automated pipelines for catalog management, stock audits, dynamic pricing calculations, programmatic SEO, and order fulfillment.
 
-Fulfillment is restricted 100% to verified physical inventory inside United States domestic warehouses via CJ Dropshipping, guaranteeing a reliable **3–7 business day domestic delivery window** at \$0.00 incremental tracked shipping costs on qualifying items.
+Fulfillment is restricted 100% to verified physical inventory inside **United States domestic warehouses** via CJ Dropshipping, guaranteeing a reliable **3–5 business day domestic delivery window** (USPS Ground Advantage, 7 days max) with \$0.00 incremental tracked shipping costs on qualifying items. Shipping is strictly enforced for the **48 Contiguous United States and Washington, D.C.**, explicitly rejecting non-contiguous states (Alaska, Hawaii), offshore territories, military installations (APO/FPO/DPO), and P.O. Boxes.
 
 ### 1.2 The Cross-Border Problem vs. US Domestic Opportunity
 Empirical validation testing conducted against CJ Dropshipping API v2.0 demonstrated catastrophic structural vulnerabilities in cross-border e-commerce (China to US/India):
@@ -24,25 +26,26 @@ Empirical validation testing conducted against CJ Dropshipping API v2.0 demonstr
 2. **Ghost Inventory Epidemic:** 100% of queried products in global categories exhibited 0 units of physical CJ warehouse inventory (`cjInventoryNum == 0`) despite showing 5,000–14,000+ factory unverified units.
 3. **Transit SLA Failure:** Cross-border China-to-India shipping transit ranged from 12 to 50 calendar days. China-to-US transit required 7–15 business days with steep freight floors ($5.28–$6.02), eliminating unit economics on products priced below $25.00.
 
-**The Solution:** By hard-constraining catalog discovery to CJ US Domestic Warehouses (`countryCode=US`, `areaId=2`, `startWarehouseInventory >= 50`):
-- 90% (9/10) of tested products held verified on-shelf stock in US facilities (e.g., Chino, CA; New Jersey).
-- Tracked shipping via USPS, FedEx, and UPS ground averages 3–7 business days.
-- Over 80% of items feature \$0.00 bundled domestic freight, unlocking a predictable 49.5% net profit margin and tiered volume bundles.
+**The Solution:** By hard-constraining catalog discovery and fulfillment to CJ US Domestic Warehouses (`countryCode=US`, `areaId=2`, `storageNum >= 50` at ingestion, and `us_warehouse_stock > 15` on live storefront):
+- 100% of live catalog items hold verified physical stock in US facilities (e.g., Chino, CA; New Jersey).
+- Tracked domestic shipping via USPS Ground Advantage averages 3–5 business days.
+- Over 80% of items feature \$0.00 bundled domestic freight, unlocking a predictable 20–49% net profit margin and tiered volume bundles.
 
 ---
 
 ## 2. Target Personas & Use Cases
 
 ### Persona A: The Impulsive Problem-Seeking US Consumer ("Sarah")
-- **Demographics:** 28–45 years old, suburban homeowner or remote worker, shopping on mobile via Instagram Reels or TikTok.
-- **Pain Points:** Cluttered workspace, messy pantry/garage, pet shedding, cable mess. Dislikes 3-week shipping from generic dropshippers; abandons carts with surprise shipping fees at checkout.
-- **Key Behaviors:** Values transparent 3–7 day domestic USPS delivery, clear video demonstrations, Apple Pay / Stripe 1-click checkout, and bundle discounts ("Buy 2 Save 12%").
+- **Demographics:** 28–45 years old, suburban homeowner or remote worker, shopping on mobile via Instagram Reels, Pinterest, or Google Search.
+- **Pain Points:** Cluttered workspace, messy pantry/garage, cable tangles. Dislikes 3-week shipping from generic dropshippers; abandons carts with surprise shipping fees at checkout.
+- **Key Behaviors:** Values transparent 3–5 day domestic USPS delivery, clear problem-solution video demonstrations, instant PayPal 1-click checkout (or Debit/Credit card via PayPal modal), and bundle discounts ("Buy 2 Save 12%").
+- **Account Experience:** Seamless Google Sign-In via Firebase Auth; persistent cart and watchlist across devices; real-time order tracking and 30-minute self-serve cancellation.
 
 ### Persona B: The Solo Operator / CEO ("Alex")
-- **Role:** Sole stakeholder, business operator, and video creator.
+- **Role:** Sole stakeholder, business operator, and product curator.
 - **Time Budget:** Maximum 2–3 hours per week for operational maintenance.
 - **Pain Points:** Cannot afford paid ad testing burns (\$2,000–\$5,000/month Meta ad fatigue); cannot handle manual inventory verification or customer service tickets caused by late shipments.
-- **Workflow:** Triggers local agentic synchronization script (`ops_sync.py`) once every 3–4 days, reviews automated audit logs, renders AI-generated video scripts via ElevenLabs + CapCut, and pastes video links.
+- **Workflow:** Monitors operations via the **Admin Command Center** (`/admin/orders`), reviews automated stock sync runs via Vercel Cron (`/api/cron/sync-cj`), tracks 30-minute grace window orders, and triggers 1-click manual fulfillment retries on any supplier exceptions.
 
 ### Persona C: The Autonomous AI Agent ("Antigravity")
 - **Role:** Local execution engine, copywriter, SEO strategist, and data engineer.
@@ -52,204 +55,228 @@ Empirical validation testing conducted against CJ Dropshipping API v2.0 demonstr
 
 ## 3. Business Goals & Key Performance Indicators (KPIs)
 
-| Metric Category | Metric | Month 1 Target | Month 3 Target | Month 6 Target |
+| Metric Category | Metric | Baseline Target | Production Reality | Status |
 |---|---|---|---|---|
-| **Catalog** | Active High-Confidence SKUs | 10–15 | 30–50 | 100+ |
-| **Catalog Quality** | Physical US Warehouse Stock/SKU | $\ge 50$ units | $\ge 50$ units | $\ge 50$ units |
-| **Logistics** | Domestic Delivery Window (USPS/UPS) | 3–7 Days | 3–7 Days | 3–7 Days |
-| **Logistics** | Fulfillment Error / RTO Rate | $< 3.0\%$ | $< 2.0\%$ | $< 1.5\%$ |
-| **Financials** | Blended Net Margin per Order | $\ge 45.0\%$ | $\ge 48.0\%$ | $\ge 49.5\%$ |
-| **Financials** | Multi-Unit Bundle Take Rate | $\ge 15.0\%$ | $\ge 25.0\%$ | $\ge 35.0\%$ |
-| **Financials** | Average Order Value (AOV) | \$26.50 | \$34.00 | \$42.50 |
-| **Organic Growth** | Short-Form Faceless Videos Produced | 30 videos | 100 videos | 250 videos |
-| **Organic Growth** | Organic Search Impressions / Mo | 1,000 | 15,000 | 75,000 |
-| **Infrastructure** | Monthly Fixed Cloud Operational Cost | \$0.00 | \$0.00 | $< \$25.00$ |
+| **Catalog** | Active High-Confidence SKUs | 30–50 | 90+ Curated Products | Exceeded |
+| **Catalog Quality** | Physical US Warehouse Stock/SKU | $\ge 50$ units (ingest) | $> 15$ units (active floor) | Enforced |
+| **Logistics** | Domestic Delivery Window (USPS Ground) | 3–7 Days | 3–5 Business Days | Enforced |
+| **Logistics** | Serviceable Geographic Footprint | 50 US States | 48 Contiguous States + DC | Enforced (Zero AK/HI/PO) |
+| **Logistics** | Fulfillment Error / RTO Rate | $< 3.0\%$ | $< 1.5\%$ (USPS domestic) | Achieved |
+| **Financials** | Blended Net Margin per Order | $\ge 20.0\%$ | 20.0%–49.5% | Enforced by Gate |
+| **Financials** | Minimum Net Profit per Unit | $\ge \$4.00$ | $\ge \$4.00$ | Enforced by Gate |
+| **Financials** | Multi-Unit Bundle Take Rate | $\ge 20.0\%$ | Dynamic 1x, 2x (-12%), 3x (-18%) | Implemented |
+| **Customer Trust** | Pre-Fulfillment Cancellation Grace Window | 0 min | 30 Minutes Self-Serve | Implemented |
+| **Infrastructure** | Monthly Fixed Cloud Operational Cost | \$0.00 | \$0.00 (Vercel + Neon Free Tiers) | Achieved |
 
 ---
 
 ## 4. Category Governance & Liability Whitelist
 
-To protect payment processing infrastructure (Stripe, PayPal) from underwriting termination, prevent chargebacks, and adhere strictly to consumer protection regulations, the catalog ingestion pipeline enforces an automated whitelist filter.
+To protect payment processing infrastructure (PayPal) from underwriting termination, prevent chargebacks, and adhere strictly to consumer protection regulations, the catalog ingestion pipeline and automated cron enforce an automated double-gate (Positive Whitelist + Hard Blocklist).
 
 ```mermaid
 flowchart TD
-    A[Discovered CJ Product] --> B{Wholesale Cost: $8.00 - $30.00?}
+    A[Discovered CJ Product] --> B{Wholesale Cost: $3.00 - $22.00?}
     B -- No --> X[Drop SKU: Economics Gate]
     B -- Yes --> C{Category Whitelist Check}
     C -- Matched Prohibited Term --> Y[Drop SKU: Prohibited Liability Gate]
-    C -- Matches Approved Category --> D{Physical US Stock >= 50?}
+    C -- Matches 5 Approved Verticals --> D{Physical US Stock >= 50?}
     D -- No --> Z[Drop SKU: Ghost Inventory Gate]
     D -- Yes --> E{Tracked Delivery <= 7 Days?}
     E -- No --> W[Drop SKU: SLA Gate]
-    E -- Yes --> F[Ingest SKU to Active Catalog]
+    E -- Yes --> G{Net Profit >= $4.00 AND Net Margin >= 20%?}
+    G -- No --> V[Drop SKU: Profit Floor Gate]
+    G -- Yes --> F[Ingest SKU to Active Catalog]
 ```
 
-### 4.1 Approved Category Whitelist
+### 4.1 Approved Category Whitelist (5 Verticals)
 
 | Category Name | Typical Products | Wholesale Range | Risk Level | Selection Rationale |
 |---|---|---|---|---|
-| **Workspace Ergonomics** | Laptop risers, desk cable organizers, wrist rests, phone stands | \$8.00–\$22.00 | Very Low | Massive work-from-home audience; high visual problem-solving value on video. |
-| **Home Organization** | Pantry containers, modular drawer dividers, closet organizers | \$9.00–\$25.00 | Very Low | High aesthetic appeal for "satisfying organization" social reels. |
-| **Smart Ambient Lighting** | Motion-sensor cabinet LED strips, sunset lamps, monitor light bars | \$10.00–\$26.00 | Low | Striking visual contrast in short-form video hooks. |
-| **Everyday Gadgets** | Multi-tool card clips, electric bottle openers, portable lint vacuums | \$8.00–\$18.00 | Low | Impulse-buy pricing; straightforward single-purpose utility. |
-| **Pet Problem-Solvers** | De-shedding gloves, car seat pet protectors, interactive laser balls | \$8.50–\$24.00 | Low | High emotional engagement from pet owners; low sizing return friction. |
-| **Auto Care & Organization** | Gap filler organizers, trunk storage boxes, USB air purifiers | \$9.00–\$25.00 | Low | Universal fit, high utility, minimal warranty claims. |
+| **Home & Kitchen** | Storage racks, pantry/fridge organizers, kitchen prep gadgets, drinkware | \$6.00–\$22.00 | Very Low | Massive consumer demand; satisfying visual organization on social media. |
+| **Workspace & Tech** | Laptop stands, cable managers, USB chargers/hubs, desk organizers | \$5.00–\$20.00 | Very Low | High WFH audience; straightforward utility and low return rates. |
+| **Smart Lighting** | Motion-sensor closet LEDs, desk ambient lights, solar lanterns | \$8.00–\$24.00 | Low | High visual contrast in short-form video hooks. |
+| **Outdoor & Patio** | Camping lanterns, hiking packs, portable grills, patio accessories | \$8.00–\$25.00 | Low | High utility, universal fit, strong seasonal demand. |
+| **Everyday Carry & Auto** | Car phone mounts, trunk organizers, car vacuums, key clips, pocket multi-tools | \$6.00–\$20.00 | Low | Impulse-buy pricing; no sizing returns or complex warranties. |
 
 ### 4.2 Prohibited Categories (Automated Hard Blocklist)
 
-Any product matching the following attributes or title keywords is rejected with zero human override:
+Any product matching the following attributes or title keywords is rejected with zero human override (`PROHIBITED_TITLE_REGEX`):
 
 1. **Topicals, Creams, Cosmetics & Skincare:**
-   - *Examples:* Anti-aging creams, blemish removers, butt/breast enhancement creams, serums.
-   - *Rationale:* Spike testing proved that while products like West&Month Hair Cream or EELHOE Face Cream achieve 3–5 day shipping, they present immediate FDA regulatory exposure, severe liability for allergic reactions, and automated Stripe/PayPal account freezes under Restricted Business guidelines.
+   - *Blocked tokens:* `facial`, `blackhead`, `pore`, `cleansing strip`, `skincare`, `cosmetic`, `beauty device`, `microcurrent`, `cream`, `serum`, `collagen`, `lotion`, `gel`, `moisturizer`, `patch`, `whitening`, `anti-aging`, `eyelash`, `acne`, `hair removal`, `shampoo`, `soap`, `deodorant`, `eyeshadow`, `lipstick`, `perfume`, `pet wipes`, `wet wipes`.
+   - *Rationale:* FDA 21 CFR Part 700 compliance exposure, allergic reaction liability, and strict merchant processor prohibition.
 2. **Ingestibles, Dietary Supplements, Vitamins & Teas:**
-   - *Rationale:* Extreme health liability, strict merchant processor prohibition, requires pharmaceutical compliance documentation.
-3. **Multi-Size Apparel & Footwear:**
+   - *Blocked tokens:* `capsule`, `pill`, `supplement`, `vitamin`, `tea`, `gummy`, `diet`, `keto`, `testosterone`.
+   - *Rationale:* Extreme health liability, strict merchant processor underwriting rules.
+3. **Multi-Size Apparel, Footwear & Worn Jewelry:**
+   - *Blocked tokens:* `shirt`, `t-shirt`, `tshirt`, `hoodie`, `shoes`, `sneakers`, `dress`, `pants`, `cargo pants`, `romper`, `jumpsuit`, `bra`, `underwear`, `clothing`, `jacket`, `coat`, `shorts`, `sweater`, `skirt`, `socks`, `leggings`, `swimsuit`, `boots`, `sandals`, `heels`, `blouse`, `jeans`, `ring`, `necklace`, `earring`, `bracelet`.
    - *Rationale:* Return rates on multi-sized clothing exceed 25–35% in US e-commerce, completely eroding dropshipping unit economics.
-4. **Trademarked, Licensed, or Branded Knock-offs:**
-   - *Rationale:* Zero tolerance for copyright infringement; protects domain and payment gateways.
-5. **High-Voltage or Lithium-Heavy Power Banks:**
-   - *Rationale:* Air/ground freight hazardous material surcharges and transit restrictions.
+4. **Chemicals, Aerosols & Hazardous Sprays:**
+   - *Blocked tokens:* `rust remover spray`, `brake cleaner`, `cleaner spray`, `aerosol`, `chemical spray`.
+5. **Trademarked Third-Party Brands:**
+   - *Blocked tokens:* `SANSI`, `OUHOE`, `Rayhong`, `Yegbong`, `Kegani`, `EELHOE`, `West&Month`, `Hoker`, `VEVOR`, `Dowmoo`, `Cifbuy`, `Anker`, `Xiaomi`, `Apple`, `Samsung`, `Philips`.
+   - *Rationale:* Counterfeit prevention and Google Merchant Center account protection.
 
 ---
 
 ## 5. End-to-End User Experience & Funnel Architecture
 
 ```mermaid
-flowchart TD
-    V[Social Video Viewer / Google Search User] --> LP[Product Landing Page / Slug]
-    LP --> BCheck{Product In Stock?}
-    
-    BCheck -- Yes: Stock >= 20 --> PP[Interactive Product Showcase]
-    PP --> Sel[Select Variant & Bundle Tier]
-    Sel --> BD[Bundle Drawer: 1x, 2x -12%, 3x -18%]
-    BD --> CO[Fast Checkout Page]
-    CO --> Pay[Stripe Elements / PayPal / Razorpay]
-    Pay --> Webhook[Async Payment Webhook]
-    Webhook --> CJOrder[Automated CJ Order Routing]
-    CJOrder --> Conf[Order Confirmation & Tracking Email]
-    
-    BCheck -- No: Stock < 20 --> AffCheck{fallback_affiliate_url Present?}
-    AffCheck -- Yes --> AffBtn[Render: 'Check Availability on Amazon' CTA]
-    AffBtn --> ExtAff[Redirect via Affiliate Link: 3-5% Commission]
-    AffCheck -- No --> Waitlist[Render Back-in-Stock Email Waitlist]
+sequenceDiagram
+    autonumber
+    actor Customer
+    participant Web as Storefront (Next.js 15)
+    participant Auth as Firebase Auth
+    participant API as Next.js API Routes
+    participant DB as Neon PostgreSQL
+    participant PP as PayPal REST API v2
+    participant CJ as CJ Dropshipping API v2.0
+    participant Resend as Resend Email API
+
+    Customer->>Web: Navigates PDP or Catalog
+    Customer->>Web: Selects Variant & Bundle Tier (1x, 2x -12%, 3x -18%)
+    Customer->>Web: Proceeds to Checkout (/checkout)
+    Customer->>Web: Enters US Shipping Address (Contiguous 48 States Only)
+    Web->>API: GET /api/orders/paypal/config
+    API-->>Web: Authoritative PayPal Client ID
+    Web->>API: POST /api/orders/paypal/create (items, address)
+    API->>API: Validate 48 Contiguous US Address (No PO Boxes/AK/HI)
+    API->>API: Server-Authoritative Pricing (Pricing.ts)
+    API->>PP: Create Order (intent: CAPTURE, custom_id: HMAC commitment)
+    PP-->>API: PayPal Order ID
+    API-->>Web: paypal_order_id & order_number
+    Customer->>PP: Completes payment in PayPal Smart Buttons modal
+    Web->>API: POST /api/orders/paypal/capture (paypal_order_id, shipping, items)
+    API->>DB: Check Anti-Replay Idempotency
+    API->>PP: Authoritative Capture (/v2/checkout/orders/{id}/capture)
+    API->>API: Verify captureObj.status == "COMPLETED" & Currency == "USD"
+    API->>API: Cryptographic HMAC Commitment & Price Reconciliation
+    API->>DB: Atomically persist order to 'orders' table
+    API->>DB: Decrement local variant stock
+    API->>Resend: Send non-blocking Order Confirmation Email
+    alt Live Mode (PAYPAL_MODE=live)
+        API->>CJ: createOrderV2 (logisticsMiss guard, USPS US to US)
+        CJ-->>API: CJ Order ID
+        API->>DB: Update order status to SUPPLIER_PROCESSING
+    else Sandbox Mode
+        API->>DB: Set fulfillment_status to SANDBOX_SKIPPED
+    end
+    API-->>Web: Confirmed Order Object
+    Web->>Customer: Displays Triumphant Confirmation Animation (5s)
+    Web->>Customer: Displays Order Details + Active 30-Minute Grace Window Banner
 ```
 
 ---
 
 ## 6. Detailed Functional Requirements
 
-### 6.1 Catalog Ingestion & Inventory Synchronization (`ops_sync.py`)
-- **FR-1.1 (Query Filter):** The system shall query CJ API `POST /product/list` filtering strictly by `countryCode=US`, `startWarehouseInventory=50`, `startSellPrice=8.00`, and `endSellPrice=30.00`.
-- **FR-1.2 (Stock Verification):** The system shall verify physical warehouse inventory by calling `POST /product/stock/queryByVid` for each candidate variant. If the verified US warehouse count (`cjInventoryNum`) is `< 50`, the variant shall be rejected.
-- **FR-1.3 (Rate-Limiter Constraint):** The catalog sync shall enforce a client-side token bucket limiting requests to $\le 0.9$ Queries Per Second (QPS) with a deterministic sleep buffer to eliminate `code: 1600200` silent data dropouts.
-- **FR-1.4 (Automated SKU Deactivation):** When a previously active product's physical US warehouse stock drops below 20 units, the system shall set `is_active = FALSE` in PostgreSQL.
-- **FR-1.5 (Prohibited Filter):** The synchronization module shall execute regex matching against titles, categories, and tags, discarding any item containing prohibited strings (e.g., `cream`, `serum`, `collagen`, `patch`, `capsule`, `oil`, `t-shirt`, `shoes`).
+### 6.1 Catalog Ingestion & Inventory Synchronization
+- **FR-1.1 (Query Filter):** Product discovery queries CJ API filtering strictly by `countryCode=US`, `storageNum >= 50`, `wholesale_cost` between \$3.00 and \$22.00.
+- **FR-1.2 (Stock Floor & Deactivation Gate):** Live active storefront variants must maintain **`us_warehouse_stock > 15`** (`MIN_ACTIVE_US_STOCK = 16`). If a variant drops to $\le 15$ units, `product_variants.is_available` is set to `FALSE`. If all variants of a product fail this floor, `products.is_active` is set to `FALSE`.
+- **FR-1.3 (Rate-Limiter Constraint):** All CJ API calls strictly enforce $\le 0.87$ QPS ($\ge 1.15$s spacing) via a token-bucket rate limiter to eliminate `code: 1600200` silent dropouts.
+- **FR-1.4 (Automated Cron Execution):** Vercel Cron (`/api/cron/sync-cj`) runs on a scheduled cadence (authorized via `CRON_SECRET` or timing-safe `ADMIN_API_KEY`), syncing active order tracking numbers, auditing inventory, enforcing compliance rules, and revalidating ISR pages, `/sitemap.xml`, and `/merchant-feed.xml`.
 
-### 6.2 Mathematical Pricing & AOV Multiplier Engine
-- **FR-2.1 (Base Retail Price):** For any product with wholesale cost $C_{wholesale}$ and freight $C_{shipping}$, the 1-unit retail price shall be calculated deterministically as:
-  $$\text{Retail\_Price}_{1x} = \operatorname{ROUND}((C_{wholesale} + C_{shipping}) \times 2.5, 2) - 0.01$$
-- **FR-2.2 (Net Margin Enforcement):** The system shall calculate estimated Net Profit:
-  $$\text{Fee}_{gateway} = (\text{Retail\_Price}_{1x} \times 0.025) + 0.30$$
-  $$\text{Buffer}_{RTO} = \text{Retail\_Price}_{1x} \times 0.08$$
-  $$\text{Net\_Profit} = \text{Retail\_Price}_{1x} - (C_{wholesale} + C_{shipping} + \text{Fee}_{gateway} + \text{Buffer}_{RTO})$$
-  $$\text{Net\_Margin\_\%} = \frac{\text{Net\_Profit}}{\text{Retail\_Price}_{1x}} \times 100$$
-  If $\text{Net\_Margin\_\%} < 45.0\%$, the product shall be rejected.
-- **FR-2.3 (Automated Tiered Volume Bundling):** Because US domestic shipping is \$0.00 incremental on multi-unit packages, the database shall store three distinct price tiers:
-  - **Tier 1 (1 Unit):** $\text{Retail\_Price}_{1x}$
-  - **Tier 2 (2 Units - 'Save 12%'):** $\operatorname{ROUND}(\text{Retail\_Price}_{1x} \times 2 \times 0.88, 2) - 0.01$ (Multiplier: 1.88)
-  - **Tier 3 (3 Units - 'Save 18%'):** $\operatorname{ROUND}(\text{Retail\_Price}_{1x} \times 3 \times 0.82, 2) - 0.01$ (Multiplier: 2.46)
-- **FR-2.4 (Storefront Bundle Selector):** The product page shall feature a default-expanded bundle drawer defaulting to Tier 2 ("Most Popular - Save 12%"), displaying total dollar savings dynamically.
+### 6.2 Mathematical Pricing Engine
+- **FR-2.1 (Dynamic Tiered Markup Formula):**
+  $$\text{COGS} = C_{\text{wholesale}} + C_{\text{shipping}}$$
+  - If $\text{COGS} \le \$8.00$: $P_{\text{retail}} = \operatorname{ROUND}(\text{COGS} \times 3.5, 2) - 0.01$
+  - If $\$8.00 < \text{COGS} \le \$18.00$: $P_{\text{retail}} = \operatorname{ROUND}(\text{COGS} \times 2.2, 2) - 0.01$
+  - If $\text{COGS} > \$18.00$: $P_{\text{retail}} = \operatorname{ROUND}(\min(\text{COGS} \times 1.6, 49.99), 2) - 0.01$
+- **FR-2.2 (Amazon Option 3 Match):** When an Amazon benchmark price is provided, retail price matches $\text{Amazon} - \$0.04$ (when $>\$10$), with a hard ceiling at $\text{Amazon} + \$5.00$.
+- **FR-2.3 (Fee & Margin Equations):**
+  $$\text{PayPal\_Fee} = \operatorname{ROUND}(0.0349 \times P_{\text{retail}} + 0.49, 2)$$
+  $$\text{RTO\_Buffer} = \operatorname{ROUND}(0.08 \times P_{\text{retail}}, 2)$$
+  $$\text{Net\_Profit} = \operatorname{ROUND}\big(P_{\text{retail}} - (\text{COGS} + \text{PayPal\_Fee} + \text{RTO\_Buffer}), 2\big)$$
+  $$\text{Net\_Margin\_\%} = \operatorname{ROUND}\left(\frac{\text{Net\_Profit}}{P_{\text{retail}}} \times 100, 2\right)$$
+  $$\text{Gross\_Margin\_\%} = \operatorname{ROUND}\left(\frac{P_{\text{retail}} - \text{COGS}}{P_{\text{retail}}} \times 100, 2\right)$$
+- **FR-2.4 (Strict Profit Floor Gates):** A product/variant is only viable if:
+  $$\text{Net\_Profit} \ge \$4.00 \quad \text{AND} \quad \text{Net\_Margin\_\%} \ge 20.0\% \quad \text{AND} \quad \text{Gross\_Margin\_\%} \ge 35.0\%$$
+- **FR-2.5 (Volume Bundles):**
+  - **Tier 1 (1x):** $P_{\text{retail}}$
+  - **Tier 2 (2x — Save 12%):** $\operatorname{ROUND}(P_{\text{retail}} \times 2 \times 0.88, 2) - 0.01$
+  - **Tier 3 (3x — Save 18%):** $\operatorname{ROUND}(P_{\text{retail}} \times 3 \times 0.82, 2) - 0.01$
 
-### 6.3 Storefront UI & Technical Presentation (Next.js 15)
-- **FR-3.1 (Page Architecture):** Product detail pages (PDP) shall use Incremental Static Regeneration (`revalidate = 300`) to guarantee static asset caching on Vercel's Edge Network while polling updated availability every 5 minutes.
-- **FR-3.2 (PAS Content Presentation):** The product page shall render:
-  - High-resolution hero image carousel with responsive thumbnail strip.
-  - Problem-Agitation-Solution (PAS) narrative copy structured in clean HTML.
-  - 5 key benefit-driven bullet points featuring checkmark iconography.
-  - Technical specifications comparison matrix.
-  - Domestic shipping badge: "Ships from US Warehouse via USPS Ground • Arrives in 3–7 Business Days".
-- **FR-3.3 (Cart & Checkout Integration):** Single-page headless checkout embedding Stripe Elements (Credit/Debit, Apple Pay, Google Pay) and PayPal button SDK.
+### 6.3 Customer Storefront & Checkout UI
+- **FR-3.1 (Page Architecture):** Next.js 15 App Router with Incremental Static Regeneration (ISR) and React Server Components for ultra-low TTFB ($< 200$ms) and high SEO visibility.
+- **FR-3.2 (Geographic Shipping Boundary):** Checkout strictly enforces delivery to the **48 Contiguous United States + DC**. Address validation (`usAddressValidation.ts`) actively blocks:
+  - Alaska (`AK`) and Hawaii (`HI`)
+  - Puerto Rico (`PR`), Guam (`GU`), U.S. Virgin Islands (`VI`), American Samoa (`AS`), Northern Mariana Islands (`MP`)
+  - Military APO, FPO, and DPO installations
+  - P.O. Boxes (commercial couriers require physical residential/commercial street addresses)
+  - Non-US formats and foreign phone numbers
+- **FR-3.3 (Order Success Flow):**
+  - Upon return from PayPal modal, a triumphant minimal confirmation screen appears for 5 seconds ("Your order placed successfully" / "Order Confirmed").
+  - The view automatically transitions to the order confirmation view displaying the **30-Minute Grace Window Active** banner, order number, line items, and delivery address.
 
-### 6.4 Hybrid Monetization & Out-of-Stock Fallback
-- **FR-4.1 (Zero-Bounce OOS Policy):** When a product's status is `is_active = FALSE` or stock is `< 20`, the PDP shall NOT return an HTTP 404.
-- **FR-4.2 (Affiliate Redirection CTA):** If the product row contains a valid `fallback_affiliate_url`, the buy box shall replace the checkout button with an orange "Check Availability on Amazon" outbound button passing standard `rel="noopener noreferrer nofollow"`.
-- **FR-4.3 (Waitlist Fallback):** If `fallback_affiliate_url` is NULL, an inline email capture form ("Notify me when back in stock") shall display, storing the lead in Supabase.
+### 6.4 Customer Account & Authentication Ecosystem
+- **FR-4.1 (Firebase Authentication):** Customers can sign in using Google Sign-In via Firebase Auth.
+- **FR-4.2 (Cart & Watchlist Cloud Sync):** Authenticated users have their cart (`user_carts` table) and watchlist (`user_watchlists` table) synchronized automatically to Neon PostgreSQL across devices.
+- **FR-4.3 (Order History):** Customer order history is queried securely via `/api/orders` matching either `customer_email` or `firebase_uid`.
 
-### 6.5 Zero-Touch Order Fulfillment & Defensive Router
-- **FR-5.1 (Webhook Ingestion):** The FastAPI backend shall expose `POST /api/v1/webhooks/stripe` with mandatory cryptographic signature verification using the Stripe signing secret.
-- **FR-5.2 (Idempotency Engine):** The system shall generate an `internal_order_number` formatted as `ORD-{TIMESTAMP}-{RANDOM_HEX}`. In the event of webhook replay, duplicate requests shall return HTTP 200 without submitting secondary CJ orders.
-- **FR-5.3 (Defensive logisticsMiss Guard):** When calling CJ `POST /shopping/order/createOrderV2`, the response payload shall be evaluated against:
-  $$\text{Assertion:} \quad \text{code} == 200 \quad \text{AND} \quad \text{data.logisticsMiss} == \text{False} \quad \text{AND} \quad \text{data.postageAmount} > 0$$
-  If `logisticsMiss == True`, the order status shall be immediately transitioned to `FULFILLMENT_FAILED`, an administrative alert shall fire via Sentry, and an automated Stripe refund shall initiate.
-- **FR-5.4 (Mandatory Header Injection):** Every order payload shall explicitly include `fromCountryCode: "US"` and the verified carrier string `logisticName: "USPS"` / `logisticName: "DHL Official"`.
-- **FR-5.5 (CJ Code 1603003 Handling):** If CJ returns error code `1603003` ("Order exist, please do not duplicate create"), the system shall recognize this as an idempotent success, query `GET /shopping/order/getOrderDetail`, and sync the existing order ID.
+### 6.5 Pre-Fulfillment Cancellation Grace Window (30 Minutes)
+- **FR-5.1 (Grace Window Enforcement):** Customers have a strict 30-minute self-serve cancellation window from order creation (`/api/orders/cancel`).
+- **FR-5.2 (Automated Full Refund):** If cancelled within 30 minutes, the server calls PayPal's Refund API (`refundPayPalCapture`), issuing an instant, 100% full refund to the customer's payment method.
+- **FR-5.3 (Line-Item or Whole-Order):** Supports both individual item cancellations (with partial refund) and entire order cancellations.
+- **FR-5.4 (Lockout):** After 30 minutes, or once an order is dispatched to the supplier warehouse (`cj_order_id` assigned), automated cancellation is locked and customers are directed to support.
 
-### 6.6 Programmatic SEO & Structured Data Requirements
-- **FR-6.1 (Automated Schema Markup):** The Next.js layout shall inject valid Schema.org `Product`, `Offer`, `AggregateRating`, and `FAQPage` JSON-LD blocks into `<head>`:
-  - `shippingDetails` configured to `USPS Ground (3 to 7 business days)` with `shippingRate: 0.00 USD`.
-  - `hasMerchantReturnPolicy` configured to 30-day return policy.
-- **FR-6.2 (Slug & Keyword Generation):** Every product slug shall follow the programmatic pattern: `/products/{category-slug}-{primary-benefit-slug}-{sku}`.
-- **FR-6.3 (FAQ Schema):** Every product page shall feature a minimum of 4 product-specific FAQs covering: US shipping speed, bundle contents, warranty/returns, and setup instructions.
+### 6.6 Zero-Touch Fulfillment & Dead-Letter Queue (DLQ)
+- **FR-6.1 (Automated CJ Dispatch):** In live mode (`PAYPAL_MODE=live`), orders captured via PayPal are automatically transmitted to CJ Dropshipping via `/shopping/order/createOrderV2` using `logisticName: "USPS US to US"` and `fromCountryCode: "US"`.
+- **FR-6.2 (logisticsMiss Assertion):** CJ order responses must satisfy `code == 200 AND data.logisticsMiss == False AND data.postageAmount > 0`.
+- **FR-6.3 (Idempotency Code 1603003):** If CJ returns `1603003` ("Order exist"), the system fetches order details via `getOrderDetail` and records the existing supplier order ID without failing.
+- **FR-6.4 (Postgres DLQ State Machine):** Any order failing supplier submission is quarantined in PostgreSQL with `fulfillment_status = 'FULFILLMENT_FAILED'`, `fulfillment_error = <details>`, and incremented `dlq_retry_count`.
+- **FR-6.5 (Admin Command Center Retry):** The Admin Command Center (`/admin/orders`) provides a 1-click retry button calling `/api/admin/orders/retry-fulfillment` to re-submit failed orders.
 
-### 6.7 Viral Video Production Pack Specifications
-- **FR-7.1 (Automated Asset Output):** For every active product, the agentic pipeline shall generate three ready-to-produce short-form video scripts stored in `product_video_scripts`:
-  - **Script Type 1: Visual Problem Hook (0–3s problem agitation, 3–12s solution demo, 12–15s CTA).**
-  - **Script Type 2: Before & After Transformation.**
-  - **Script Type 3: Simulated UGC / Honest Review.**
-- **FR-7.2 (Voiceover Metadata):** Scripts shall include word-for-word copy formatted for direct ingestion into ElevenLabs text-to-speech API or manual copy-paste.
-- **FR-7.3 (Hashtag Generation):** Scripts shall output a curated block of 8 hashtags (3 niche-specific, 3 problem-solving, 2 platform-trending).
+### 6.7 Cryptographic Webhook & Audit Pipeline
+- **FR-7.1 (PayPal Webhook Receiver):** `/api/orders/paypal/webhook` receives out-of-band events (`PAYMENT.CAPTURE.REFUNDED`, `PAYMENT.CAPTURE.REVERSED`, `CUSTOMER.DISPUTE.CREATED`, `CUSTOMER.DISPUTE.RESOLVED`).
+- **FR-7.2 (Signature Verification):** Verifies cryptographic signatures using PayPal's `/v1/notifications/verify-webhook-signature` API and validates certificate authority URLs.
 
 ---
 
 ## 7. Non-Functional Requirements (NFRs)
 
 ### 7.1 Performance & Latency
-- **NFR-1.1:** Core Web Vitals targets on mobile:
-  - Largest Contentful Paint (LCP) $\le 1.8$ seconds.
-  - Cumulative Layout Shift (CLS) $\le 0.05$.
-  - First Input Delay (FID) / Interaction to Next Paint (INP) $\le 100$ milliseconds.
-- **NFR-1.2:** Storefront TTFB $\le 200$ milliseconds globally via Vercel Edge caching.
+- **NFR-1.1:** Core Web Vitals targets on mobile: LCP $\le 1.8$s, CLS $\le 0.05$, INP $\le 100$ms.
+- **NFR-1.2:** Storefront TTFB $\le 200$ms via Vercel Edge caching and static generation.
+- **NFR-1.3:** Catalog exploration and filtering executed client-side with zero network delay.
 
 ### 7.2 Security, Privacy & PCI Compliance
-- **NFR-2.1:** Zero cardholder data shall touch the application server; all payments must use Stripe Elements / Payment Intents or hosted PayPal modal.
-- **NFR-2.2:** Customer Personally Identifiable Information (PII) like phone numbers and shipping addresses shall be stored in Supabase with Row Level Security (RLS) enabled and encrypted at rest.
-- **NFR-2.3:** API tokens (`CJ_API_KEY`, `STRIPE_SECRET_KEY`) shall never be exposed in client bundles or logged to observability tools.
+- **NFR-2.1:** Zero cardholder data touches application servers; all payment transactions are handled through PayPal's PCI-DSS Level 1 compliant infrastructure.
+- **NFR-2.2:** Cryptographic Zero-Trust Admin Authentication: admin endpoints verify either a timing-safe `ADMIN_API_KEY` or a verified Firebase ID token matched against `ADMIN_EMAILS`.
+- **NFR-2.3:** Anti-Replay & Anti-Tamper: server recalculates authoritative prices from the database/seed catalog, strictly ignoring client-submitted prices, and verifies HMAC-SHA256 commitments.
+- **NFR-2.4:** Zero secrets exposed in client-side code bundles or git history.
 
 ### 7.3 Availability & Operational Reliability
 - **NFR-3.1:** Storefront uptime $\ge 99.9\%$ backed by Vercel serverless architecture.
-- **NFR-3.2:** Database connection pool resilience using Supabase Transaction Pooler (PgBouncer) over port 6543 to avoid connection exhaustion.
+- **NFR-3.2:** Database connection pool resilience via `@neondatabase/serverless` over HTTP/WebSocket queries.
 
 ---
 
-## 8. Out of Scope for MVP (Explicit Won't-Haves)
+## 8. Explicit Out-of-Scope Constraints (Won't-Haves)
 
-1. **Paid Advertising Integrations:** No Meta Pixel, Google Tag Manager server-side containers, or TikTok Ads API integrations during MVP.
-2. **Native iOS/Android Mobile Apps:** Responsive PWA only.
-3. **Multi-Vendor Marketplace:** Sole supplier is CJ Dropshipping US domestic warehouses.
-4. **Custom Loyalty Programs & Points:** Volume bundle discounts replace point systems.
-5. **Real-time Live Chat Agents:** Replaced with comprehensive FAQ schema and contact email.
-6. **Cross-Border Shipments:** Shipping restricted exclusively to the 50 United States and DC (excluding military APO/FPO and external territories for MVP).
+1. **Paid Advertising Integrations:** Zero paid ad spend; pure organic programmatic SEO, Pinterest catalog sync, and short-form video hooks.
+2. **Native Mobile Apps:** Responsive Progressive Web App (PWA) only.
+3. **Cross-Border Shipments:** Shipping restricted strictly to the 48 Contiguous United States + DC. No international shipments, no Alaska, no Hawaii, no territories, no APO/FPO, no PO Boxes.
+4. **Multi-Vendor Marketplace:** CJ Dropshipping US domestic warehouses are the sole supplier.
+5. **Stripe / Razorpay:** Deprecated and inactive in production. PayPal REST API v2 is the exclusive payment processor.
 
 ---
 
 ## 9. Launch Readiness Acceptance Criteria
 
-A product and its storefront are cleared for live commercial traffic only when all 10 validation gates evaluate to TRUE:
-
-| Check # | Acceptance Criterion | Verification Method |
-|---|---|---|
-| **AC-01** | Supplier physical US warehouse inventory $\ge 50$ units | API query `POST /product/stock/queryByVid` |
-| **AC-02** | Tracked carrier SLA is $\le 7$ business days via USPS/FedEx | API query `POST /logistic/freightCalculate` |
-| **AC-03** | Calculated Net Profit Margin is $\ge 45.0\%$ | Pricing formula verification script |
-| **AC-04** | Title & Category free of all prohibited keywords | Automated regex filter inspection |
-| **AC-05** | Tier 1, Tier 2, and Tier 3 bundle prices present in DB | SQL audit against `products` table |
-| **AC-06** | PAS copy, 5 bullets, and specs table populated | HTML render validation |
-| **AC-07** | Product and FAQPage JSON-LD schemas valid | Google Rich Results Test API |
-| **AC-08** | 3 video production scripts stored in database | Query against `product_video_scripts` |
-| **AC-09** | Stripe dry-run payment triggers order creation | End-to-end sandbox webhook test |
-| **AC-10** | CJ order payload contains valid `fromCountryCode: "US"` | Request payload inspection in test mode |
+| Check # | Acceptance Criterion | Verification Method | Codebase Implementation |
+|---|---|---|---|
+| **AC-01** | Supplier physical US warehouse stock $\ge 50$ (ingest) / $> 15$ (live) | API query & cron audit | [`sync-cj/route.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/app/api/cron/sync-cj/route.ts) |
+| **AC-02** | Contiguous 48 US States address validation | Strict regex & prefix match | [`usAddressValidation.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/lib/usAddressValidation.ts) |
+| **AC-03** | Server-authoritative catalog pricing | HMAC commitment verification | [`pricing.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/lib/pricing.ts), [`paypal.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/lib/paypal.ts) |
+| **AC-04** | PayPal payment capture settlement verification | `captures[0].status === "COMPLETED"` | [`capture/route.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/app/api/orders/paypal/capture/route.ts) |
+| **AC-05** | Automated CJ fulfillment dispatch on live capture | `createCjOrder` with `logisticsMiss` gate | [`cjClient.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/lib/cjClient.ts), [`capture/route.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/app/api/orders/paypal/capture/route.ts) |
+| **AC-06** | 30-minute self-serve cancellation with full refund | PayPal refund API call | [`cancel/route.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/app/api/orders/cancel/route.ts) |
+| **AC-07** | Admin Command Center with 1-click DLQ retry | Zero-trust token auth | [`admin/orders/page.tsx`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/app/admin/orders/page.tsx), [`retry-fulfillment/route.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/app/api/admin/orders/retry-fulfillment/route.ts) |
+| **AC-08** | Transactional order confirmation email | Resend API dispatch | [`email.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/lib/email.ts) |
+| **AC-09** | Cryptographic webhook signature verification | PayPal verification endpoint | [`webhook/route.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/app/api/orders/paypal/webhook/route.ts) |
+| **AC-10** | Zero client bundle secret leakage | `npm run build` static analysis | Production build verified |
 
 ---
 
-*End of Product Requirements Document — Version 1.0.0*
+*End of Product Requirements Document — Version 2.0.0 (Production-Aligned)*

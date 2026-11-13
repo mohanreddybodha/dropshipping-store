@@ -2,10 +2,14 @@
 
 import { useEffect } from "react";
 import { Product } from "../../lib/types";
+import { recordCategoryAffinity } from "../../lib/recommendations";
 
 export default function TrackRecentlyViewed({ product }: { product: Product }) {
   useEffect(() => {
     try {
+      if (product.category) {
+        recordCategoryAffinity(product.category);
+      }
       const raw = localStorage.getItem("recently_viewed_products");
       let list: Product[] = raw ? JSON.parse(raw) : [];
       list = list.filter((p) => p.slug !== product.slug);

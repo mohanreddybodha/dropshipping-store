@@ -108,11 +108,30 @@ export default function WatchlistPage() {
 
     const recentSlugs = new Set(recentList.map((p) => p.slug));
 
-    // 2. Fetch live suggested items and sync remote watchlist concurrently
-    getCatalog({ limit: 30 }).then((cat) => {
-      if (Array.isArray(cat)) {
+    // 2. Fetch live catalog to reconcile saved items & suggested items concurrently
+    getCatalog({ limit: 100 }).then((cat) => {
+      if (Array.isArray(cat) && cat.length > 0) {
+        // Reconcile saved items with live catalog so slugs, images, and prices are 100% active and canonical
+        setItems((prevItems) => {
+          const updated = prevItems.map((item) => {
+            const liveMatch = cat.find(
+              (c) =>
+                (c.pid && item.pid && String(c.pid) === String(item.pid)) ||
+                (c.id && item.id && String(c.id) === String(item.id)) ||
+                (c.slug && item.slug && c.slug === item.slug) ||
+                (c.title && item.title && (c.title.toLowerCase().includes(item.title.toLowerCase()) || item.title.toLowerCase().includes(c.title.toLowerCase())))
+            );
+            return liveMatch || item;
+          });
+          try {
+            localStorage.setItem("watchlist_items", JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+
+        const activeSlugs = new Set(currentSaved.map((p) => p.slug));
         const filtered = cat.filter(
-          (p) => !savedSlugs.has(p.slug) && !recentSlugs.has(p.slug)
+          (p) => !activeSlugs.has(p.slug) && !recentSlugs.has(p.slug)
         ).slice(0, 10);
         setSuggestedItems(filtered);
       }
