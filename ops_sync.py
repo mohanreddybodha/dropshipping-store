@@ -66,7 +66,7 @@ except ImportError:
     console = None
 
 
-MIN_INGESTION_US_STOCK = 50
+MIN_INGESTION_US_STOCK = 20
 MIN_ACTIVE_US_STOCK = 16  # Strictly > 15 physical US warehouse units
 MAX_DELIVERY_SLA_DAYS = 7
 MIN_NET_PROFIT_USD = 4.00
@@ -80,25 +80,30 @@ APPROVED_THEMES = [
     "gadget", "portable", "rechargeable", "pocket", "foldable", "usb",
     "flashlight", "fan", "multitool", "opener", "alarm", "sensor", "keychain", "tool",
     "clip", "hook", "strap", "wallet", "case", "paracord", "tripod", "warmer", "ultrasonic",
-    "gloves", "mitt", "wiper", "scraper", "cleaner", "brush",
-    # Car accessories
+    "gloves", "mitt", "wiper", "scraper", "cleaner", "brush", "key", "carabiner", "whistle",
+    # Car accessories & Auto utility
     "car", "vehicle", "auto", "dash", "cup holder", "seat hook", "trunk", "steering", "vacuum",
+    "tire", "gauge", "inflator", "pump", "inverter", "mirror", "seat", "shade", "umbrella", "wiper",
     # Smart kitchen & bath tools
     "kitchen", "cooking", "chopper", "slicer", "grater", "peeler", "dispenser",
     "knife", "cleaver", "bottle", "scale", "fridge", "sponge", "drainer", "caddy",
     "tumbler", "mug", "faucet", "mop", "steamer", "bidet", "cabinet", "pull",
     "container", "jar", "basket", "bucket", "tray", "strainer", "colander", "funnel",
     "spoon", "fork", "utensil", "tongs", "whisk", "spatula", "measuring", "timer",
+    "cup", "glass", "bowl", "plate", "pan", "pot", "cookware", "board", "stopper", "pourer", "grinder", "crusher", "press", "sealer",
     # Pet accessories
     "pet", "dog", "cat", "puppy", "kitten", "collar", "leash", "harness", "feeder", "pet toy", "muzzle", "litter",
     # Workspace, hardware & Tech
     "desk", "cable", "organizer", "holder", "stand", "charger", "mount", "tray", "dock",
     "mouse pad", "shelf", "rack", "storage", "box", "clock", "drill", "bit", "reamer", "stool",
     "hanger", "bracket", "level", "tape", "screwdriver", "wrench", "pliers", "lock",
+    "hub", "adapter", "switch", "splitter", "keyboard", "mouse", "clamp", "vise", "hardware", "fastener", "anchor",
     # Lighting & Outdoor utility
     "light", "lamp", "led", "nightlight", "lantern", "torch", "outdoor", "camping",
     "hammock", "grill", "mat", "pad", "tent", "backpack", "aerator", "weed barrier",
-    "solar", "sconce", "bulb", "spotlight", "headlamp", "compass", "thermos"
+    "solar", "sconce", "bulb", "spotlight", "headlamp", "compass", "thermos",
+    "bike", "bicycle", "cycle", "fishing", "lure", "rod", "reel", "rope", "cord", "hiking", "waterproof",
+    "diffuser", "humidifier", "cooler", "stove", "burner", "survival", "projection", "projector"
 ]
 
 
@@ -369,13 +374,13 @@ def reset_database() -> None:
 
 def export_catalog_to_json(filepath: str = "storefront/src/lib/seedCatalog.json") -> int:
     """Export all active database products and variants to storefront seedCatalog.json."""
-    engine = init_db()
+    engine = get_engine()
     session = get_session(engine)
     try:
-        products = session.query(Product).filter(Product.is_active == True).all()
+        products = session.query(Product).filter(Product.is_active == True).order_by(Product.id.asc()).all()
         export_list = []
         for p in products:
-            variants = session.query(ProductVariant).filter(ProductVariant.product_id == p.id).all()
+            variants = session.query(ProductVariant).filter(ProductVariant.product_id == p.id).order_by(ProductVariant.id.asc()).all()
             var_list = []
             for v in variants:
                 var_list.append({
@@ -383,16 +388,17 @@ def export_catalog_to_json(filepath: str = "storefront/src/lib/seedCatalog.json"
                     "vid": v.vid,
                     "sku": v.sku,
                     "image_url": v.image_url,
-                    "wholesale_cost": v.wholesale_cost,
-                    "shipping_cost": v.shipping_cost,
-                    "retail_price_1x": v.retail_price,
-                    "bundle_2_price": v.bundle_2_price,
-                    "bundle_3_price": v.bundle_3_price,
-                    "us_warehouse_stock": v.us_warehouse_stock,
+                    "wholesale_cost": float(v.wholesale_cost or 0.0),
+                    "shipping_cost": float(v.shipping_cost or 0.0),
+                    "retail_price_1x": float(v.retail_price or 0.0),
+                    "bundle_2_price": float(v.bundle_2_price or 0.0),
+                    "bundle_3_price": float(v.bundle_3_price or 0.0),
+                    "us_warehouse_stock": int(v.us_warehouse_stock or 0),
                     "carrier_name": v.carrier_name,
                     "delivery_sla": v.delivery_sla,
                     "is_available": v.is_available,
                 })
+            images = p.images_json if isinstance(p.images_json, list) else ([p.hero_image_url] if p.hero_image_url else [])
             export_list.append({
                 "id": p.id,
                 "pid": p.pid,
@@ -401,7 +407,7 @@ def export_catalog_to_json(filepath: str = "storefront/src/lib/seedCatalog.json"
                 "slug": p.slug,
                 "category": p.category,
                 "hero_image_url": p.hero_image_url,
-                "images": p.images_json or [p.hero_image_url],
+                "images": images,
                 "pas_description_html": p.pas_description_html,
                 "features": p.features_json or [],
                 "seo_meta": p.seo_meta_json or {},
@@ -496,10 +502,29 @@ def run_bulk_seed(target: int = 150) -> int:
         "nightlight", "lantern", "solar", "mount", "wallet", "keychain",
         "clock", "audio", "grill", "tent", "hammock", "blanket", "compass"
     ]
-    queries = (
-        [{"page": p, "keyword": None, "stock": MIN_INGESTION_US_STOCK} for p in range(1, 52)] +
-        [{"page": p, "keyword": kw, "stock": MIN_INGESTION_US_STOCK} for kw in keywords for p in range(1, 8)]
-    )
+    target_categories = [
+        # (categoryId, label, max_pages)
+        ("A2F799BE-FB59-428E-A953-296AA2673FCF", "Automobiles & Motorcycles", 6),
+        ("4B397425-26C1-4D0E-B6D2-96B0B03689DB", "Sports & Outdoors", 6),
+        ("6A5D2EB4-13BD-462E-A627-78CFED11B2A2", "Home Improvement", 8),
+        ("D9E66BF8-4E81-4CAB-A425-AEDEC5FBFBF2", "Consumer Electronics", 4),
+        ("1126E280-CB7D-418A-90AB-7118E2D97CCC", "Computer & Office", 4),
+        ("E9FDC79A-8365-4CA6-AC23-64D971F08B8B", "Phones & Accessories", 4),
+        ("52FC6CA5-669B-4D0B-B1AC-415675931399", "Home, Garden & Furniture", 35),
+    ]
+
+    queries = []
+    # 1. Round-robin interleave across categories by page for balanced niche distribution
+    max_cat_pages = max(c[2] for c in target_categories)
+    for p in range(1, max_cat_pages + 1):
+        for cid, cname, max_p in target_categories:
+            if p <= max_p:
+                queries.append({"page": p, "category_id": cid, "stock": 20, "label": f"{cname} p{p}"})
+
+    # 2. Then keyword queries as fallback
+    for p in range(1, 6):
+        for kw in keywords:
+            queries.append({"page": p, "keyword": kw, "stock": 20, "label": f"kw:{kw} p{p}"})
 
     seen_pids = {p.pid for p in session.query(Product.pid).all()}
 
@@ -509,20 +534,30 @@ def run_bulk_seed(target: int = 150) -> int:
                 break
 
             kw = q.get("keyword")
+            cid = q.get("category_id")
             pg = q.get("page", 1)
             stk = q.get("stock", MIN_INGESTION_US_STOCK)
-            logger.info("Querying CJ US warehouse (page=%d, keyword=%s, stock>=%d)...", pg, kw, stk)
-            try:
-                candidates = client.query_us_warehouse_products(
-                    page=pg,
-                    size=50,
-                    min_warehouse_stock=stk,
-                    keyword=kw,
-                )
-            except Exception as q_err:
-                logger.warning("Query failed (pg %d): %s", pg, q_err)
-                time.sleep(2.0)
-                continue
+            lbl = q.get("label", kw or cid or "all")
+            logger.info("Querying CJ US warehouse (page=%d, target=%s, stock>=%d)...", pg, lbl, stk)
+            candidates = []
+            for attempt in range(1, 4):
+                try:
+                    candidates = client.query_us_warehouse_products(
+                        page=pg,
+                        size=50,
+                        min_warehouse_stock=stk,
+                        keyword=kw,
+                        category_id=cid,
+                        min_price=2.5,
+                        max_price=28.0,
+                    )
+                    break
+                except Exception as q_err:
+                    if attempt < 3:
+                        logger.warning("Query attempt %d failed (pg %d): %s. Retrying in %ds...", attempt, pg, q_err, attempt * 4)
+                        time.sleep(attempt * 4.0)
+                    else:
+                        logger.warning("Query failed after 3 attempts (pg %d): %s", pg, q_err)
 
             for item in candidates:
                 if items_ingested >= target:
@@ -883,7 +918,7 @@ def main() -> None:
     parser.add_argument("--reset-db", action="store_true", help="Clear all products and variants from database before re-seeding")
     parser.add_argument("--discover", action="store_true", help="Discover and ingest new winning US domestic products")
     parser.add_argument("--bulk-seed", action="store_true", help="Fast-track bulk multi-category ingestion (150-300 items)")
-    parser.add_argument("--target", type=int, default=150, help="Target number of active products in database (default: 150)")
+    parser.add_argument("--target", type=int, default=205, help="Target number of active products in database (default: 205)")
     parser.add_argument("--sync-stock", action="store_true", help="Audit live US warehouse stock (> 15) and rules for active products")
     parser.add_argument("--enforce-rules", action="store_true", help="Enforce category, 3P brand, stock (> 15), and margin gates in DB")
     parser.add_argument("--limit", type=int, default=10, help="Maximum products to discover (default: 10)")

@@ -78,19 +78,29 @@ class CJClient:
         "oil", "mask", "whitening", "anti-aging", "anti aging", "slimming",
         "butt", "breast", "eyelash", "acne", "hair removal", "gummy", "gummies",
         "diet", "keto", "drop", "drops", "snore", "snoring", "teeth", "tooth",
+        "dental", "oral", "powder", "toothpaste", "chew",
         "booster", "testosterone", "formula", "fragrance oil", "perfume", "parfum",
         "body spray", "shampoo", "soap", "deodorant", "nail", "nails",
         "eyeshadow", "lipstick", "pet wipes", "wet wipes", "grooming wipes",
+        # Medical devices & diagnostic kits
+        "breathalyzer", "alcohol detector", "blood pressure", "stethoscope", "thermometer",
+        "glucose", "diagnostic",
         # Chemicals / sprays / aerosols
         "rust remover spray", "brake cleaner", "cleaner spray", "aerosol", "iron powder",
+        # Bedding, linens & towels (high return rate / sizing mismatch)
+        "duvet", "bedding", "pillowcase", "bedsheet", "curtain", "drapes", "towel", "blanket",
         # Apparel, shoes, clothing, and worn jewelry (25-35% return rate gate)
         "t-shirt", "tshirt", "shirt", "hoodie", "shoes", "shoe", "sneaker",
         "dress", "pants", "trousers", "cargo pants", "romper", "jumpsuit",
         "bra", "underwear", "clothing", "jacket", "coat",
         "shorts", "sweater", "skirt", "socks", "sock", "leggings", "swimsuit",
         "swimwear", "boots", "boot", "sandals", "sandal", "heels", "blouse",
+        "flip flop", "flip flops", "slipper", "slippers", "clog", "clogs",
+        "hat", "hats", "cap", "caps", "beanie", "beanies", "beret", "headband",
+        "hair clip", "hairpin", "wig", "hair extension",
         "jeans", "jean", "denim", "fleece", "vest", "robe", "lingerie", "scarf",
-        "tights", "pantyhose", "suit", "jewelry making", "earring", "necklace",
+        "tights", "pantyhose", "suit", "jewelry making", "jewelry", "bead", "beads",
+        "brooch", "cufflink", "anklet", "charm", "earring", "necklace",
         "bracelet", "ring",
         # Tiles, wallpapers, and wall stickers
         "tile", "tiles", "wallpaper", "flooring", "wall sticker",
@@ -106,6 +116,9 @@ class CJClient:
         "sansi", "ouhoe", "rayhong", "yegbong", "kegani", "eelhoe",
         "west&month", "hoker", "vevor", "dowmoo", "cifbuy",
         "anker", "xiaomi", "baseus", "ugreen", "philips", "sony", "apple", "samsung",
+        "serta", "toyota", "honda", "ford", "bmw", "mercedes", "audi", "chevrolet",
+        "nissan", "tesla", "mazda", "subaru", "jeep", "dodge", "volkswagen", "lexus",
+        "hyundai", "kia",
     ]
 
     def __init__(
@@ -195,6 +208,7 @@ class CJClient:
         max_price: Optional[float] = None,
         min_warehouse_stock: Optional[int] = 50,
         keyword: Optional[str] = None,
+        category_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Query catalog filtering for US domestic warehouses and approved price bounds."""
         self.authenticate()
@@ -214,6 +228,8 @@ class CJClient:
             params["startWarehouseInventory"] = min_warehouse_stock
         if keyword:
             params["keyWord"] = keyword
+        if category_id:
+            params["categoryId"] = category_id
 
         resp = self.client.get(url, params=params, headers=self._get_headers())
         if resp.status_code == 429:
@@ -239,19 +255,25 @@ class CJClient:
 
     def get_product_details(self, pid: str) -> Dict[str, Any]:
         """Fetch detailed variant and media information for a product."""
-        self.authenticate()
-        self.rate_limiter.acquire()
-
         url = f"{self.BASE_URL}/product/query"
-        resp = self.client.get(url, params={"pid": pid}, headers=self._get_headers())
-        if resp.status_code == 429:
-            logger.warning("CJ API 429 rate limit hit on query. Backing off 3.0s...")
-            time.sleep(3.0)
+        for attempt in range(1, 3):
+            self.authenticate()
             self.rate_limiter.acquire()
-            resp = self.client.get(url, params={"pid": pid}, headers=self._get_headers())
-
-        res_json = resp.json() if resp.status_code == 200 else {}
-        return res_json.get("data") or {}
+            try:
+                resp = self.client.get(url, params={"pid": pid}, headers=self._get_headers())
+                if resp.status_code == 429:
+                    logger.warning("CJ API 429 rate limit hit on query. Backing off 3.0s...")
+                    time.sleep(3.0)
+                    self.rate_limiter.acquire()
+                    resp = self.client.get(url, params={"pid": pid}, headers=self._get_headers())
+                res_json = resp.json() if resp.status_code == 200 else {}
+                return res_json.get("data") or {}
+            except Exception as req_err:
+                if attempt < 2:
+                    time.sleep(2.5)
+                else:
+                    raise req_err
+        return {}
 
     def query_variant_stock(self, vid: str) -> List[Dict[str, Any]]:
         """Query physical warehouse stock count for a variant by VID.
@@ -311,17 +333,18 @@ class CJClient:
         return resp.json().get("data", []) or []
 
     def get_cheapest_domestic_shipping(
-        self, vid: str
+        self, vid: str, max_allowed_days: int = 7
     ) -> Tuple[Optional[str], float, str, int]:
         """Return (carrier_name, shipping_cost, delivery_aging_string, max_delivery_days).
 
-        Filters for tracked domestic lines with max delivery <= 7 business days.
+        Filters for tracked domestic lines with max delivery <= max_allowed_days.
         """
         freight_lines = self.calculate_us_freight(vid)
         if not freight_lines:
             return None, 0.0, "N/A", 999
 
         valid_lines = []
+        all_lines = []
         for line in freight_lines:
             logistic_name = line.get("logisticName") or "USPS"
             cost = float(line.get("logisticPrice") or 0.0)
@@ -331,11 +354,19 @@ class CJClient:
             nums = re.findall(r"\d+", aging)
             max_days = int(nums[-1]) if nums else 7
 
-            valid_lines.append((logistic_name, cost, aging, max_days))
+            entry = (logistic_name, cost, aging, max_days)
+            all_lines.append(entry)
+            if max_days <= max_allowed_days:
+                valid_lines.append(entry)
 
-        # Sort by cost ascending, then max_days ascending
-        valid_lines.sort(key=lambda x: (x[1], x[3]))
-        return valid_lines[0]
+        if valid_lines:
+            # Sort valid lines by cost ascending, then max_days ascending
+            valid_lines.sort(key=lambda x: (x[1], x[3]))
+            return valid_lines[0]
+
+        # If no lines meet max_allowed_days, return the fastest option
+        all_lines.sort(key=lambda x: (x[3], x[1]))
+        return all_lines[0]
 
     def create_order(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Submit an order to CJ Dropshipping via POST /shopping/order/createOrderV2.
