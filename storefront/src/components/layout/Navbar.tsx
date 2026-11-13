@@ -14,6 +14,7 @@ import {
   User,
   Heart,
   ShoppingBag,
+  Home,
 } from "lucide-react";
 import { Product } from "../../lib/types";
 import { getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
@@ -382,13 +383,25 @@ export default function Navbar() {
                   <Search className="w-4 h-4 text-slate-700" />
                 </button>
 
-                {/* Watchlist Link (Desktop & Tablet) */}
+                {/* Home Link (Desktop & Tablet) */}
+                <Link
+                  href="/"
+                  prefetch={true}
+                  className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group"
+                  aria-label="Home"
+                  title="Home"
+                >
+                  <Home className="w-4 h-4 text-slate-700 group-hover:text-emerald-600 transition" />
+                  <span className="hidden xl:inline text-xs font-bold text-slate-800">Home</span>
+                </Link>
+
+                {/* Watchlist / Collections Link (Desktop & Tablet) */}
                 <Link
                   href="/watchlist"
                   prefetch={true}
                   className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative"
-                  aria-label="Watchlist"
-                  title="Saved Watchlist"
+                  aria-label="My Collections"
+                  title="My Collections"
                 >
                   <div className="relative flex items-center justify-center">
                     <Heart className="w-4 h-4 text-slate-700 group-hover:text-rose-600 transition" />
@@ -398,7 +411,7 @@ export default function Navbar() {
                       </span>
                     )}
                   </div>
-                  <span className="hidden xl:inline text-xs font-bold text-slate-800">Watchlist</span>
+                  <span className="hidden xl:inline text-xs font-bold text-slate-800">Collections</span>
                 </Link>
 
                 {/* Cart Link (Desktop & Tablet) */}

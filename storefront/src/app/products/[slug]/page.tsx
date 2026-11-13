@@ -174,31 +174,26 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
   const productSchema = buildProductJsonLdGraph(product, primaryVariant);
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 pt-2 sm:pt-3 pb-24 sm:pb-28 md:pb-10 space-y-5 sm:space-y-8">
+    <div className="w-full max-w-[1920px] mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 pt-1.5 sm:pt-2.5 pb-12 sm:pb-16 md:pb-6 space-y-4 sm:space-y-6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
       <TrackRecentlyViewed product={product} />
 
-      {/* Top Action Row: Back Button on left, Watchlist & Share Buttons on right (Zero wasted space) */}
-      <div className="flex items-center justify-between">
+      {/* Top Action Row: Back Button on left, Product Name on same line (Zero wasted space) */}
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
         <ProductBackButton />
-        <div className="flex items-center gap-2">
-          <ProductWatchlistButton product={product} />
-          <ProductShareButton title={product.title} />
-        </div>
+        <h1 className="text-sm sm:text-base lg:text-lg font-bold text-slate-900 tracking-tight truncate flex-1 min-w-0">
+          {product.title}
+        </h1>
       </div>
 
       {/* Main Product Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
         {/* Left Column: Visual Showcase (7 cols) */}
         <div className="lg:col-span-7 space-y-3">
-          <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 tracking-tight leading-snug">
-            {product.title}
-          </h1>
-
-          {/* Interactive Product Gallery with All Variant Images */}
+          {/* Interactive Product Gallery with All Variant Images + Top-Right Floating Watchlist & Share */}
           {(() => {
             const allImages: string[] = [];
             if (targetVariant?.image_url) allImages.push(targetVariant.image_url);
@@ -216,6 +211,12 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
               <ProductGallery
                 images={uniqueImages.length > 0 ? uniqueImages : ["/placeholder.jpg"]}
                 title={product.title}
+                topRightActions={
+                  <>
+                    <ProductWatchlistButton product={product} />
+                    <ProductShareButton title={product.title} />
+                  </>
+                }
               />
             );
           })()}

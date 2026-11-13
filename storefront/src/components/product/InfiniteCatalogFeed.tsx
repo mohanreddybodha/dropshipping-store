@@ -70,14 +70,14 @@ export default function InfiniteCatalogFeed({
 
       {/* Infinite Scroll Sentinel */}
       {hasMore ? (
-        <div ref={sentinelRef} className="py-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold animate-pulse">
+        <div ref={sentinelRef} className="py-4 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold animate-pulse">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
             <span>Loading more domestic products…</span>
           </div>
         </div>
       ) : (
-        <div className="py-8 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5 border-t border-slate-100 mt-4">
+        <div className="py-3 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5 border-t border-slate-100 mt-2">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
           <span>You&apos;ve explored all verified domestic products</span>
         </div>

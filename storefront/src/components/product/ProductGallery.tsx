@@ -6,9 +6,10 @@ import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 interface ProductGalleryProps {
   images?: string[];
   title: string;
+  topRightActions?: React.ReactNode;
 }
 
-export default function ProductGallery({ images = [], title }: ProductGalleryProps) {
+export default function ProductGallery({ images = [], title, topRightActions }: ProductGalleryProps) {
   // Ensure non-empty initial array
   const initialImages = images && images.length > 0 ? images : ["/placeholder.jpg"];
   const [galleryImages, setGalleryImages] = useState<string[]>(initialImages);
@@ -78,6 +79,13 @@ export default function ProductGallery({ images = [], title }: ProductGalleryPro
     <div className="space-y-4">
       {/* Main Image Frame */}
       <div className="relative w-full aspect-square max-h-[500px] bg-slate-50 border border-slate-200/80 rounded-3xl overflow-hidden group shadow-sm flex items-center justify-center">
+        {/* Top-Right Floating Overlay (Watchlist & Share) */}
+        {topRightActions && (
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex items-center gap-2">
+            {topRightActions}
+          </div>
+        )}
+
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={galleryImages[selectedIndex] || galleryImages[0] || "/placeholder.jpg"}

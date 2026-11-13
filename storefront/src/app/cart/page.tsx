@@ -180,7 +180,9 @@ export default function CartPage() {
             Shopping Cart
           </h1>
           <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
-            {items.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0)} items ready for domestic checkout
+            {items.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0)}{" "}
+            {items.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0) === 1 ? "item" : "items"}{" "}
+            ready for dispatch • Free domestic US delivery
           </p>
         </div>
         <div className="flex items-center">

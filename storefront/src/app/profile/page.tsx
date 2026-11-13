@@ -37,7 +37,7 @@ import {
   createCheckoutOrder,
 } from "../../lib/api";
 import { CustomerOrder } from "../../lib/types";
-import NavigationBackButton from "../../components/ui/NavigationBackButton";
+
 
 // Helper to resolve product image, title, and link for order items
 function resolveOrderItemInfo(item: any) {
@@ -411,15 +411,6 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full max-w-5xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 sm:pb-20 md:pb-10 space-y-4 sm:space-y-5">
-      {/* ── TOP HEADER (Clean back navigation + title, zero top-right button) ── */}
-      <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
-        <NavigationBackButton />
-        <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2 truncate">
-          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 flex-shrink-0" />
-          <span className="truncate">Account</span>
-        </h1>
-      </div>
-
       {/* ── AUTH STATUS SKELETON ── */}
       {authLoading && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center space-y-2.5">
