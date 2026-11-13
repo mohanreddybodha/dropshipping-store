@@ -5,6 +5,14 @@
 > **Last Updated:** 2026-10-25  
 > **Author:** Spike Test Automation Suite + Engineering Review  
 
+> [!NOTE]
+> **Production Status (November 2026):** All four critical API traps identified in this audit were permanently mitigated in production code:
+> - **Trap 1 (`logisticsMiss`):** Enforced in [`storefront/src/lib/cjClient.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/lib/cjClient.ts) and [`storefront/src/app/api/orders/paypal/capture/route.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/app/api/orders/paypal/capture/route.ts).
+> - **Trap 2 (0.87 QPS rate limit & code `1600200`):** Managed in [`storefront/src/app/api/cron/sync-cj/route.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/app/api/cron/sync-cj/route.ts) with Upstash Redis token caching.
+> - **Trap 3 (`fromCountryCode="US"` injection):** Enforced on all order creation calls.
+> - **Trap 4 (Idempotency code `1603003`):** Handled as idempotent success with order detail lookup in [`storefront/src/lib/cjClient.ts`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/lib/cjClient.ts).
+> - **Unified Full-Stack Architecture:** Consolidated onto Option A (Next.js 15 on Vercel) with PayPal REST API v2 exclusively. See [`docs/ARCHITECTURE_DECISION_RECORD.md`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/docs/ARCHITECTURE_DECISION_RECORD.md) and [`docs/03_SDD_ARCHITECTURE.md`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/docs/03_SDD_ARCHITECTURE.md).
+
 ---
 
 ## Table of Contents
