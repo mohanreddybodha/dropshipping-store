@@ -57,7 +57,7 @@ export default function HorizontalProductRow({
   }
 
   return (
-    <section className="pt-6 border-t border-slate-200/80 space-y-3">
+    <section className="pt-3.5 sm:pt-4 border-t border-slate-200/80 space-y-2 sm:space-y-2.5">
       {/* Header Row: Title & View All (No description below heading) */}
       <div className="flex items-center justify-between">
         <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
@@ -101,7 +101,7 @@ export default function HorizontalProductRow({
       {/* Horizontal Carousel */}
       <div
         ref={rowRef}
-        className="flex gap-2 sm:gap-3 overflow-x-auto pb-3 pt-1 -mx-2 sm:mx-0 px-2 sm:px-0 scrollbar-none snap-x snap-mandatory"
+        className="flex gap-1.5 sm:gap-2.5 overflow-x-auto pb-2 pt-0.5 -mx-2 sm:mx-0 px-2 sm:px-0 scrollbar-none snap-x snap-mandatory"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {products.map((item) => (

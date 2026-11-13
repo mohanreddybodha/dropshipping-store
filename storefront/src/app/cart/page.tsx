@@ -112,7 +112,7 @@ export default function CartPage() {
   // ── EMPTY CART VIEW ──
   if (items.length === 0) {
     return (
-      <div className="w-full max-w-[1920px] mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5 sm:space-y-6">
+      <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-0 space-y-3 sm:space-y-4">
 
 
         {/* Centered Empty Cart Card */}
@@ -172,9 +172,9 @@ export default function CartPage() {
 
   // ── ACTIVE CART VIEW ──
   return (
-    <div className="w-full max-w-[1920px] mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5 sm:space-y-6">
+    <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-0 space-y-3 sm:space-y-4">
       {/* Cart Title Bar */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
             Shopping Cart

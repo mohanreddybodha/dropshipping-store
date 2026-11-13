@@ -270,7 +270,7 @@ export default function CatalogExplorer({
   const seoProfile = getCategorySeoProfile(activeCategory);
 
   return (
-    <div id="catalog-section" className="space-y-3">
+    <div id="catalog-section" className="space-y-2">
       {!isCollectionPage && (
         <h1 className="sr-only">
           {activeSearch ? `Results for "${activeSearch}"` : seoProfile.headline}
@@ -463,7 +463,7 @@ export default function CatalogExplorer({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 min-[1920px]:grid-cols-6 gap-2 sm:gap-3 lg:gap-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 min-[1920px]:grid-cols-6 gap-1.5 sm:gap-2.5 md:gap-3">
           {visibleProducts.map((product) => (
             <ProductCard key={product.pid} product={product} />
           ))}
@@ -471,7 +471,7 @@ export default function CatalogExplorer({
       )}
 
       {/* Infinite Scroll Sentinel */}
-      <div ref={sentinelRef} className="h-6" />
+      <div ref={sentinelRef} className="h-4" />
 
       {/* Loading indicator */}
       {hasMore && (

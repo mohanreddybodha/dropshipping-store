@@ -146,6 +146,7 @@ export default function ProfilePage() {
 
   // Active Interactive Modal Drawer (Animated from bottom)
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   // Dual-Factor Lookup State
   const [lookupEmail, setLookupEmail] = useState("");
@@ -288,12 +289,13 @@ export default function ProfilePage() {
 
   // Prevent background scroll & listen for Escape key when modal is open
   useEffect(() => {
-    if (activeModal) {
+    if (activeModal || showSignOutConfirm) {
       const original = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
           setActiveModal(null);
+          setShowSignOutConfirm(false);
         }
       };
       window.addEventListener("keydown", handleKeyDown);
@@ -302,7 +304,7 @@ export default function ProfilePage() {
         window.removeEventListener("keydown", handleKeyDown);
       };
     }
-  }, [activeModal]);
+  }, [activeModal, showSignOutConfirm]);
 
   // Google Sign-In Handler
   const handleGoogleSignIn = async () => {
@@ -410,7 +412,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="w-full max-w-5xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 sm:pb-20 md:pb-10 space-y-4 sm:space-y-5">
+    <div className="w-full max-w-5xl 2xl:max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pt-2 sm:pt-3 pb-0 space-y-3 sm:space-y-4">
       {/* ── AUTH STATUS SKELETON ── */}
       {authLoading && (
         <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center space-y-2.5">
@@ -667,7 +669,7 @@ export default function ProfilePage() {
             <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden">
               <button
                 type="button"
-                onClick={handleSignOut}
+                onClick={() => setShowSignOutConfirm(true)}
                 className="w-full flex items-center justify-between p-3.5 sm:p-4 hover:bg-rose-50/50 transition active:scale-[0.99] group text-left cursor-pointer"
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -684,6 +686,60 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* ── Sign Out Confirmation Pop-up Modal ── */}
+      {showSignOutConfirm && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="signout-dialog-title"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setShowSignOutConfirm(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
+                <LogOut className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 id="signout-dialog-title" className="text-base font-black text-slate-900">
+                  Sign Out
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Confirm account sign out
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Are you sure you want to sign out of your account on Vastire?
+            </p>
+
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSignOutConfirm(false)}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition active:scale-95 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setShowSignOutConfirm(false);
+                  await handleSignOut();
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition active:scale-95 cursor-pointer"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── INTERACTIVE MODAL DRAWERS (Animated from bottom) ── */}
       {activeModal && (

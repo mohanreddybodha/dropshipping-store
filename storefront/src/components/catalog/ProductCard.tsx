@@ -112,14 +112,14 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div
       onMouseEnter={prefetchProduct}
       onPointerDown={prefetchProduct}
-      className="group relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-2 sm:p-3 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between active:scale-[0.985] transition-transform duration-100"
+      className="group relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 shadow-sm hover:shadow-xl hover:border-emerald-400 transition-all duration-200 flex flex-col justify-between active:scale-[0.985] transition-transform duration-100"
     >
       {/* Clickable Card Body */}
       <Link
         href={productHref}
         prefetch={true}
         onClick={() => recordCategoryAffinity(product.category || "General")}
-        className="block space-y-1.5 sm:space-y-2"
+        className="block space-y-1 sm:space-y-1.5"
       >
         {/* 1:1 Aspect Ratio Image Stage (No background/border box for seamless float) */}
         <div className="relative w-full aspect-square rounded-lg sm:rounded-xl overflow-hidden flex items-center justify-center">
@@ -138,7 +138,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Fixed 2-Line Title Container ensuring all cards match in height */}
-        <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 h-8 sm:h-9 leading-snug">
+        <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 h-7 sm:h-8 leading-tight">
           {product.title}
         </h3>
       </Link>
@@ -149,7 +149,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         onClick={toggleWatchlist}
         aria-label={isSaved ? "Remove from watchlist" : "Add to watchlist"}
         title={isSaved ? "In Watchlist" : "Add to Watchlist"}
-        className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-white transition-all duration-150 active:scale-90 border border-slate-100"
+        className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 backdrop-blur-sm shadow-sm flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-white transition-all duration-150 active:scale-90 border border-slate-100"
       >
         <Heart
           className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${
@@ -162,7 +162,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link
         href={productHref}
         prefetch={true}
-        className="pt-1.5 sm:pt-2 mt-1.5 border-t border-slate-100 flex items-center justify-between block"
+        className="pt-1 sm:pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-between block"
       >
         <div className="flex items-baseline gap-1.5 min-w-0">
           <span className="text-sm sm:text-base font-black text-slate-900">

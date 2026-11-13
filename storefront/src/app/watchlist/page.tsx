@@ -17,9 +17,9 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
   const heroImage = product.hero_image_url || product.images?.[0] || "/placeholder.jpg";
 
   return (
-    <div className="group block bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-2 sm:p-3 shadow-sm hover:shadow-xl hover:border-rose-300 transition-all duration-200 flex flex-col justify-between">
+    <div className="group block bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 shadow-sm hover:shadow-xl hover:border-rose-300 transition-all duration-200 flex flex-col justify-between">
       {/* Image Stage */}
-      <Link href={`/products/${product.slug}`} prefetch={true} className="block space-y-1.5 sm:space-y-2">
+      <Link href={`/products/${product.slug}`} prefetch={true} className="block space-y-1 sm:space-y-1.5">
         <div className="relative w-full aspect-square rounded-lg sm:rounded-xl overflow-hidden flex items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -45,13 +45,13 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
         </div>
 
         {/* Fixed 2-Line Title Container ensuring all cards match in height */}
-        <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-900 group-hover:text-rose-700 transition line-clamp-2 h-8 sm:h-9 leading-snug">
+        <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-900 group-hover:text-rose-700 transition line-clamp-2 h-7 sm:h-8 leading-tight">
           {product.title}
         </h3>
       </Link>
 
       {/* Price & Discount Row (Total consistency with ProductCard, no bag icon) */}
-      <div className="pt-1.5 sm:pt-2 mt-1.5 border-t border-slate-100 flex items-center justify-between">
+      <div className="pt-1 sm:pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-between">
         <div className="flex items-baseline gap-1.5 min-w-0">
           <span className="text-sm sm:text-base font-black text-slate-900">
             ${retailPrice.toFixed(2)}
@@ -207,9 +207,9 @@ export default function WatchlistPage() {
   }
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto px-2.5 sm:px-6 lg:px-8 xl:px-10 pt-2.5 sm:pt-4 pb-20 md:pb-8 space-y-5 sm:space-y-6">
+    <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-0 space-y-3 sm:space-y-4">
       {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
         <h1 className="text-xl sm:text-2xl font-black text-slate-900">
           My Collections
         </h1>
@@ -249,7 +249,7 @@ export default function WatchlistPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 min-[1920px]:grid-cols-6 gap-2 sm:gap-3 lg:gap-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 min-[1920px]:grid-cols-6 gap-1.5 sm:gap-2.5 md:gap-3">
           {items.map((product) => (
             <WatchlistCard
               key={product.slug}

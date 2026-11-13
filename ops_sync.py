@@ -79,20 +79,25 @@ APPROVED_THEMES = [
     "gadget", "portable", "rechargeable", "pocket", "foldable", "usb",
     "flashlight", "fan", "multitool", "opener", "alarm", "sensor", "keychain", "tool",
     "clip", "hook", "strap", "wallet", "case", "paracord", "tripod", "warmer", "ultrasonic",
+    "gloves", "mitt", "wiper", "scraper", "cleaner", "brush",
     # Car accessories
     "car", "vehicle", "auto", "dash", "cup holder", "seat hook", "trunk", "steering", "vacuum",
     # Smart kitchen & bath tools
     "kitchen", "cooking", "chopper", "slicer", "grater", "peeler", "dispenser",
     "knife", "cleaver", "bottle", "scale", "fridge", "sponge", "drainer", "caddy",
     "tumbler", "mug", "faucet", "mop", "steamer", "bidet", "cabinet", "pull",
+    "container", "jar", "basket", "bucket", "tray", "strainer", "colander", "funnel",
+    "spoon", "fork", "utensil", "tongs", "whisk", "spatula", "measuring", "timer",
     # Pet accessories
     "pet", "dog", "cat", "puppy", "kitten", "collar", "leash", "harness", "feeder", "pet toy", "muzzle", "litter",
     # Workspace, hardware & Tech
     "desk", "cable", "organizer", "holder", "stand", "charger", "mount", "tray", "dock",
     "mouse pad", "shelf", "rack", "storage", "box", "clock", "drill", "bit", "reamer", "stool",
+    "hanger", "bracket", "level", "tape", "screwdriver", "wrench", "pliers", "lock",
     # Lighting & Outdoor utility
     "light", "lamp", "led", "nightlight", "lantern", "torch", "outdoor", "camping",
-    "hammock", "grill", "mat", "pad", "tent", "backpack", "aerator", "weed barrier"
+    "hammock", "grill", "mat", "pad", "tent", "backpack", "aerator", "weed barrier",
+    "solar", "sconce", "bulb", "spotlight", "headlamp", "compass", "thermos"
 ]
 
 
@@ -361,6 +366,58 @@ def reset_database() -> None:
         session.close()
 
 
+def export_catalog_to_json(filepath: str = "storefront/src/lib/seedCatalog.json") -> int:
+    """Export all active database products and variants to storefront seedCatalog.json."""
+    engine = init_db()
+    session = get_session(engine)
+    try:
+        products = session.query(Product).filter(Product.is_active == True).all()
+        export_list = []
+        for p in products:
+            variants = session.query(ProductVariant).filter(ProductVariant.product_id == p.id).all()
+            var_list = []
+            for v in variants:
+                var_list.append({
+                    "id": v.id,
+                    "vid": v.vid,
+                    "sku": v.sku,
+                    "image_url": v.image_url,
+                    "wholesale_cost": v.wholesale_cost,
+                    "shipping_cost": v.shipping_cost,
+                    "retail_price_1x": v.retail_price,
+                    "bundle_2_price": v.bundle_2_price,
+                    "bundle_3_price": v.bundle_3_price,
+                    "us_warehouse_stock": v.us_warehouse_stock,
+                    "carrier_name": v.carrier_name,
+                    "delivery_sla": v.delivery_sla,
+                    "is_available": v.is_available,
+                })
+            export_list.append({
+                "id": p.id,
+                "pid": p.pid,
+                "title": p.title,
+                "brand_title": p.brand_title or "Vastire",
+                "slug": p.slug,
+                "category": p.category,
+                "hero_image_url": p.hero_image_url,
+                "images": p.images_json or [p.hero_image_url],
+                "pas_description_html": p.pas_description_html,
+                "features": p.features_json or [],
+                "seo_meta": p.seo_meta_json or {},
+                "faq_schema": p.faq_schema_json or [],
+                "is_active": p.is_active,
+                "variants": var_list,
+            })
+        target_path = Path(filepath)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(target_path, "w", encoding="utf-8") as f:
+            json.dump(export_list, f, indent=2)
+        logger.info("Exported %d active products to %s", len(export_list), filepath)
+        return len(export_list)
+    finally:
+        session.close()
+
+
 def run_bulk_seed(target: int = 150) -> int:
     """Execute high-speed bulk ingestion across multi-page US Warehouse catalog."""
     engine = init_db()
@@ -439,8 +496,8 @@ def run_bulk_seed(target: int = 150) -> int:
         "clock", "audio", "grill", "tent", "hammock", "blanket", "compass"
     ]
     queries = (
-        [{"page": p, "keyword": kw, "stock": MIN_INGESTION_US_STOCK} for kw in keywords for p in range(1, 8)] +
-        [{"page": p, "keyword": None, "stock": MIN_INGESTION_US_STOCK} for p in range(1, 45)]
+        [{"page": p, "keyword": None, "stock": MIN_INGESTION_US_STOCK} for p in range(1, 45)] +
+        [{"page": p, "keyword": kw, "stock": MIN_INGESTION_US_STOCK} for kw in keywords for p in range(1, 8)]
     )
 
     seen_pids = {p.pid for p in session.query(Product.pid).all()}
@@ -618,6 +675,10 @@ def run_bulk_seed(target: int = 150) -> int:
 
     total_final = items_ingested
     logger.info("Bulk seeding finished. Total active products in database: %d", total_final)
+    try:
+        export_catalog_to_json()
+    except Exception as exp_err:
+        logger.warning("Could not auto-export seedCatalog.json: %s", exp_err)
     return total_final
 
 

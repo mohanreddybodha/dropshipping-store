@@ -47,7 +47,7 @@ export default function InfiniteCatalogFeed({
   const hasMore = visibleCount < products.length;
 
   return (
-    <section className="pt-8 border-t border-slate-200/80 space-y-4">
+    <section className="pt-4 sm:pt-6 border-t border-slate-200/80 space-y-2.5 sm:space-y-3">
       {/* Clean Header: Heading on left (no AI icon, no description), View All on right */}
       <div className="flex items-center justify-between">
         <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
@@ -62,7 +62,7 @@ export default function InfiniteCatalogFeed({
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5 sm:gap-2.5 md:gap-3">
         {visibleProducts.map((item) => (
           <ProductCard key={item.slug} product={item} />
         ))}
