@@ -3,6 +3,20 @@ import { getDb, DbOrder, DbUser, DbCartItem } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+function maskStreet(address?: string): string {
+  if (!address) return "";
+  const parts = address.trim().split(" ");
+  if (parts.length <= 1) return "***";
+  return `*** ${parts.slice(1).join(" ")}`;
+}
+
+function maskPhone(phone?: string): string {
+  if (!phone) return "";
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 4) return "***";
+  return `(***) ***-${digits.slice(-4)}`;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -129,13 +143,11 @@ export async function GET(req: NextRequest) {
           internal_order_number: r.internal_order_number,
           cj_order_id: r.cj_order_id,
           customer_email: r.customer_email,
-          customer_phone: r.customer_phone,
+          customer_phone: maskPhone(r.customer_phone),
           status: r.status,
           total_retail: r.total_retail,
-          total_wholesale: r.total_wholesale,
-          net_profit: r.net_profit,
           shipping_name: r.shipping_name,
-          shipping_address: r.shipping_address,
+          shipping_address: maskStreet(r.shipping_address),
           shipping_city: r.shipping_city,
           shipping_province: r.shipping_province,
           shipping_zip: r.shipping_zip,
