@@ -5,12 +5,39 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
+        userAgent: ["Pinterestbot", "Pinterest"],
+        allow: [
+          "/",
+          "/collections/",
+          "/products/",
+          "/catalog.xml",
+          "/feed.xml",
+          "/merchant-feed.xml",
+          "/api/catalog/feed",
+          "/privacy",
+          "/terms",
+          "/shipping-policy",
+          "/refund-policy",
+        ],
+        disallow: [
+          "/admin/",
+          "/cart",
+          "/checkout",
+          "/orders",
+          "/profile",
+          "/watchlist",
+        ],
+      },
+      {
         userAgent: "*",
         allow: [
           "/",
           "/collections/",
           "/products/",
+          "/catalog.xml",
+          "/feed.xml",
           "/merchant-feed.xml",
+          "/api/catalog/feed",
           "/privacy",
           "/terms",
           "/shipping-policy",

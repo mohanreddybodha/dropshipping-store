@@ -6,20 +6,18 @@ import CatalogBackgroundPrefetch from "./CatalogBackgroundPrefetch";
 // In-memory module-level session flag: once dismissed in this SPA runtime, never show again
 let globalSplashDismissed = false;
 
-export default function AppLaunchSplash() {
-  const [visible, setVisible] = useState(() => {
-    if (typeof window === "undefined") return true;
-    if (globalSplashDismissed) return false;
-    try {
-      if (sessionStorage.getItem("vastire_launch_splash_seen")) {
-        globalSplashDismissed = true;
-        document.documentElement.classList.add("splash-dismissed");
-        return false;
-      }
-    } catch {}
-    return true;
-  });
+function isBotUserAgent(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /bot|crawler|spider|pinterest|facebook|google|bing|yahoo|duckduck|headless|prerender|lighthouse/i.test(
+    ua
+  );
+}
 
+export default function AppLaunchSplash() {
+  // CRITICAL: Default to false on SSR so automated crawlers (Pinterestbot, Googlebot, Meta)
+  // receive unobstructed, pure HTML without a full-screen z-[99999] blocking overlay.
+  const [visible, setVisible] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   const dismiss = useCallback(() => {
@@ -41,7 +39,15 @@ export default function AppLaunchSplash() {
   }, []);
 
   useEffect(() => {
-    if (!visible || globalSplashDismissed) {
+    // If bot crawler, never display splash screen
+    if (isBotUserAgent()) {
+      globalSplashDismissed = true;
+      document.documentElement.classList.add("splash-dismissed");
+      document.body.classList.remove("splash-active");
+      return;
+    }
+
+    if (globalSplashDismissed) {
       document.documentElement.classList.add("splash-dismissed");
       document.body.classList.remove("splash-active");
       return;
@@ -52,23 +58,22 @@ export default function AppLaunchSplash() {
         globalSplashDismissed = true;
         document.documentElement.classList.add("splash-dismissed");
         document.body.classList.remove("splash-active");
-        setVisible(false);
         return;
       }
     } catch {}
 
+    // First-time human visitor in browser: show branded launch splash
+    setVisible(true);
     document.body.classList.add("splash-active");
 
-    // Auto-dismiss after 2.2 seconds (snappy brand intro on cold start)
     const timer = setTimeout(() => {
       dismiss();
-    }, 2200);
+    }, 1800);
 
     return () => clearTimeout(timer);
-  }, [visible, dismiss]);
+  }, [dismiss]);
 
-  // If already seen or dismissed, return ONLY the background prefetcher.
-  // Zero splash DOM nodes are rendered, preventing React from re-injecting them during navigation.
+  // If already seen, dismissed, or SSR crawler: return ONLY background prefetcher.
   if (!visible || globalSplashDismissed) {
     return <CatalogBackgroundPrefetch />;
   }
