@@ -265,9 +265,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`${
-          isHome ? "block" : "hidden md:block"
-        } sticky top-0 z-50 bg-white border-b border-slate-200/90 shadow-2xs`}
+        className="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-2xs"
       >
         <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-8 xl:px-10">
           <div className="h-16 flex items-center justify-between gap-3 sm:gap-6">

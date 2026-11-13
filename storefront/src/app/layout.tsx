@@ -3,7 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "../lib/cart";
 import { AppShell } from "../components/layout";
-import AppLaunchSplash from "../components/ui/AppLaunchSplash";
+import CatalogBackgroundPrefetch from "../components/ui/CatalogBackgroundPrefetch";
 import { buildGlobalOrganizationGraph, SITE_URL } from "../lib/seo";
 
 const brandPoppins = Poppins({
@@ -96,18 +96,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="p:domain_verify" content="9e0471cb8ca202c5260ff1e2886a6d9a" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                localStorage.removeItem('vastire_brand_emblem_uri');
-                if (sessionStorage.getItem('vastire_launch_splash_seen')) {
-                  document.documentElement.classList.add('splash-dismissed');
-                }
-              } catch (e) {}
-            `,
-          }}
-        />
       </head>
       <body
         suppressHydrationWarning
@@ -119,7 +107,7 @@ export default function RootLayout({
             __html: JSON.stringify(buildGlobalOrganizationGraph()),
           }}
         />
-        <AppLaunchSplash />
+        <CatalogBackgroundPrefetch />
         <CartProvider>
           <AppShell>{children}</AppShell>
         </CartProvider>
