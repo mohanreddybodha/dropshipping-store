@@ -177,37 +177,52 @@ def clean_consumer_title(raw_title: str) -> str:
 
 
 def categorize_product(title: str, category_name: str = "") -> str:
-    """Categorize item into one of the 5 consumer categories."""
+    """Categorize item into one of the 5 consumer categories using exact word boundaries."""
     combined = f"{title.lower()} {category_name.lower()}"
 
-    if any(k in combined for k in [
-        "light", "lamp", "led", "bulb", "lantern", "nightlight", "ambient", "sconce",
-        "solar light", "rgb", "ceiling light", "strip light", "glow", "backlit", "illumination"
-    ]):
+    # 1. Smart Lighting
+    lighting_patterns = [
+        r"\blights?\b", r"\blamps?\b", r"\bleds?\b", r"\bbulbs?\b", r"\blanterns?\b",
+        r"\bnightlights?\b", r"\bambient\b", r"\bsconces?\b", r"\bsolar lights?\b",
+        r"\brgb\b", r"\bceiling lights?\b", r"\bstrip lights?\b", r"\bglow\b",
+        r"\bbacklit\b", r"\billumination\b", r"\bchandelier\b", r"\bspotlight\b"
+    ]
+    if any(re.search(pat, combined) for pat in lighting_patterns):
         return "Smart Lighting"
 
-    if any(k in combined for k in [
-        "outdoor", "patio", "camping", "hammock", "fire pit", "garden", "bbq", "grill",
-        "hiking", "tent", "picnic", "backyard", "deck", "canopy", "survival", "compass",
-        "antenna", "firepit", "campfire"
-    ]):
+    # 2. Outdoor & Patio
+    outdoor_patterns = [
+        r"\boutdoors?\b", r"\bpatios?\b", r"\bcamping\b", r"\bhammocks?\b",
+        r"\bfire\s*pits?\b", r"\bgardens?\b", r"\bbbq\b", r"\bgrills?\b",
+        r"\bhiking\b", r"\btents?\b", r"\bpicnics?\b", r"\bbackyards?\b",
+        r"\bdecks?\b", r"\bcanop(y|ies)\b", r"\bsurvival\b", r"\bcompass\b",
+        r"\bcampfire\b"
+    ]
+    if any(re.search(pat, combined) for pat in outdoor_patterns):
         return "Outdoor & Patio"
 
-    if any(k in combined for k in [
-        "car", "auto", "vehicle", "wallet", "keychain", "edc", "tire", "windshield",
-        "trunk", "key holder", "emergency", "seat", "visor", "charger car", "mount car",
-        "radar", "dash", "cupholder"
-    ]):
+    # 3. Everyday Carry & Auto
+    edc_auto_patterns = [
+        r"\bcars?\b", r"\bauto\b", r"\bautomotive\b", r"\bvehicles?\b",
+        r"\bwallets?\b", r"\bkeychains?\b", r"\bedc\b", r"\btires?\b",
+        r"\bwindshields?\b", r"\btrunks?\b", r"\bkey\s*holders?\b",
+        r"\bvisors?\b", r"\bdash\b", r"\bcupholders?\b"
+    ]
+    if any(re.search(pat, combined) for pat in edc_auto_patterns):
         return "Everyday Carry & Auto"
 
-    if any(k in combined for k in [
-        "desk", "office", "computer", "laptop", "cable", "mouse", "keyboard", "stand",
-        "tablet", "screen", "monitor", "dock", "headphone", "audio", "usb", "ergonomic",
-        "clock", "charger", "station", "stationery", "organizer desk"
-    ]):
+    # 4. Workspace & Tech
+    workspace_patterns = [
+        r"\bdesks?\b", r"\boffices?\b", r"\bcomputers?\b", r"\blaptops?\b",
+        r"\bcables?\b", r"\bmice\b", r"\bkeyboards?\b", r"\bstands?\b",
+        r"\btablets?\b", r"\bscreens?\b", r"\bmonitors?\b", r"\bdocks?\b",
+        r"\bheadphones?\b", r"\baudios?\b", r"\busb\b", r"\bergonomic\b",
+        r"\bclocks?\b", r"\bchargers?\b", r"\bstations?\b", r"\bstationery\b"
+    ]
+    if any(re.search(pat, combined) for pat in workspace_patterns):
         return "Workspace & Tech"
 
-    # Default consumer problem solver
+    # 5. Default: Home & Kitchen
     return "Home & Kitchen"
 
 
@@ -363,6 +378,18 @@ def run_bulk_seed(target: int = 150) -> int:
         logger.info("Starting Bulk Catalog Seed (Target: %d products)...", target)
 
     # 1. Clean existing legacy records in DB with dirty titles or single images
+    try:
+        from sqlalchemy import text
+        with engine.begin() as conn:
+            for tbl, seq in [("products", "products_id_seq"), ("product_variants", "product_variants_id_seq")]:
+                try:
+                    m = conn.execute(text(f"SELECT COALESCE(MAX(id), 0) FROM {tbl}")).scalar()
+                    conn.execute(text(f"SELECT setval('{seq}', {max(m, 1)}, true)"))
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
     existing_records = session.query(Product).all()
     cleaned_count = 0
     for prod in existing_records:
@@ -402,15 +429,18 @@ def run_bulk_seed(target: int = 150) -> int:
     items_processed = 0
     errors = []
 
-    # Paginate through US warehouse pages and targeted keywords with Double-Gate filtering (>= 50 physical US units)
+    # Paginate through high-converting targeted keywords first, then general US warehouse
+    keywords = [
+        "kitchen", "desk", "led", "lamp", "charger", "storage", "organizer",
+        "outdoor", "camping", "gadget", "bottle", "stand", "car", "fan",
+        "cleaner", "knife", "box", "hook", "tool", "cable", "holder",
+        "dispenser", "peeler", "mug", "cup", "thermos", "timer", "scale",
+        "nightlight", "lantern", "solar", "mount", "wallet", "keychain",
+        "clock", "audio", "grill", "tent", "hammock", "blanket", "compass"
+    ]
     queries = (
-        [{"page": p, "keyword": None, "stock": MIN_INGESTION_US_STOCK} for p in range(45, 85)] +
-        [{"page": p, "keyword": kw, "stock": MIN_INGESTION_US_STOCK} for kw in [
-            "kitchen", "outdoor", "camping", "led", "lamp", "charger",
-            "storage", "cleaner", "brush", "knife", "fan", "box", "hook",
-            "mat", "car", "pet", "tool", "gadget", "organizer", "bottle",
-            "rack", "cable", "stand"
-        ] for p in [1, 2, 3]]
+        [{"page": p, "keyword": kw, "stock": MIN_INGESTION_US_STOCK} for kw in keywords for p in range(1, 8)] +
+        [{"page": p, "keyword": None, "stock": MIN_INGESTION_US_STOCK} for p in range(1, 45)]
     )
 
     seen_pids = {p.pid for p in session.query(Product.pid).all()}

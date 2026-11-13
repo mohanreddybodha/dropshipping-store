@@ -214,7 +214,11 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
                 topRightActions={
                   <>
                     <ProductWatchlistButton product={product} />
-                    <ProductShareButton title={product.title} />
+                    <ProductShareButton
+                      title={product.title}
+                      heroImage={product.hero_image_url || product.images?.[0]}
+                      slug={product.slug}
+                    />
                   </>
                 }
               />
