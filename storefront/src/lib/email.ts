@@ -71,22 +71,22 @@ export async function sendOrderConfirmationEmail(params: SendOrderConfirmationPa
     .map(
       (item) => `
       <tr style="border-bottom: 1px solid #f1f5f9;">
-        <td style="padding: 12px 0;">
-          <div style="font-weight: 600; color: #0f172a; font-size: 14px;">${escapeHtml(item.title)}</div>
+        <td style="padding: 16px 8px 16px 0; vertical-align: middle;">
+          <div style="font-weight: 700; color: #0f172a; font-size: 15px; line-height: 1.4;">${escapeHtml(item.title)}</div>
           ${
             item.size || item.color
-              ? `<div style="font-size: 12px; color: #64748b; margin-top: 2px;">
-                  ${item.size ? `Size: ${escapeHtml(item.size)}` : ""}
-                  ${item.size && item.color ? " • " : ""}
-                  ${item.color ? `Color: ${escapeHtml(item.color)}` : ""}
+              ? `<div style="font-size: 13px; color: #64748b; margin-top: 4px;">
+                  ${item.size ? `Size: <strong>${escapeHtml(item.size)}</strong>` : ""}
+                  ${item.size && item.color ? " &bull; " : ""}
+                  ${item.color ? `Color: <strong>${escapeHtml(item.color)}</strong>` : ""}
                 </div>`
               : ""
           }
         </td>
-        <td style="padding: 12px 8px; text-align: center; color: #334155; font-size: 13px; font-weight: 600;">
+        <td style="padding: 16px 12px; text-align: center; color: #334155; font-size: 14px; font-weight: 700; vertical-align: middle;">
           ${item.quantity}
         </td>
-        <td style="padding: 12px 0; text-align: right; color: #0f172a; font-size: 14px; font-weight: 700;">
+        <td style="padding: 16px 0 16px 12px; text-align: right; color: #0f172a; font-size: 15px; font-weight: 800; vertical-align: middle;">
           $${Number(item.price * item.quantity).toFixed(2)}
         </td>
       </tr>`
@@ -101,59 +101,71 @@ export async function sendOrderConfirmationEmail(params: SendOrderConfirmationPa
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Order Confirmation - ${orderNumber}</title>
     </head>
-    <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 32px 16px;">
+    <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 20px 12px;">
         <tr>
           <td align="center">
-            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 580px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-              <!-- Header -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 680px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);">
+              <!-- Brand Header with Vastire Emblem Icon -->
               <tr>
-                <td style="background-color: #064e3b; padding: 24px 32px; text-align: left;">
-                  <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Vastire</h1>
-                  <p style="margin: 4px 0 0 0; color: #a7f3d0; font-size: 13px;">Curated Home, Kitchen & Workspace Essentials</p>
+                <td style="background-color: #064e3b; padding: 24px 36px; text-align: left;">
+                  <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                    <tr>
+                      <td style="vertical-align: middle; width: 50px;">
+                        <img src="https://vastire.com/brand-emblem.png" width="46" height="37" alt="Vastire" style="display: block; width: 46px; height: auto; border: 0;" />
+                      </td>
+                      <td style="vertical-align: middle; padding-left: 14px;">
+                        <span style="color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; display: block;">Vastire</span>
+                        <span style="color: #a7f3d0; font-size: 13px; font-weight: 500; margin-top: 2px; display: block;">Curated Home, Kitchen &amp; Workspace Essentials</span>
+                      </td>
+                      <td style="vertical-align: middle; text-align: right;">
+                        <span style="background-color: #047857; color: #ffffff; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">
+                          Order Confirmed
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
                 </td>
               </tr>
 
-              <!-- Body -->
+              <!-- Email Body -->
               <tr>
-                <td style="padding: 32px;">
-                  <div style="display: inline-block; background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 12px; font-weight: 700; padding: 4px 10px; rounded: 8px; border-radius: 20px; text-transform: uppercase; margin-bottom: 16px;">
-                    Order Confirmed
-                  </div>
-
-                  <h2 style="margin: 0 0 8px 0; font-size: 20px; color: #0f172a; font-weight: 800;">
+                <td style="padding: 36px;">
+                  <h2 style="margin: 0 0 10px 0; font-size: 22px; color: #0f172a; font-weight: 800; letter-spacing: -0.3px;">
                     Thank you for your order, ${escapeHtml(customerName)}!
                   </h2>
-                  <p style="margin: 0 0 24px 0; color: #475569; font-size: 14px; line-height: 1.6;">
-                    We have received your payment and dispatched your order to our domestic US fulfillment team. Your package will ship via tracked ground courier (USPS / UPS / FedEx) within 3–5 business days.
+                  <p style="margin: 0 0 24px 0; color: #475569; font-size: 15px; line-height: 1.6;">
+                    We have received your payment and dispatched your order to our domestic US fulfillment warehouse. Your package will ship via tracked ground courier within 3&ndash;5 business days.
                   </p>
 
-                  <!-- Order Metadata Box -->
-                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                  <!-- 2-Column Responsive Order Information Card -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 28px;">
                     <tr>
-                      <td style="padding: 6px 12px; font-size: 13px; color: #64748b;">Order Reference:</td>
-                      <td style="padding: 6px 12px; font-size: 13px; color: #0f172a; font-weight: 700; text-align: right;">${orderNumber}</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 6px 12px; font-size: 13px; color: #64748b;">Shipping SLA:</td>
-                      <td style="padding: 6px 12px; font-size: 13px; color: #059669; font-weight: 700; text-align: right;">Est. 3–5 Business Days (Free)</td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 6px 12px; font-size: 13px; color: #64748b;">Deliver To:</td>
-                      <td style="padding: 6px 12px; font-size: 13px; color: #0f172a; font-weight: 600; text-align: right;">
-                        ${escapeHtml(shippingAddress)}, ${escapeHtml(shippingCity)}, ${shippingProvince} ${shippingZip}
+                      <td style="padding: 18px 24px; width: 50%; vertical-align: top; border-right: 1px solid #e2e8f0;">
+                        <div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Order Reference</div>
+                        <div style="font-size: 16px; color: #0f172a; font-weight: 800;">${orderNumber}</div>
+                        <div style="font-size: 13px; color: #059669; font-weight: 700; margin-top: 6px;">&#10003; 3&ndash;5 Day Domestic Delivery</div>
+                      </td>
+                      <td style="padding: 18px 24px; width: 50%; vertical-align: top;">
+                        <div style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Shipping Destination</div>
+                        <div style="font-size: 14px; color: #0f172a; font-weight: 600; line-height: 1.4;">
+                          ${escapeHtml(shippingAddress)}<br />
+                          ${escapeHtml(shippingCity)}, ${escapeHtml(shippingProvince)} ${escapeHtml(shippingZip)}
+                        </div>
                       </td>
                     </tr>
                   </table>
 
-                  <!-- Items Table -->
-                  <h3 style="margin: 0 0 12px 0; font-size: 15px; color: #0f172a; font-weight: 700;">Items Ordered</h3>
+                  <!-- Order Items Table -->
+                  <h3 style="margin: 0 0 14px 0; font-size: 16px; color: #0f172a; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+                    Items Ordered
+                  </h3>
                   <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
                     <thead>
-                      <tr style="border-bottom: 2px solid #e2e8f0;">
-                        <th align="left" style="padding-bottom: 8px; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700;">Product</th>
-                        <th align="center" style="padding-bottom: 8px; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; width: 60px;">Qty</th>
-                        <th align="right" style="padding-bottom: 8px; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; width: 80px;">Total</th>
+                      <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <th align="left" style="padding: 8px 0; font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 700;">Item</th>
+                        <th align="center" style="padding: 8px 12px; font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 700; width: 60px;">Qty</th>
+                        <th align="right" style="padding: 8px 0; font-size: 12px; text-transform: uppercase; color: #64748b; font-weight: 700; width: 100px;">Price</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -161,33 +173,37 @@ export async function sendOrderConfirmationEmail(params: SendOrderConfirmationPa
                     </tbody>
                     <tfoot>
                       <tr>
-                        <td colspan="2" style="padding-top: 16px; font-size: 14px; font-weight: 600; color: #475569;">Domestic Ground Shipping</td>
-                        <td style="padding-top: 16px; font-size: 14px; font-weight: 700; color: #059669; text-align: right;">Free</td>
+                        <td colspan="2" style="padding: 16px 0 6px 0; font-size: 14px; color: #64748b; text-align: right;">Subtotal:</td>
+                        <td style="padding: 16px 0 6px 0; font-size: 15px; color: #0f172a; font-weight: 700; text-align: right;">$${Number(totalRetail).toFixed(2)}</td>
                       </tr>
                       <tr>
-                        <td colspan="2" style="padding-top: 8px; font-size: 16px; font-weight: 800; color: #0f172a;">Total Paid</td>
-                        <td style="padding-top: 8px; font-size: 18px; font-weight: 900; color: #0f172a; text-align: right;">$${totalRetail.toFixed(2)} USD</td>
+                        <td colspan="2" style="padding: 4px 0 10px 0; font-size: 14px; color: #64748b; text-align: right;">Domestic Tracked Delivery:</td>
+                        <td style="padding: 4px 0 10px 0; font-size: 14px; color: #059669; font-weight: 800; text-align: right;">FREE</td>
+                      </tr>
+                      <tr style="border-top: 2px solid #e2e8f0;">
+                        <td colspan="2" style="padding: 14px 0; font-size: 16px; font-weight: 800; color: #0f172a; text-align: right;">Total Paid:</td>
+                        <td style="padding: 14px 0; font-size: 20px; font-weight: 800; color: #059669; text-align: right;">$${Number(totalRetail).toFixed(2)} USD</td>
                       </tr>
                     </tfoot>
                   </table>
 
-                  <!-- Action Button -->
-                  <div style="text-align: center; margin: 32px 0 16px 0;">
-                    <a href="https://vastire.com/orders" style="display: inline-block; background-color: #059669; color: #ffffff; font-weight: 700; font-size: 14px; padding: 14px 28px; text-decoration: none; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.3);">
-                      Track Order on Vastire
+                  <!-- Primary CTA Button -->
+                  <div style="text-align: center; margin: 32px 0 20px 0;">
+                    <a href="https://vastire.com/orders" style="display: inline-block; background-color: #059669; color: #ffffff; font-weight: 800; font-size: 15px; padding: 15px 36px; text-decoration: none; border-radius: 10px; box-shadow: 0 4px 10px rgba(5, 150, 105, 0.25);">
+                      Track Order on Vastire &rarr;
                     </a>
                   </div>
 
-                  <p style="margin: 24px 0 0 0; color: #64748b; font-size: 12px; text-align: center; line-height: 1.5;">
-                    Need help or want to modify your order? Simply reply directly to this email or visit our <a href="https://vastire.com/orders" style="color: #059669; text-decoration: underline;">Support & Tracking Page</a>.
+                  <p style="margin: 20px 0 0 0; color: #64748b; font-size: 13px; text-align: center; line-height: 1.6;">
+                    Have questions or need to modify your delivery? Reply directly to this email or visit our <a href="https://vastire.com/orders" style="color: #059669; font-weight: 600; text-decoration: underline;">Support &amp; Tracking Center</a>.
                   </p>
                 </td>
               </tr>
 
-              <!-- Footer -->
+              <!-- Footer with Clean Neutral Branding -->
               <tr>
-                <td style="background-color: #f1f5f9; padding: 16px 32px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
-                  Vastire • Domestic US Fulfillment
+                <td style="background-color: #f8fafc; padding: 20px 36px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                  Vastire &bull; Domestic US Fulfillment &bull; <a href="https://vastire.com" style="color: #64748b; text-decoration: none;">vastire.com</a>
                 </td>
               </tr>
             </table>
@@ -269,41 +285,131 @@ export async function sendAdminOrderAlertEmail(params: SendAdminOrderAlertParams
 
   const itemsList = items
     .map(
-      (it) => `<li style="margin-bottom: 6px;"><strong>${escapeHtml(it.title)}</strong> (Qty: ${it.quantity}) - $${Number(it.price * it.quantity).toFixed(2)}${it.size ? ` [Size: ${escapeHtml(it.size)}]` : ""}${it.color ? ` [Color: ${escapeHtml(it.color)}]` : ""}</li>`
+      (it) => `
+      <tr style="border-bottom: 1px solid #f1f5f9;">
+        <td style="padding: 10px 0; color: #0f172a; font-weight: 600;">
+          ${escapeHtml(it.title)}
+          ${it.color || it.size ? `<div style="font-size: 12px; color: #64748b; font-weight: normal;">${it.color ? `Color: ${escapeHtml(it.color)}` : ''} ${it.size ? `Size: ${escapeHtml(it.size)}` : ''}</div>` : ''}
+        </td>
+        <td style="padding: 10px 8px; text-align: center; color: #475569; font-weight: 700;">${it.quantity}</td>
+        <td style="padding: 10px 0; text-align: right; color: #0f172a; font-weight: 700;">$${Number(it.price * it.quantity).toFixed(2)}</td>
+      </tr>`
     )
     .join("");
 
   const adminHtml = `
   <!DOCTYPE html>
   <html>
-    <head><meta charset="utf-8"></head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; padding: 24px; color: #0f172a;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; padding: 24px;">
-        <div style="background: #064e3b; color: #ffffff; padding: 16px 20px; border-radius: 8px; margin-bottom: 20px;">
-          <h2 style="margin: 0; font-size: 18px; color: #ffffff;">🛒 New Paid Order Received</h2>
-          <p style="margin: 4px 0 0 0; font-size: 13px; color: #a7f3d0;">Order: <strong>${orderNumber}</strong> | PayPal Txn: ${paypalOrderId}</p>
-        </div>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Order Alert: ${orderNumber}</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f1f5f9; color: #0f172a;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 20px 12px;">
+        <tr>
+          <td align="center">
+            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 680px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);">
+              <!-- Admin Header with Instant Navigation Link -->
+              <tr>
+                <td style="background-color: #064e3b; padding: 22px 32px;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="vertical-align: middle;">
+                        <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; color: #a7f3d0; margin-bottom: 4px;">
+                          &#128722; Instant Order Alert
+                        </div>
+                        <h2 style="margin: 0; font-size: 20px; color: #ffffff; font-weight: 800;">
+                          New Paid Order #${orderNumber}
+                        </h2>
+                      </td>
+                      <td style="vertical-align: middle; text-align: right;">
+                        <!-- Instant Admin Action Link -->
+                        <a href="https://vastire.com/admin/orders" style="display: inline-block; background-color: #ffffff; color: #064e3b; font-weight: 800; font-size: 13px; padding: 10px 18px; text-decoration: none; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                          Open in Admin &rarr;
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
-          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b;">Customer:</td><td style="padding: 8px 0; font-weight: 600; text-align: right;">${escapeHtml(customerName)} (${escapeHtml(customerEmail)})</td></tr>
-          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b;">Phone:</td><td style="padding: 8px 0; font-weight: 600; text-align: right;">${escapeHtml(customerPhone || "N/A")}</td></tr>
-          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b;">Shipping Address:</td><td style="padding: 8px 0; font-weight: 600; text-align: right;">${escapeHtml(shippingAddress)}, ${escapeHtml(shippingCity)}, ${shippingProvince} ${shippingZip}</td></tr>
-          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b;">Total Paid by Buyer:</td><td style="padding: 8px 0; font-weight: 700; color: #059669; text-align: right;">$${totalRetail.toFixed(2)} USD</td></tr>
-          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b;">Est. Supplier Wholesale Cost:</td><td style="padding: 8px 0; text-align: right;">$${totalWholesale.toFixed(2)} USD</td></tr>
-          <tr><td style="padding: 8px 0; color: #64748b; font-weight: 700;">Est. Net Profit:</td><td style="padding: 8px 0; font-weight: 800; color: #065f46; text-align: right;">$${netProfit.toFixed(2)} USD</td></tr>
-        </table>
+              <!-- Profit & Financial Breakdown Banner -->
+              <tr>
+                <td style="padding: 24px 32px 12px 32px;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+                    <tr>
+                      <td style="width: 33%; text-align: left;">
+                        <div style="font-size: 11px; color: #047857; text-transform: uppercase; font-weight: 700;">Customer Paid</div>
+                        <div style="font-size: 20px; color: #065f46; font-weight: 800; margin-top: 2px;">$${totalRetail.toFixed(2)}</div>
+                      </td>
+                      <td style="width: 33%; text-align: center; border-left: 1px solid #a7f3d0; border-right: 1px solid #a7f3d0;">
+                        <div style="font-size: 11px; color: #047857; text-transform: uppercase; font-weight: 700;">Supplier Cost</div>
+                        <div style="font-size: 20px; color: #065f46; font-weight: 800; margin-top: 2px;">$${totalWholesale.toFixed(2)}</div>
+                      </td>
+                      <td style="width: 33%; text-align: right;">
+                        <div style="font-size: 11px; color: #047857; text-transform: uppercase; font-weight: 700;">Net Profit</div>
+                        <div style="font-size: 20px; color: #059669; font-weight: 800; margin-top: 2px;">+$${netProfit.toFixed(2)}</div>
+                      </td>
+                    </tr>
+                  </table>
 
-        <h3 style="font-size: 15px; margin: 16px 0 8px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Items (${items.length}):</h3>
-        <ul style="padding-left: 20px; font-size: 13px; line-height: 1.6; color: #334155;">
-          ${itemsList}
-        </ul>
+                  <!-- Customer & Shipping Details (2-Column) -->
+                  <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 24px;">
+                    <tr>
+                      <td style="padding: 16px 20px; width: 50%; vertical-align: top; border-right: 1px solid #e2e8f0;">
+                        <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Customer Details</div>
+                        <div style="font-weight: 700; color: #0f172a; font-size: 14px;">${escapeHtml(customerName)}</div>
+                        <div style="font-size: 13px; color: #059669; margin-top: 2px;"><a href="mailto:${customerEmail}" style="color: #059669; text-decoration: none;">${customerEmail}</a></div>
+                        ${customerPhone ? `<div style="font-size: 13px; color: #64748b; margin-top: 2px;">${escapeHtml(customerPhone)}</div>` : ''}
+                      </td>
+                      <td style="padding: 16px 20px; width: 50%; vertical-align: top;">
+                        <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Shipping Destination</div>
+                        <div style="font-size: 13px; color: #0f172a; line-height: 1.4; font-weight: 600;">
+                          ${escapeHtml(shippingAddress)}<br />
+                          ${escapeHtml(shippingCity)}, ${escapeHtml(shippingProvince)} ${escapeHtml(shippingZip)}
+                        </div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 6px;">PayPal Ref: <code>${escapeHtml(paypalOrderId)}</code></div>
+                      </td>
+                    </tr>
+                  </table>
 
-        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; text-align: center;">
-          <a href="https://vastire.com/admin/orders" style="display: inline-block; background: #0f172a; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600;">
-            View in Admin Dashboard
-          </a>
-        </div>
-      </div>
+                  <!-- Line Items -->
+                  <h3 style="margin: 0 0 10px 0; font-size: 15px; color: #0f172a; font-weight: 800;">
+                    Ordered Items (${items.length})
+                  </h3>
+                  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
+                    <thead>
+                      <tr style="border-bottom: 2px solid #e2e8f0;">
+                        <th align="left" style="padding: 6px 0; font-size: 11px; text-transform: uppercase; color: #64748b;">Item Title</th>
+                        <th align="center" style="padding: 6px 8px; font-size: 11px; text-transform: uppercase; color: #64748b; width: 50px;">Qty</th>
+                        <th align="right" style="padding: 6px 0; font-size: 11px; text-transform: uppercase; color: #64748b; width: 90px;">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${itemsList}
+                    </tbody>
+                  </table>
+
+                  <!-- Large Action Button -->
+                  <div style="text-align: center; padding: 16px 0 8px 0; border-top: 1px solid #e2e8f0;">
+                    <a href="https://vastire.com/admin/orders" style="display: inline-block; background-color: #0f172a; color: #ffffff; font-weight: 800; font-size: 14px; padding: 14px 32px; text-decoration: none; border-radius: 8px;">
+                      Open Vastire Admin Orders Dashboard &rarr;
+                    </a>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f8fafc; padding: 16px 32px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                  Automated Internal Notification &bull; Vastire Administration
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
     </body>
   </html>
   `;
