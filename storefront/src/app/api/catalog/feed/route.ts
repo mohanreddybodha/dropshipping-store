@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ==========================================
-    // 2. Standard Media RSS (for Pinterest RSS auto-publish)
+    // 2. Standard Media RSS (for Pinterest RSS auto-publish & scrapers)
     // ==========================================
     if (format === "rss") {
       const itemsXml = activeProducts
@@ -121,18 +121,23 @@ export async function GET(req: NextRequest) {
       <description><![CDATA[${desc}]]></description>
       <pubDate>${pubDate}</pubDate>
       ${imageLink ? `<enclosure url="${escapeXml(imageLink)}" length="102400" type="image/jpeg" />` : ""}
+      ${imageLink ? `<media:content url="${escapeXml(imageLink)}" medium="image" type="image/jpeg">
+        <media:title><![CDATA[${p.title}]]></media:title>
+        <media:description><![CDATA[${desc}]]></media:description>
+      </media:content>` : ""}
     </item>`;
         })
         .join("\n");
 
       const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Vastire - Modern Home &amp; Living</title>
     <link>${SITE_URL}</link>
     <description>Curated modern essentials for your home, kitchen and personal workspace. Free 3-5 day tracked US shipping.</description>
     <language>en-US</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml" />
 ${itemsXml}
   </channel>
 </rss>`;
@@ -171,9 +176,10 @@ ${itemsXml}
       <g:image_link>${escapeXml(imageLink)}</g:image_link>
       ${additionalImages ? `${additionalImages}` : ""}
       <g:price>${price.toFixed(2)} USD</g:price>
-      <g:availability>in stock</g:availability>
+      <g:availability>in_stock</g:availability>
       <g:condition>new</g:condition>
       <g:brand>Vastire</g:brand>
+      <g:identifier_exists>false</g:identifier_exists>
       <g:product_type><![CDATA[${category}]]></g:product_type>
       <g:google_product_category>Home &amp; Garden</g:google_product_category>
       <g:shipping>

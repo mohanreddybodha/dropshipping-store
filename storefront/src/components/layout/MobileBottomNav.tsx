@@ -2,21 +2,25 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useCart } from "../../lib/cart";
 
-// ── Custom SVG Tab Icons Matching User Design (media_1794652588225_edab7147.png) ──
+// ── Full Gapless SVG Tab Icons (Green Theme) ──
 
 function HomeTabIcon({ active }: { active: boolean }) {
   if (active) {
     return (
-      <svg className="w-5 h-5 text-rose-500 fill-current" viewBox="0 0 24 24">
-        <path d="M12 2.5L2.5 10.5C2.18 10.77 2 11.17 2 11.6V20C2 21.1 2.9 22 4 22H9.5C9.78 22 10 21.78 10 21.5V15.5C10 14.67 10.67 14 11.5 14H12.5C13.33 14 14 14.67 14 15.5V21.5C14 21.78 14.22 22 14.5 22H20C21.1 22 22 21.1 22 20V11.6C22 11.17 21.82 10.77 21.5 10.5L12 2.5Z" />
+      <svg
+        className="w-5 h-5 text-emerald-600 fill-current transition-transform duration-200 scale-105"
+        viewBox="0 0 24 24"
+      >
+        <path d="M12 2L2 10.5V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V10.5L12 2Z" />
       </svg>
     );
   }
   return (
     <svg
-      className="w-5 h-5 text-slate-600"
+      className="w-5 h-5 text-slate-600 transition-transform duration-200"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -30,53 +34,20 @@ function HomeTabIcon({ active }: { active: boolean }) {
   );
 }
 
-function MessagesTabIcon({ active }: { active: boolean }) {
-  if (active) {
-    return (
-      <svg className="w-5 h-5 text-rose-500" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20 2H4C2.9 2 2 2.9 2 4V17C2 18.1 2.9 19 4 19H6V22.5L10.5 19H20C21.1 19 22 18.1 22 17V4C22 2.9 21.1 2 20 2Z" />
-        <line x1="7" y1="8.5" x2="17" y2="8.5" stroke="white" strokeWidth="2" strokeLinecap="round" />
-        <line x1="7" y1="12.5" x2="14" y2="12.5" stroke="white" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  return (
-    <svg
-      className="w-5 h-5 text-slate-600"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      <line x1="9" y1="8" x2="15" y2="8" />
-      <line x1="9" y1="12" x2="13" y2="12" />
-    </svg>
-  );
-}
-
-function SearchTabIcon({ active }: { active: boolean }) {
+function CollectionsTabIcon({ active }: { active: boolean }) {
   if (active) {
     return (
       <svg
-        className="w-5 h-5 text-rose-500"
+        className="w-5 h-5 text-emerald-600 fill-current transition-transform duration-200 scale-105"
         viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
       >
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
       </svg>
     );
   }
   return (
     <svg
-      className="w-5 h-5 text-slate-600"
+      className="w-5 h-5 text-slate-600 transition-transform duration-200"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -84,30 +55,26 @@ function SearchTabIcon({ active }: { active: boolean }) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
     </svg>
   );
 }
 
-function HistoryTabIcon({ active }: { active: boolean }) {
+function CartTabIcon({ active }: { active: boolean }) {
   if (active) {
     return (
-      <svg className="w-5 h-5 text-rose-500" viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="12" cy="12" r="10" />
-        <polyline
-          points="12 6 12 12 16 12"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+      <svg
+        className="w-5 h-5 text-emerald-600 fill-current transition-transform duration-200 scale-105"
+        viewBox="0 0 24 24"
+      >
+        <path d="M4 7C4 5.9 4.9 5 6 5H18C19.1 5 20 5.9 20 7V19C20 20.1 19.1 21 18 21H6C4.9 21 4 20.1 4 19V7Z" />
+        <path d="M9 5V4C9 2.34 10.34 1 12 1C13.66 1 15 2.34 15 4V5H13V4C13 3.45 12.55 3 12 3C11.45 3 11 3.45 11 4V5H9Z" />
       </svg>
     );
   }
   return (
     <svg
-      className="w-5 h-5 text-slate-600"
+      className="w-5 h-5 text-slate-600 transition-transform duration-200"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -115,8 +82,9 @@ function HistoryTabIcon({ active }: { active: boolean }) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
+      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+      <path d="M3 6h18" />
+      <path d="M16 10a4 4 0 0 1-8 0" />
     </svg>
   );
 }
@@ -124,7 +92,10 @@ function HistoryTabIcon({ active }: { active: boolean }) {
 function ProfileTabIcon({ active }: { active: boolean }) {
   if (active) {
     return (
-      <svg className="w-5 h-5 text-rose-500" viewBox="0 0 24 24" fill="currentColor">
+      <svg
+        className="w-5 h-5 text-emerald-600 fill-current transition-transform duration-200 scale-105"
+        viewBox="0 0 24 24"
+      >
         <circle cx="12" cy="7" r="4.5" />
         <path d="M4 21C4 16.58 7.58 13 12 13C16.42 13 20 16.58 20 21H4Z" />
       </svg>
@@ -132,7 +103,7 @@ function ProfileTabIcon({ active }: { active: boolean }) {
   }
   return (
     <svg
-      className="w-5 h-5 text-slate-600"
+      className="w-5 h-5 text-slate-600 transition-transform duration-200"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -147,142 +118,91 @@ function ProfileTabIcon({ active }: { active: boolean }) {
 }
 
 export default function MobileBottomNav() {
-  const router = useRouter();
   const pathname = usePathname();
-  const [isSearchActive, setIsSearchActive] = useState(false);
+  const { itemCount } = useCart();
+  const [mounted, setMounted] = useState(false);
 
-  // Listen to search open/close events from Navbar
   useEffect(() => {
-    const onSearchOpen = () => setIsSearchActive(true);
-    const onSearchClose = () => setIsSearchActive(false);
-
-    window.addEventListener("app:search_opened", onSearchOpen);
-    window.addEventListener("app:search_closed", onSearchClose);
-
-    return () => {
-      window.removeEventListener("app:search_opened", onSearchOpen);
-      window.removeEventListener("app:search_closed", onSearchClose);
-    };
+    setMounted(true);
   }, []);
-
-  // Reset search active state on route changes unless query has active search
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const q = new URLSearchParams(window.location.search).get("search");
-      if (!q || q === "open") {
-        setIsSearchActive(q === "open");
-      }
-    }
-  }, [pathname]);
 
   // Do not render bottom nav on checkout or product detail pages
   if (pathname === "/checkout" || pathname.startsWith("/products/")) return null;
 
-  const isHomeActive = pathname === "/" && !isSearchActive;
-  const isMessagesActive = pathname === "/messages";
-  const isHistoryActive = pathname === "/orders";
-  const isProfileActive = pathname === "/profile";
-
-  const handleSearchClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (pathname === "/") {
-      window.dispatchEvent(new CustomEvent("app:open_search"));
-    } else {
-      router.push("/?search=open");
-    }
-  };
+  const navItems = [
+    {
+      label: "Home",
+      href: "/",
+      icon: HomeTabIcon,
+      isActive: pathname === "/",
+    },
+    {
+      label: "Collections",
+      href: "/watchlist",
+      icon: CollectionsTabIcon,
+      isActive: pathname === "/watchlist",
+    },
+    {
+      label: "Cart",
+      href: "/cart",
+      icon: CartTabIcon,
+      isActive: pathname === "/cart",
+      badge: mounted && itemCount > 0 ? itemCount : null,
+    },
+    {
+      label: "Profile",
+      href: "/profile",
+      icon: ProfileTabIcon,
+      isActive: pathname === "/profile",
+    },
+  ];
 
   return (
     <nav
       aria-label="Mobile Navigation Bar"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white rounded-t-[26px] border-t border-slate-100 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white rounded-t-[26px] border-t border-slate-100 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5"
     >
-      <div className="grid grid-cols-5 h-12">
-        {/* 1. Home Tab */}
-        <Link
-          href="/"
-          prefetch={true}
-          onClick={(e) => {
-            if (isHomeActive && typeof window !== "undefined") {
-              e.preventDefault();
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }
-          }}
-          className="flex flex-col items-center justify-center transition-all duration-150 active:scale-95 select-none"
-        >
-          <HomeTabIcon active={isHomeActive} />
-          <span
-            className={`text-[11px] mt-1 tracking-tight ${
-              isHomeActive ? "text-rose-500 font-medium" : "text-slate-600 font-normal"
-            }`}
-          >
-            Home
-          </span>
-        </Link>
-
-        {/* 2. Messages Tab */}
-        <Link
-          href="/messages"
-          prefetch={true}
-          className="flex flex-col items-center justify-center transition-all duration-150 active:scale-95 select-none"
-        >
-          <MessagesTabIcon active={isMessagesActive} />
-          <span
-            className={`text-[11px] mt-1 tracking-tight ${
-              isMessagesActive ? "text-rose-500 font-medium" : "text-slate-600 font-normal"
-            }`}
-          >
-            Messages
-          </span>
-        </Link>
-
-        {/* 3. Search Tab */}
-        <button
-          type="button"
-          onClick={handleSearchClick}
-          className="flex flex-col items-center justify-center transition-all duration-150 active:scale-95 select-none cursor-pointer"
-        >
-          <SearchTabIcon active={isSearchActive} />
-          <span
-            className={`text-[11px] mt-1 tracking-tight ${
-              isSearchActive ? "text-rose-500 font-medium" : "text-slate-600 font-normal"
-            }`}
-          >
-            Search
-          </span>
-        </button>
-
-        {/* 4. History Tab */}
-        <Link
-          href="/orders"
-          prefetch={true}
-          className="flex flex-col items-center justify-center transition-all duration-150 active:scale-95 select-none"
-        >
-          <HistoryTabIcon active={isHistoryActive} />
-          <span
-            className={`text-[11px] mt-1 tracking-tight ${
-              isHistoryActive ? "text-rose-500 font-medium" : "text-slate-600 font-normal"
-            }`}
-          >
-            History
-          </span>
-        </Link>
-
-        {/* 5. Profile Tab */}
-        <Link
-          href="/profile"
-          prefetch={true}
-          className="flex flex-col items-center justify-center transition-all duration-150 active:scale-95 select-none"
-        >
-          <ProfileTabIcon active={isProfileActive} />
-          <span
-            className={`text-[11px] mt-1 tracking-tight ${
-              isProfileActive ? "text-rose-500 font-medium" : "text-slate-600 font-normal"
-            }`}
-          >
-            Profile
-          </span>
-        </Link>
+      <div className="grid grid-cols-4 h-13 items-center">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              prefetch={true}
+              onClick={(e) => {
+                if (item.isActive && typeof window !== "undefined") {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+              className="flex flex-col items-center justify-center relative transition-all duration-200 active:scale-95 select-none py-1 group"
+            >
+              {/* WhatsApp-Style Active Indicator Pill */}
+              <div
+                className={`relative px-4 py-0.5 rounded-full transition-all duration-200 flex items-center justify-center ${
+                  item.isActive ? "bg-emerald-100/70" : "bg-transparent"
+                }`}
+              >
+                <Icon active={item.isActive} />
+                {typeof item.badge === "number" && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[9px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-xs">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              <span
+                className={`text-[11px] mt-0.5 tracking-tight transition-colors duration-150 ${
+                  item.isActive
+                    ? "text-emerald-700 font-bold"
+                    : "text-slate-600 font-medium group-hover:text-slate-900"
+                }`}
+              >
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
       </div>
 
       {/* Modern Centered Home Indicator Bar */}
