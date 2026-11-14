@@ -187,7 +187,7 @@ export async function sendOrderConfirmationEmail(params: SendOrderConfirmationPa
               <!-- Footer -->
               <tr>
                 <td style="background-color: #f1f5f9; padding: 16px 32px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
-                  © ${new Date().getFullYear()} Vastire Inc. • Domestic US Fulfillment • All Rights Reserved.
+                  Vastire • Domestic US Fulfillment
                 </td>
               </tr>
             </table>
