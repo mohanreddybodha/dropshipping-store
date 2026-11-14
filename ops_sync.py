@@ -933,7 +933,9 @@ def run_stock_sync(enforce_rules: bool = True) -> int:
                     product.is_active = False
                     logger.warning("Product ID %s ('%s') deactivated: 0 variants with US stock > 15.", product.id, (product.title or "")[:40])
 
-                session.commit()
+            # Single batch commit for all audited products (eliminates 200 individual round-trip commits over SSL)
+            session.commit()
+            logger.info("Successfully committed stock updates for %d products in a single transaction.", items_processed)
 
         if enforce_rules:
             rule_summary = enforce_catalog_rules(session)
