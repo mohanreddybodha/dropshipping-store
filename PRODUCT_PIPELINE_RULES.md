@@ -166,3 +166,107 @@ flowchart LR
    - **Vercel Scheduled Cron (`/api/cron/sync-cj`)**: Syncs CJ order tracking, runs time-budgeted live CJ US stock checks (`stock > 15`), disables low-stock/non-compliant variants & products in Neon PostgreSQL, flushes `clearCatalogCache()` + `clearPricingCache()`, revalidates `/`, `/collections/[slug]`, `/products/[slug]`, `/sitemap.xml`, and `/merchant-feed.xml`, and optionally submits changed URLs to IndexNow.
    - **GitHub Actions Cron (`.github/workflows/catalog-sync.yml`)**: Runs every 6 hours without Vercel's 60-second execution limit to audit full CJ inventory (`ops_sync.py --sync-stock`), enforce compliance rules in Neon PostgreSQL, and trigger `POST https://vastire.com/api/cron/sync-cj?mode=revalidate`.
    - **Google Merchant Center & Search Console**: Because GMC consumes `https://vastire.com/merchant-feed.xml` as a scheduled primary XML feed and Search Console indexes `https://vastire.com/sitemap.xml`, revalidating both routes immediately upon DB deactivation guarantees automatic removal/delisting on Google's next scheduled fetch without manual edits.
+
+---
+
+## 8. Offline-First Ingestion & Zero-Egress ETL Protocol (Production Catalog Standard)
+
+To permanently eliminate cloud database network egress and compute exhaustion (preventing Neon 5 GB public network transfer overages), all catalog expansion and product discovery **must** adhere to an **Offline-First Staged Pipeline**. 
+
+Live product discovery, copy iteration, margin testing, and Amazon price scraping must **never** connect to or query the live production database. The database is touched exactly **once** at the very end via a single atomic batch load.
+
+### 8.1 Zero-Egress Architecture Flow
+
+```mermaid
+flowchart TD
+    subgraph Local_Offline_Environment ["Local Workstation (0 KB Cloud DB Egress)"]
+        A["1. CJ US API Discovery<br/>(Rate: 0.87 QPS Token Bucket)"] -->|"Write Raw Responses"| B[("devdata/staging_raw_cj.json")]
+        B --> C["2. Offline Multi-Gate Filter<br/>(Rules WH-01 to 06, Category Double-Gate)"]
+        C --> D["3. Offline Valuation & Pricing Engine<br/>(Formulas 5.1-5.5, Amazon Option 3, Net >= 20%)"]
+        D -->|"Write Viable Candidates"| E[("devdata/staging_viable.json")]
+        E --> F["4. Offline Enrichment & QA<br/>(QA-01 to QA-06: Titles, PAS Copy, Specs, Images)"]
+        F -->|"Write Final Production Catalog"| G[("devdata/staging_production_catalog.json")]
+        G --> H["5. Pre-Flight Stock Verification<br/>(Quick Live Stock Sweep for Final VIDs Only)"]
+        H --> I["6. Local Parity Sync<br/>(Overwrite storefront/src/lib/seedCatalog.json)"]
+    end
+
+    subgraph Production_Cloud ["Production Infrastructure (Total Egress <= 1 MB)"]
+        I -->|"7. Atomic Single-Shot Batch UPSERT"| J[("Neon PostgreSQL<br/>(lingering-pond-25637887)")]
+        J --> K["8. Invalidate Caches<br/>(clearCatalogCache() + revalidatePath)"]
+        K --> L["Storefront UI & Merchant Feeds Live"]
+    end
+```
+
+### 8.2 Phase 1: Local Raw Supplier Extraction (`devdata/staging_raw_cj.json`)
+1. **Targeted Extraction Only:** Query CJ Dropshipping API v2.0 using strictly approved categories and high-converting keywords (avoid broad, unconstrained pagination that pulls prohibited apparel or cosmetics).
+2. **Rate Limiting:** Enforce the thread-safe `0.87 QPS` token-bucket rate limiter (`>= 1.15s` per request).
+3. **Local File Persistence:** Stream all raw JSON responses directly into `devdata/staging_raw_cj.json`.
+4. **Database Egress:** **0 bytes**. No connection to Neon PostgreSQL is opened.
+
+### 8.3 Phase 2: Offline Multi-Gate Valuation & Compliance Filtering (`devdata/staging_viable.json`)
+1. **Double-Gate Enforcement:** Run local regex checks against `PROHIBITED_WORDS`, `THIRD_PARTY_BRANDS`, and `APPROVED_THEMES` on the raw title, category, and variant strings. Reject any match immediately.
+2. **Physical Stock Floor:** Assert variant has confirmed physical US stock $\ge 20$ units (`MIN_INGESTION_US_STOCK`).
+3. **Domestic Delivery SLA:** Verify `max_delivery_days <= 7` business days via CJ domestic shipping matrix.
+4. **Pricing Engine Execution:**
+   - Compute $\text{COGS} = \text{wholesale} + \text{shipping}$.
+   - Apply Tiered Markup (Formula 5.2) and compute Amazon Option 3 Benchmark (Formula 5.3).
+   - Calculate PayPal fees (`3.49% + $0.49`) and RTO buffer (`8.0%`).
+   - Assert $\text{Net Profit} \ge \$4.00$, $\text{Net Margin} \ge 20.0\%$, and $\text{Gross Margin} \ge 35.0\%$.
+5. **Persistence:** Save shortlisted candidate records to `devdata/staging_viable.json`.
+6. **Database Egress:** **0 bytes**. All calculations run locally on CPU.
+
+### 8.4 Phase 3: Offline Content Enrichment & Media Validation (`devdata/staging_production_catalog.json`)
+1. **Clean Consumer Titles (QA-01):** Transform raw supplier names into 4–8 word customer-centric retail titles. Deduplicate repeated words; capitalize acronyms (`LED`, `LCD`, `USB`, `US`, `RGB`, `EDC`).
+2. **Canonical Slugs (QA-02):** Generate SEO-friendly URL slugs via `toSeoProductSlug()`. Ensure uniqueness across candidates.
+3. **Media Verification (QA-03):** Validate that every product has $\ge 2$ high-resolution HTTPS image URLs. Strip broken or non-HTTPS URLs.
+4. **Structured Specs (QA-05):** Construct clean `specs_json` objects (`Material`, `Power Source`, `Package Weight`, `In the Box`) free of supplier artifacts or garbled characters.
+5. **PAS Copywriting (QA-06):** Generate problem-agitation-solution product narratives and 4+ key benefit bullet points in `features_json`.
+6. **Persistence:** Export the fully populated, production-ready dataset to `devdata/staging_production_catalog.json`.
+7. **Database Egress:** **0 bytes**.
+
+### 8.5 Phase 4: Pre-Flight Just-In-Time Stock & SLA Sweep
+*To prevent the "Inventory Snapshot Trap" (where stock fluctuates during the time spent curating and enriching the catalog):*
+1. Before loading to production, extract the list of specific variant IDs (`vid`s) from `devdata/staging_production_catalog.json`.
+2. Execute a rapid, lightweight stock check against CJ (`/product/stock/queryByVid`) for *only those surviving variants*.
+3. Drop any variant whose physical US stock dropped to $\le 15$ units during the offline curation phase. If a product now has 0 valid variants, drop the product.
+4. Update final stock numbers in `devdata/staging_production_catalog.json`.
+5. **Database Egress:** **0 bytes**.
+
+### 8.6 Phase 5: Single-Shot Atomic Database Load & Fallback Parity
+1. **Static Fallback Sync:** Copy `devdata/staging_production_catalog.json` directly into [`storefront/src/lib/seedCatalog.json`](file:///c:/Users/bodha/OneDrive/Desktop/DropShipping/storefront/src/lib/seedCatalog.json). This guarantees Next.js build-time SSG and offline server fallbacks match the exact catalog state.
+2. **Atomic Multi-Row UPSERT:**
+   - Open a single connection to Neon PostgreSQL using `DATABASE_URL`.
+   - Execute a batch parameterized transaction:
+     ```sql
+     INSERT INTO products (pid, title, brand_title, slug, category, hero_image_url, images_json, pas_description_html, features_json, specs_json, seo_meta_json, faq_schema_json, is_active)
+     VALUES (...)
+     ON CONFLICT (pid) DO UPDATE SET
+       title = EXCLUDED.title,
+       slug = EXCLUDED.slug,
+       category = EXCLUDED.category,
+       hero_image_url = EXCLUDED.hero_image_url,
+       images_json = EXCLUDED.images_json,
+       pas_description_html = EXCLUDED.pas_description_html,
+       features_json = EXCLUDED.features_json,
+       specs_json = EXCLUDED.specs_json,
+       seo_meta_json = EXCLUDED.seo_meta_json,
+       faq_schema_json = EXCLUDED.faq_schema_json,
+       is_active = EXCLUDED.is_active;
+
+     INSERT INTO product_variants (vid, product_id, sku, image_url, wholesale_cost, shipping_cost, retail_price, bundle_2_price, bundle_3_price, us_warehouse_stock, carrier_name, delivery_sla, is_available)
+     VALUES (...)
+     ON CONFLICT (vid) DO UPDATE SET
+       retail_price = EXCLUDED.retail_price,
+       bundle_2_price = EXCLUDED.bundle_2_price,
+       bundle_3_price = EXCLUDED.bundle_3_price,
+       us_warehouse_stock = EXCLUDED.us_warehouse_stock,
+       carrier_name = EXCLUDED.carrier_name,
+       delivery_sla = EXCLUDED.delivery_sla,
+       is_available = EXCLUDED.is_available;
+     ```
+3. **Network Egress Impact:** Under **1.5 MB** total transfer for 200+ products, completed in $< 3$ seconds.
+
+### 8.7 Phase 6: Cache Invalidation & Merchant Feed Refresh
+1. Trigger `clearCatalogCache()` and `clearPricingCache()`.
+2. Call `revalidatePath('/')`, `revalidatePath('/collections')`, and `revalidatePath('/merchant-feed.xml')`.
+3. The live storefront and Google Merchant Center scheduled scraper instantly serve the new catalog with zero downtime and zero out-of-stock items.
