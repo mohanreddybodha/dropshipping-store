@@ -261,7 +261,7 @@ async function handleSync(req: NextRequest) {
           Origin: "Domestic US Warehouse",
           SLA: "Tracked Domestic 3-7 Days",
           Condition: "Brand New Factory Sealed",
-          Warranty: "30-Day Consumer Guarantee",
+          Support: "7-Day Defect & Transit Damage Replacement",
         };
         await sql`UPDATE products SET specs_json = ${JSON.stringify(defaultSpecs)} WHERE id = ${p.id}`;
       }

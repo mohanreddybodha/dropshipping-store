@@ -108,12 +108,13 @@ export default function WatchlistPage() {
 
     const recentSlugs = new Set(recentList.map((p) => p.slug));
 
-    // 2. Fetch live catalog to reconcile saved items & suggested items concurrently
-    getCatalog({ limit: 100 }).then((cat) => {
+    // 2. Fetch full live catalog to reconcile saved items & suggested items concurrently
+    getCatalog({ limit: 500 }).then((cat) => {
       if (Array.isArray(cat) && cat.length > 0) {
         // Reconcile saved items with live catalog so slugs, images, and prices are 100% active and canonical
         setItems((prevItems) => {
-          const updated = prevItems.map((item) => {
+          const updated: Product[] = [];
+          for (const item of prevItems) {
             const liveMatch = cat.find(
               (c) =>
                 (c.pid && item.pid && String(c.pid) === String(item.pid)) ||
@@ -121,8 +122,11 @@ export default function WatchlistPage() {
                 (c.slug && item.slug && c.slug === item.slug) ||
                 (c.title && item.title && (c.title.toLowerCase().includes(item.title.toLowerCase()) || item.title.toLowerCase().includes(c.title.toLowerCase())))
             );
-            return liveMatch || item;
-          });
+            // Strictly retain active verified catalog products, automatically pruning discontinued/stale items
+            if (liveMatch) {
+              updated.push(liveMatch);
+            }
+          }
           try {
             localStorage.setItem("watchlist_items", JSON.stringify(updated));
           } catch {}
@@ -144,7 +148,7 @@ export default function WatchlistPage() {
         const remoteState = await getUserAuthState(user.uid, user.email, user.phoneNumber);
         if (remoteState?.watchlist && Array.isArray(remoteState.watchlist) && remoteState.watchlist.length > 0) {
           const remotePids = new Set<string>(remoteState.watchlist);
-          const fullCatalog = await getCatalog({ limit: 100 });
+          const fullCatalog = await getCatalog({ limit: 500 });
           setItems((localPrev) => {
             const merged = [...localPrev];
             const existingPids = new Set(merged.map((p) => p.pid));

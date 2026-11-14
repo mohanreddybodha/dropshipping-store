@@ -350,7 +350,7 @@ def generate_clean_consumer_copy(
         "Origin": "Domestic US Warehouse",
         "SLA": "Tracked Domestic 3-7 Days",
         "Condition": "Brand New Factory Sealed",
-        "Warranty": "30-Day Consumer Guarantee",
+        "Support Policy": "7-Day Defect & Transit Damage Replacement",
     }
 
     return {
