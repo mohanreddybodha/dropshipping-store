@@ -43,6 +43,7 @@ function normalizeCatalogSlugs(products) {
     let legacySlug = rawOriginalSlug || finalSlug;
     if (String(product.id) === "1" || product.pid === "1902560845030125569") {
       legacySlug = "new-for-keeping-turbo-fans-for-with-9002by";
+      finalSlug = "portable-high-velocity-usb-turbo-desk-fan";
     }
 
     return {

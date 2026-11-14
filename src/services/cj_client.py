@@ -81,7 +81,7 @@ class CJClient:
         "dental", "oral", "powder", "toothpaste", "chew",
         "booster", "testosterone", "formula", "fragrance oil", "perfume", "parfum",
         "body spray", "shampoo", "soap", "deodorant", "nail", "nails",
-        "eyeshadow", "lipstick", "pet wipes", "wet wipes", "grooming wipes",
+        "eyeshadow", "lipstick", "lip gloss", "lip balm", "lip", "pet wipes", "wet wipes", "grooming wipes",
         # Medical devices & diagnostic kits
         "breathalyzer", "alcohol detector", "blood pressure", "stethoscope", "thermometer",
         "glucose", "diagnostic",
@@ -90,8 +90,9 @@ class CJClient:
         # Bedding, linens & towels (high return rate / sizing mismatch)
         "duvet", "bedding", "pillowcase", "bedsheet", "curtain", "drapes", "towel", "blanket",
         # Apparel, shoes, clothing, and worn jewelry (25-35% return rate gate)
-        "t-shirt", "tshirt", "shirt", "hoodie", "shoes", "shoe", "sneaker",
+        "t-shirt", "tshirt", "shirt", "hoodie", "hooded", "shoes", "shoe", "sneaker",
         "dress", "pants", "trousers", "cargo pants", "romper", "jumpsuit",
+        "cardigan", "knitted", "sleeve", "sleeved", "crew neck", "v-neck", "slim fit", "skinny",
         "bra", "underwear", "clothing", "jacket", "coat",
         "shorts", "sweater", "skirt", "socks", "sock", "leggings", "swimsuit",
         "swimwear", "boots", "boot", "sandals", "sandal", "heels", "blouse",

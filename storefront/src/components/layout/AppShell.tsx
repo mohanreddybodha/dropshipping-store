@@ -20,6 +20,22 @@ export default function AppShell({ children }: AppShellProps) {
   const isBrowseSurface = pathname === "/" || pathname.startsWith("/collections/");
   const isProduct = pathname.startsWith("/products/");
 
+  // Track last internal non-policy route in sessionStorage for deterministic back navigation
+  useEffect(() => {
+    if (typeof window === "undefined" || !pathname) return;
+    const isPolicyPage =
+      pathname === "/terms" ||
+      pathname === "/privacy" ||
+      pathname === "/shipping-policy" ||
+      pathname === "/refund-policy";
+
+    if (!isPolicyPage) {
+      try {
+        sessionStorage.setItem("vastire_last_internal_route", pathname);
+      } catch {}
+    }
+  }, [pathname]);
+
   // Automatic stale deployment chunk reload handler (client-side only, zero SSR DOM mutation)
   useEffect(() => {
     const handleChunkError = (e: ErrorEvent) => {

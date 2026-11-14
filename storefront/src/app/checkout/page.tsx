@@ -1715,6 +1715,25 @@ function CheckoutContent() {
             <span>Continue to Payment</span>
             <ArrowRight className="w-4 h-4" />
           </button>
+
+          {/* Age Verification & Legal Agreement Disclaimer */}
+          <p className="text-[11px] sm:text-xs text-slate-500 text-center leading-relaxed mt-2.5">
+            By continuing, you are agreeing that you are 18 years above and agree to the Vastire{" "}
+            <Link
+              href="/terms?from=/checkout"
+              className="text-emerald-700 hover:text-emerald-800 font-semibold underline underline-offset-2 transition-colors"
+            >
+              Terms and Conditions
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/privacy?from=/checkout"
+              className="text-emerald-700 hover:text-emerald-800 font-semibold underline underline-offset-2 transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            .
+          </p>
         </div>
 
         {errorMessage && (

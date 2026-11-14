@@ -1,6 +1,6 @@
 import { CustomerOrder, PaginatedCatalogResponse, Product } from "./types";
 import seedData from "./seedCatalog.json";
-import { normalizeCatalogSlugs } from "./seo";
+import { normalizeCatalogSlugs, toSeoProductSlug } from "./seo";
 
 export function getApiBaseUrl(): string {
   // 1. If explicit API_URL is configured

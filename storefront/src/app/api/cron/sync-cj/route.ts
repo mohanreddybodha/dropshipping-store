@@ -247,13 +247,23 @@ async function handleSync(req: NextRequest) {
     for (const p of dbProducts) {
       const titleStr = `${p.title || ""} ${p.category || ""}`;
       const prohibited = PROHIBITED_TITLE_REGEX.test(titleStr);
-      const missingContent = !p.specs_json || !p.features_json || !p.hero_image_url;
+      const missingContent = !p.features_json || !p.hero_image_url;
 
       if (prohibited || missingContent) {
         await sql`UPDATE products SET is_active = FALSE, updated_at = NOW() WHERE id = ${p.id}`;
         await sql`UPDATE product_variants SET is_available = FALSE WHERE product_id = ${p.id}`;
         ruleDeactivatedProducts++;
         continue;
+      }
+
+      if (!p.specs_json) {
+        const defaultSpecs = {
+          Origin: "Domestic US Warehouse",
+          SLA: "Tracked Domestic 3-7 Days",
+          Condition: "Brand New Factory Sealed",
+          Warranty: "30-Day Consumer Guarantee",
+        };
+        await sql`UPDATE products SET specs_json = ${JSON.stringify(defaultSpecs)} WHERE id = ${p.id}`;
       }
     }
 

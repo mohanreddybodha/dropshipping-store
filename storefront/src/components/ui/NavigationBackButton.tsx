@@ -18,11 +18,51 @@ export default function NavigationBackButton({
   const router = useRouter();
 
   const handleBack = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-      return;
+    if (typeof window !== "undefined") {
+      // 1. Highest Priority: Explicit 'from' or 'returnUrl' query parameter
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const fromParam = params.get("from") || params.get("returnUrl");
+        if (fromParam && fromParam.startsWith("/")) {
+          router.push(fromParam);
+          return;
+        }
+      } catch {
+        // Ignore URL parsing errors
+      }
+
+      // 2. Second Priority: Recorded internal application route from sessionStorage
+      try {
+        const lastInternalRoute = sessionStorage.getItem("vastire_last_internal_route");
+        if (
+          lastInternalRoute &&
+          lastInternalRoute.startsWith("/") &&
+          lastInternalRoute !== window.location.pathname
+        ) {
+          router.push(lastInternalRoute);
+          return;
+        }
+      } catch {
+        // Ignore sessionStorage access errors
+      }
+
+      // 3. Third Priority: Browser history if document.referrer came from this origin
+      try {
+        const isInternalReferrer =
+          Boolean(document.referrer) &&
+          document.referrer.includes(window.location.host);
+
+        if (isInternalReferrer && window.history.length > 1) {
+          router.back();
+          return;
+        }
+      } catch {
+        // Ignore referrer access errors
+      }
     }
-    router.push(fallbackHref);
+
+    // 4. Default Fallback (Directly opened page, new tab, or external traffic) -> navigate to Home
+    router.push(fallbackHref || "/");
   };
 
   if (label) {
