@@ -9,6 +9,7 @@ import Footer from "./Footer";
 import MobileBottomNav from "./MobileBottomNav";
 import { ToastContainer } from "../ui/Toast";
 import VastireLogo from "../ui/VastireLogo";
+import { recordCurrentRoute } from "../../lib/navigationHistory";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -20,20 +21,10 @@ export default function AppShell({ children }: AppShellProps) {
   const isBrowseSurface = pathname === "/" || pathname.startsWith("/collections/");
   const isProduct = pathname.startsWith("/products/");
 
-  // Track last internal non-policy route in sessionStorage for deterministic back navigation
+  // Track internal navigation history for seamless back navigation across the app
   useEffect(() => {
     if (typeof window === "undefined" || !pathname) return;
-    const isPolicyPage =
-      pathname === "/terms" ||
-      pathname === "/privacy" ||
-      pathname === "/shipping-policy" ||
-      pathname === "/refund-policy";
-
-    if (!isPolicyPage) {
-      try {
-        sessionStorage.setItem("vastire_last_internal_route", pathname);
-      } catch {}
-    }
+    recordCurrentRoute();
   }, [pathname]);
 
   // Automatic stale deployment chunk reload handler (client-side only, zero SSR DOM mutation)

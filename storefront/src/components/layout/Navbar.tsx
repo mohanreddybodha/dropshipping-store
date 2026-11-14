@@ -60,7 +60,11 @@ export default function Navbar() {
     setMounted(true);
     try {
       const q = new URLSearchParams(window.location.search).get("search");
-      if (q) setSearchQuery(q);
+      if (q === "open") {
+        setIsSearchExpanded(true);
+      } else if (q) {
+        setSearchQuery(q);
+      }
       const raw = localStorage.getItem("watchlist_items");
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -70,6 +74,33 @@ export default function Navbar() {
       // Ignore
     }
   }, []);
+
+  // Listen to open search requests from mobile bottom navigation
+  useEffect(() => {
+    const handleOpenSearch = () => {
+      setIsSearchExpanded(true);
+      setTimeout(() => {
+        if (window.innerWidth < 768) {
+          searchInputRef.current?.focus();
+        } else {
+          desktopSearchInputRef.current?.focus();
+        }
+      }, 50);
+    };
+    window.addEventListener("app:open_search", handleOpenSearch);
+    return () => window.removeEventListener("app:open_search", handleOpenSearch);
+  }, []);
+
+  // Broadcast search overlay open/close events for bottom nav synchronization
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (isSearchExpanded) {
+        window.dispatchEvent(new CustomEvent("app:search_opened"));
+      } else {
+        window.dispatchEvent(new CustomEvent("app:search_closed"));
+      }
+    }
+  }, [isSearchExpanded]);
 
   // Listen to cross-component watchlist sync events
   useEffect(() => {
@@ -395,18 +426,18 @@ export default function Navbar() {
                   <span className="hidden xl:inline text-xs font-bold text-slate-800">Home</span>
                 </Link>
 
-                {/* Watchlist / Collections Link (Desktop & Tablet) */}
+                {/* Watchlist / Collections Link */}
                 <Link
                   href="/watchlist"
                   prefetch={true}
-                  className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative"
+                  className="flex items-center justify-center gap-2 w-9 h-9 md:w-auto md:px-3 md:py-2 rounded-xl bg-slate-100 md:bg-transparent hover:bg-slate-200 md:hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative shadow-xs md:shadow-none"
                   aria-label="My Collections"
                   title="My Collections"
                 >
                   <div className="relative flex items-center justify-center">
                     <Heart className="w-4 h-4 text-slate-700 group-hover:text-rose-600 transition" />
                     {mounted && watchlistCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                      <span className="absolute -top-1.5 -right-2 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                         {watchlistCount}
                       </span>
                     )}
@@ -414,18 +445,18 @@ export default function Navbar() {
                   <span className="hidden xl:inline text-xs font-bold text-slate-800">Collections</span>
                 </Link>
 
-                {/* Cart Link (Desktop & Tablet) */}
+                {/* Cart Link */}
                 <Link
                   href="/cart"
                   prefetch={true}
-                  className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative"
+                  className="flex items-center justify-center gap-2 w-9 h-9 md:w-auto md:px-3 md:py-2 rounded-xl bg-slate-100 md:bg-transparent hover:bg-slate-200 md:hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative shadow-xs md:shadow-none"
                   aria-label="Shopping Cart"
                   title="Shopping Cart"
                 >
                   <div className="relative flex items-center justify-center">
                     <ShoppingBag className="w-4 h-4 text-slate-700 group-hover:text-emerald-600 transition" />
                     {mounted && itemCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-emerald-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                      <span className="absolute -top-1.5 -right-2 bg-emerald-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                         {itemCount}
                       </span>
                     )}

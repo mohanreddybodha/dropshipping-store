@@ -29,6 +29,7 @@ import {
 } from "@/lib/api";
 import { CustomerOrder } from "@/lib/types";
 import ThemedDropdown, { ThemedDropdownOption } from "@/components/ui/ThemedDropdown";
+import NavigationBackButton from "@/components/ui/NavigationBackButton";
 import {
   validateUsPhone,
   validateUsZip,
@@ -664,13 +665,7 @@ function OrdersContent() {
       {/* ── HEADER (Back button before icon, no breadcrumbs, no description) ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <div className="flex items-center gap-2.5">
-          <Link
-            href="/profile"
-            className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 hover:text-slate-900 transition flex-shrink-0"
-            aria-label="Back to account"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
+          <NavigationBackButton fallbackHref="/" aria-label="Go back" />
           <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
             <Package className="w-5 h-5" />
           </div>
