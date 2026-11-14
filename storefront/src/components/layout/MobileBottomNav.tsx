@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useCart } from "../../lib/cart";
 import { auth, onAuthStateChanged, FirebaseUser } from "../../lib/firebase";
 
-// ── 1. Home Tab Icons (Consistent Lucide Family Animation) ──
+// ── 1. Home Tab Icons (Consistent Lucide Family with Sleek Compact Door) ──
 
 function HomeActiveIcon() {
   return (
@@ -14,19 +14,12 @@ function HomeActiveIcon() {
       className="w-5 h-5 text-emerald-800 transition-transform duration-200 scale-105"
       viewBox="0 0 24 24"
     >
-      {/* Same Lucide Home outline filled with emerald-800 */}
+      {/* Same Lucide Home geometry with a sleek, compact, perfectly proportioned door cutout */}
       <path
-        d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12 2.5L3 9.5V20C3 21.1 3.9 22 5 22H10.5V16C10.5 15.45 10.95 15 11.5 15H12.5C13.05 15 13.5 15.45 13.5 16V22H19C20.1 22 21 21.1 21 20V9.5L12 2.5Z"
         fill="currentColor"
-      />
-      {/* Same Lucide Home door cutout rendered transparent (light green pill color) */}
-      <polyline
-        points="9 22 9 12 15 12 15 22"
-        fill="none"
-        stroke="#d1fae5"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </svg>
   );
@@ -272,9 +265,6 @@ export default function MobileBottomNav() {
           );
         })}
       </div>
-
-      {/* Modern Centered Home Indicator Bar */}
-      <div className="w-32 h-1 bg-slate-300 rounded-full mx-auto mt-1" />
     </nav>
   );
 }
