@@ -25,6 +25,22 @@ export interface SendOrderConfirmationParams {
   items: OrderEmailItem[];
 }
 
+export interface SendAdminOrderAlertParams {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingProvince: string;
+  shippingZip: string;
+  totalRetail: number;
+  totalWholesale?: number;
+  netProfit?: number;
+  paypalOrderId: string;
+  items: OrderEmailItem[];
+}
+
 /**
  * Sends a responsive, branded HTML order confirmation email to the buyer upon successful payment capture.
  * Sets reply_to: "support@vastire.com" so customer replies reach the store support team.
@@ -185,10 +201,17 @@ export async function sendOrderConfirmationEmail(params: SendOrderConfirmationPa
   try {
     const fromAddress = process.env.RESEND_FROM_EMAIL || "Vastire Orders <orders@vastire.com>";
     const replyTo = "Vastire Support <support@vastire.com>";
+    const adminEmail = (
+      process.env.ADMIN_NOTIFICATION_EMAIL ||
+      process.env.ADMIN_EMAIL ||
+      process.env.SUPPORT_EMAIL ||
+      ""
+    ).trim();
 
     const result = await resend.emails.send({
       from: fromAddress,
       to: customerEmail,
+      ...(adminEmail && adminEmail.includes("@") ? { bcc: [adminEmail] } : {}),
       replyTo,
       subject: `Order Confirmed: ${orderNumber} - Vastire`,
       html: emailHtml,
@@ -203,6 +226,104 @@ export async function sendOrderConfirmationEmail(params: SendOrderConfirmationPa
     return true;
   } catch (err: any) {
     console.error("[Email Service] Resend exception:", err?.message || err);
+    return false;
+  }
+}
+
+/**
+ * Sends an internal, real-time alert email to the store owner / administrator
+ * containing wholesale costs, net margins, customer contact, and PayPal reference.
+ */
+export async function sendAdminOrderAlertEmail(params: SendAdminOrderAlertParams): Promise<boolean> {
+  if (!resend || !isResendConfigured) return false;
+
+  const adminEmail = (
+    process.env.ADMIN_NOTIFICATION_EMAIL ||
+    process.env.ADMIN_EMAIL ||
+    process.env.SUPPORT_EMAIL ||
+    ""
+  ).trim();
+
+  if (!adminEmail || !adminEmail.includes("@")) {
+    console.warn("[Email Service] No ADMIN_NOTIFICATION_EMAIL configured; skipped dedicated admin order alert.");
+    return false;
+  }
+
+  const {
+    orderNumber,
+    customerName,
+    customerEmail,
+    customerPhone,
+    shippingAddress,
+    shippingCity,
+    shippingProvince,
+    shippingZip,
+    totalRetail,
+    totalWholesale = 0,
+    netProfit = 0,
+    paypalOrderId,
+    items,
+  } = params;
+
+  const fromAddress = process.env.RESEND_FROM_EMAIL || "Vastire Orders <orders@vastire.com>";
+
+  const itemsList = items
+    .map(
+      (it) => `<li style="margin-bottom: 6px;"><strong>${escapeHtml(it.title)}</strong> (Qty: ${it.quantity}) - $${Number(it.price * it.quantity).toFixed(2)}${it.size ? ` [Size: ${escapeHtml(it.size)}]` : ""}${it.color ? ` [Color: ${escapeHtml(it.color)}]` : ""}</li>`
+    )
+    .join("");
+
+  const adminHtml = `
+  <!DOCTYPE html>
+  <html>
+    <head><meta charset="utf-8"></head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; padding: 24px; color: #0f172a;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; padding: 24px;">
+        <div style="background: #064e3b; color: #ffffff; padding: 16px 20px; border-radius: 8px; margin-bottom: 20px;">
+          <h2 style="margin: 0; font-size: 18px; color: #ffffff;">🛒 New Paid Order Received</h2>
+          <p style="margin: 4px 0 0 0; font-size: 13px; color: #a7f3d0;">Order: <strong>${orderNumber}</strong> | PayPal Txn: ${paypalOrderId}</p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b;">Customer:</td><td style="padding: 8px 0; font-weight: 600; text-align: right;">${escapeHtml(customerName)} (${escapeHtml(customerEmail)})</td></tr>
+          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b;">Phone:</td><td style="padding: 8px 0; font-weight: 600; text-align: right;">${escapeHtml(customerPhone || "N/A")}</td></tr>
+          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b;">Shipping Address:</td><td style="padding: 8px 0; font-weight: 600; text-align: right;">${escapeHtml(shippingAddress)}, ${escapeHtml(shippingCity)}, ${shippingProvince} ${shippingZip}</td></tr>
+          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b;">Total Paid by Buyer:</td><td style="padding: 8px 0; font-weight: 700; color: #059669; text-align: right;">$${totalRetail.toFixed(2)} USD</td></tr>
+          <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 8px 0; color: #64748b;">Est. Supplier Wholesale Cost:</td><td style="padding: 8px 0; text-align: right;">$${totalWholesale.toFixed(2)} USD</td></tr>
+          <tr><td style="padding: 8px 0; color: #64748b; font-weight: 700;">Est. Net Profit:</td><td style="padding: 8px 0; font-weight: 800; color: #065f46; text-align: right;">$${netProfit.toFixed(2)} USD</td></tr>
+        </table>
+
+        <h3 style="font-size: 15px; margin: 16px 0 8px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">Items (${items.length}):</h3>
+        <ul style="padding-left: 20px; font-size: 13px; line-height: 1.6; color: #334155;">
+          ${itemsList}
+        </ul>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; text-align: center;">
+          <a href="https://vastire.com/admin/orders" style="display: inline-block; background: #0f172a; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600;">
+            View in Admin Dashboard
+          </a>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
+
+  try {
+    const result = await resend.emails.send({
+      from: fromAddress,
+      to: adminEmail,
+      subject: `🛒 [NEW ORDER] $${totalRetail.toFixed(2)} - Order #${orderNumber} (${customerName})`,
+      html: adminHtml,
+    });
+
+    if (result.error) {
+      console.error("[Email Service] Admin notification failed:", result.error);
+      return false;
+    }
+    console.info(`[Email Service] Admin alert sent to ${adminEmail} (ID: ${result.data?.id})`);
+    return true;
+  } catch (err: any) {
+    console.error("[Email Service] Admin alert exception:", err?.message || err);
     return false;
   }
 }

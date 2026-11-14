@@ -12,7 +12,7 @@ import {
   PayPalGatewayError,
 } from "@/lib/paypal";
 import { resolveAuthoritativeCart, CatalogPricingError } from "@/lib/pricing";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderConfirmationEmail, sendAdminOrderAlertEmail } from "@/lib/email";
 import {
   US_STATE_ZIP_PREFIXES,
   validateUsStreetAddress,
@@ -537,7 +537,32 @@ export async function POST(req: NextRequest) {
           color: it.color,
         })),
       }).catch((emailErr) => {
-        console.error("[PayPal Capture] Background email dispatch error:", emailErr);
+        console.error("[PayPal Capture] Background buyer email dispatch error:", emailErr);
+      });
+
+      // Non-blocking Dedicated Admin Order Alert Email via Resend
+      sendAdminOrderAlertEmail({
+        orderNumber,
+        customerName: validatedCustomer.name,
+        customerEmail: validatedCustomer.email,
+        customerPhone: validatedCustomer.phone,
+        shippingAddress: validatedCustomer.address,
+        shippingCity: validatedCustomer.city,
+        shippingProvince: validatedCustomer.province,
+        shippingZip: validatedCustomer.zip,
+        totalRetail,
+        totalWholesale: wholesale,
+        netProfit: profit,
+        paypalOrderId: cleanPayPalOrderId,
+        items: cart.verifiedItems.map((it) => ({
+          title: it.title,
+          quantity: it.quantity,
+          price: it.price,
+          size: it.size,
+          color: it.color,
+        })),
+      }).catch((adminEmailErr) => {
+        console.error("[PayPal Capture] Background admin alert dispatch error:", adminEmailErr);
       });
     }
 
