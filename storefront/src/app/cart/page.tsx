@@ -23,7 +23,6 @@ import {
 import { Product } from "../../lib/types";
 import { getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
 import HorizontalProductRow from "../../components/catalog/HorizontalProductRow";
-import NavigationBackButton from "../../components/ui/NavigationBackButton";
 import { showToast } from "../../components/ui/Toast";
 
 export default function CartPage() {
@@ -175,19 +174,16 @@ export default function CartPage() {
   return (
     <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-[82px] md:pb-6 space-y-3 sm:space-y-4">
       {/* Cart Title Bar */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-        <div className="flex items-center gap-2.5">
-          <NavigationBackButton fallbackHref="/" />
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              Shopping Cart
-            </h1>
-            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
-              {items.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0)}{" "}
-              {items.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0) === 1 ? "item" : "items"}{" "}
-              ready for dispatch • Free domestic US delivery
-            </p>
-          </div>
+      <div className="flex items-center justify-between pb-1">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Shopping Cart
+          </h1>
+          <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+            {items.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0)}{" "}
+            {items.reduce((acc, curr) => acc + (Number(curr.quantity) || 1), 0) === 1 ? "item" : "items"}{" "}
+            ready for dispatch
+          </p>
         </div>
         <div className="flex items-center">
           {items.length > 0 && (

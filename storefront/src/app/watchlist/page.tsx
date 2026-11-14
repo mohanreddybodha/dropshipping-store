@@ -8,7 +8,6 @@ import { showToast } from "../../components/ui/Toast";
 import { auth, onAuthStateChanged } from "../../lib/firebase";
 import { toggleUserWatchlist, getUserAuthState, getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
 import HorizontalProductRow from "../../components/catalog/HorizontalProductRow";
-import NavigationBackButton from "../../components/ui/NavigationBackButton";
 
 /** Watchlist card: clean card with delete icon replacing heart, rating in bottom-right of image, and consistent 2-line title */
 function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () => void }) {
@@ -239,13 +238,10 @@ export default function WatchlistPage() {
   return (
     <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 pt-1.5 sm:pt-2.5 pb-[82px] md:pb-6 space-y-3 sm:space-y-4">
       {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-        <div className="flex items-center gap-2.5">
-          <NavigationBackButton fallbackHref="/" />
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-            My Collections
-          </h1>
-        </div>
+      <div className="flex items-center justify-between pb-1">
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+          My Collections
+        </h1>
 
         {items.length > 0 && (
           <button

@@ -6,13 +6,28 @@ import { usePathname } from "next/navigation";
 import { useCart } from "../../lib/cart";
 import { auth, onAuthStateChanged, FirebaseUser } from "../../lib/firebase";
 
-// ── 1. Home Tab Icons (Exact match to media_1794656088222_478ea279.png) ──
+// ── 1. Home Tab Icons (Consistent Lucide Family Animation) ──
 
 function HomeActiveIcon() {
   return (
-    <svg className="w-5 h-5 text-emerald-100" viewBox="0 0 24 24" fill="currentColor">
-      {/* Pitched roof house with centered rectangular door cutout */}
-      <path d="M12 3L2 12H5V21H10V14H14V21H19V12H22L12 3Z" />
+    <svg
+      className="w-5 h-5 text-emerald-800 transition-transform duration-200 scale-105"
+      viewBox="0 0 24 24"
+    >
+      {/* Same Lucide Home outline filled with emerald-800 */}
+      <path
+        d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+        fill="currentColor"
+      />
+      {/* Same Lucide Home door cutout rendered transparent (light green pill color) */}
+      <polyline
+        points="9 22 9 12 15 12 15 22"
+        fill="none"
+        stroke="#d1fae5"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -20,7 +35,7 @@ function HomeActiveIcon() {
 function HomeInactiveIcon() {
   return (
     <svg
-      className="w-5 h-5 text-slate-600"
+      className="w-5 h-5 text-slate-600 transition-transform duration-200"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -38,7 +53,7 @@ function HomeInactiveIcon() {
 
 function CollectionsActiveIcon() {
   return (
-    <svg className="w-5 h-5 text-emerald-100 fill-current" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-emerald-800 fill-current transition-transform duration-200 scale-105" viewBox="0 0 24 24">
       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
     </svg>
   );
@@ -47,7 +62,7 @@ function CollectionsActiveIcon() {
 function CollectionsInactiveIcon() {
   return (
     <svg
-      className="w-5 h-5 text-slate-600"
+      className="w-5 h-5 text-slate-600 transition-transform duration-200"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -60,16 +75,28 @@ function CollectionsInactiveIcon() {
   );
 }
 
-// ── 3. Cart Tab Icons (Exact match to media_1794656095650_4a4a7bc0.png) ──
+// ── 3. Cart Tab Icons (Consistent Lucide ShoppingBag with Transparent Handle) ──
 
 function CartActiveIcon() {
   return (
-    <svg className="w-5 h-5 text-emerald-100" viewBox="0 0 24 24" fill="currentColor">
-      {/* Shopping bag with arched handle and handle attachment tabs */}
+    <svg
+      className="w-5 h-5 text-emerald-800 transition-transform duration-200 scale-105"
+      viewBox="0 0 24 24"
+    >
+      {/* Same Lucide ShoppingBag body filled with emerald-800 */}
       <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M6 7C4.9 7 4 7.9 4 9V19C4 20.1 4.9 21 6 21H18C19.1 21 20 20.1 20 19V9C20 7.9 19.1 7 18 7H16V5C16 2.8 14.2 1 12 1C9.8 1 8 2.8 8 5V7H6ZM10 5C10 3.9 10.9 3 12 3C13.1 3 14 3.9 14 5V7H10V5ZM8 10C8 9.45 8.45 9 9 9C9.55 9 10 9.45 10 10V11C10 11.55 9.55 12 9 12C8.45 12 8 11.55 8 11V10ZM14 10C14 9.45 14.45 9 15 9C15.55 9 16 9.45 16 10V11C16 11.55 15.55 12 15 12C14.45 12 14 11.55 14 11V10Z"
+        d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"
+        fill="currentColor"
+      />
+      <line x1="3" y1="6" x2="21" y2="6" stroke="#d1fae5" strokeWidth="1.5" />
+      {/* Handle rendered transparent (light green pill color) */}
+      <path
+        d="M16 10a4 4 0 0 1-8 0"
+        fill="none"
+        stroke="#d1fae5"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -78,7 +105,7 @@ function CartActiveIcon() {
 function CartInactiveIcon() {
   return (
     <svg
-      className="w-5 h-5 text-slate-600"
+      className="w-5 h-5 text-slate-600 transition-transform duration-200"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -93,11 +120,11 @@ function CartInactiveIcon() {
   );
 }
 
-// ── 4. Profile / You Tab Icons (Exact match to media_1794656146201_ca3cd319.png) ──
+// ── 4. Profile / You Tab Icons ──
 
 function ProfileActiveIcon() {
   return (
-    <svg className="w-5 h-5 text-emerald-100 fill-current" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-emerald-800 fill-current transition-transform duration-200 scale-105" viewBox="0 0 24 24">
       <circle cx="12" cy="7" r="4.5" />
       <path d="M4 21C4 16.58 7.58 13 12 13C16.42 13 20 16.58 20 21H4Z" />
     </svg>
@@ -107,7 +134,7 @@ function ProfileActiveIcon() {
 function ProfileInactiveIcon() {
   return (
     <svg
-      className="w-5 h-5 text-slate-600"
+      className="w-5 h-5 text-slate-600 transition-transform duration-200"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -170,8 +197,6 @@ export default function MobileBottomNav() {
       renderIcon: (active: boolean) => (active ? <CartActiveIcon /> : <CartInactiveIcon />),
     },
     {
-      // Authenticated users see "You" with initial circle matching media_1794656146201_ca3cd319.png;
-      // Unauthenticated users see "Profile" with standard user icon as it presently exists.
       label: isAuthenticated ? "You" : "Profile",
       href: "/profile",
       isActive: pathname === "/profile",
@@ -215,11 +240,11 @@ export default function MobileBottomNav() {
               }}
               className="flex flex-col items-center justify-center relative transition-all duration-200 active:scale-95 select-none py-0.5 group"
             >
-              {/* Material 3 / WhatsApp Stadium Pill Container matching reference images */}
+              {/* Light Green Stadium Pill matching Vastire's Application Theme */}
               <div
                 className={`relative w-16 h-8 rounded-full transition-all duration-200 flex items-center justify-center ${
                   item.isActive
-                    ? "bg-[#047857] shadow-xs"
+                    ? "bg-emerald-100 shadow-xs"
                     : "bg-transparent group-hover:bg-slate-100"
                 }`}
               >
@@ -227,7 +252,7 @@ export default function MobileBottomNav() {
 
                 {/* Cart Badge */}
                 {typeof item.badge === "number" && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-xs border-2 border-white">
+                  <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[9px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-xs border-2 border-white">
                     {item.badge}
                   </span>
                 )}
@@ -237,7 +262,7 @@ export default function MobileBottomNav() {
               <span
                 className={`text-[11px] mt-1 tracking-tight transition-colors duration-150 ${
                   item.isActive
-                    ? "text-slate-900 font-bold"
+                    ? "text-emerald-800 font-bold"
                     : "text-slate-600 font-medium group-hover:text-slate-900"
                 }`}
               >
