@@ -16,15 +16,22 @@ export default function ProductGallery({ images = [], title, topRightActions }: 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  // Sync state if parent images prop updates
+  // Sync state cleanly if parent scoped images prop updates
   useEffect(() => {
     if (images && images.length > 0) {
-      setGalleryImages((prev) => {
-        const combined = Array.from(new Set([...images, ...prev.filter((i) => i !== "/placeholder.jpg")]));
-        return combined.length > 0 ? combined : ["/placeholder.jpg"];
-      });
+      setGalleryImages(images);
+      setSelectedIndex(0);
     }
   }, [images]);
+
+  // Defensive error recovery: seamlessly prune broken URLs so "View 2 / View 3" alt text never leaks
+  const handleImageError = useCallback((failedUrl: string, failedIdx: number) => {
+    setGalleryImages((prev) => {
+      const filtered = prev.filter((u, i) => i !== failedIdx && u !== failedUrl);
+      return filtered.length > 0 ? filtered : ["/placeholder.jpg"];
+    });
+    setSelectedIndex((prev) => (prev >= failedIdx && prev > 0 ? prev - 1 : 0));
+  }, []);
 
   const handlePrev = useCallback(() => {
     setSelectedIndex((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
@@ -90,6 +97,7 @@ export default function ProductGallery({ images = [], title, topRightActions }: 
         <img
           src={galleryImages[selectedIndex] || galleryImages[0] || "/placeholder.jpg"}
           alt={`${title} - View ${selectedIndex + 1}`}
+          onError={() => handleImageError(galleryImages[selectedIndex] || "", selectedIndex)}
           className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105 cursor-zoom-in"
           onClick={() => setIsLightboxOpen(true)}
         />
@@ -148,6 +156,7 @@ export default function ProductGallery({ images = [], title, topRightActions }: 
               <img
                 src={img}
                 alt={`${title} thumbnail ${idx + 1}`}
+                onError={() => handleImageError(img, idx)}
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
@@ -185,6 +194,7 @@ export default function ProductGallery({ images = [], title, topRightActions }: 
             <img
               src={galleryImages[selectedIndex] || galleryImages[0] || "/placeholder.jpg"}
               alt={`${title} full display`}
+              onError={() => handleImageError(galleryImages[selectedIndex] || "", selectedIndex)}
               className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl"
             />
 

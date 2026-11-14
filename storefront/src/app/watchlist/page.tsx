@@ -6,7 +6,7 @@ import { Heart, Trash2, ArrowLeft, ShoppingBag, ArrowDown } from "lucide-react";
 import { Product } from "../../lib/types";
 import { showToast } from "../../components/ui/Toast";
 import { auth, onAuthStateChanged } from "../../lib/firebase";
-import { toggleUserWatchlist, getUserAuthState, getCatalog } from "../../lib/api";
+import { toggleUserWatchlist, getUserAuthState, getCatalog, FALLBACK_PRODUCTS } from "../../lib/api";
 import HorizontalProductRow from "../../components/catalog/HorizontalProductRow";
 
 /** Watchlist card: clean card with delete icon replacing heart, rating in bottom-right of image, and consistent 2-line title */
@@ -44,8 +44,11 @@ function WatchlistCard({ product, onRemove }: { product: Product; onRemove: () =
           </button>
         </div>
 
-        {/* Fixed 2-Line Title Container ensuring all cards match in height */}
-        <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-900 group-hover:text-rose-700 transition line-clamp-2 h-7 sm:h-8 leading-tight">
+        {/* Single-Line Title Container with ellipsis overflow and tooltip */}
+        <h3
+          title={product.title}
+          className="text-[11px] sm:text-[13px] font-bold text-slate-900 group-hover:text-rose-700 transition truncate block h-4 sm:h-5 leading-tight"
+        >
           {product.title}
         </h3>
       </Link>
@@ -80,12 +83,34 @@ export default function WatchlistPage() {
     try {
       const raw = localStorage.getItem("watchlist_items");
       if (raw) {
-        currentSaved = JSON.parse(raw);
-        setItems(currentSaved);
+        const parsed: Product[] = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          // Instant synchronous reconciliation against local authoritative catalog:
+          // Immediately prunes discontinued/prohibited items (e.g. old skincare tests)
+          // and ensures active products have their canonical live slug.
+          const cleaned: Product[] = [];
+          for (const item of parsed) {
+            const liveMatch = FALLBACK_PRODUCTS.find(
+              (c) =>
+                (c.pid && item.pid && String(c.pid) === String(item.pid)) ||
+                (c.id && item.id && String(c.id) === String(item.id)) ||
+                (c.slug && item.slug && c.slug === item.slug) ||
+                (c.title && item.title && (c.title.toLowerCase().includes(item.title.toLowerCase()) || item.title.toLowerCase().includes(c.title.toLowerCase())))
+            );
+            if (liveMatch) {
+              cleaned.push(liveMatch);
+            }
+          }
+          currentSaved = cleaned;
+          try {
+            localStorage.setItem("watchlist_items", JSON.stringify(cleaned));
+          } catch {}
+        }
       }
     } catch {
       // Storage read error
     } finally {
+      setItems(currentSaved);
       setIsHydrated(true);
     }
 

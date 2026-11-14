@@ -137,8 +137,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </div>
 
-        {/* Fixed 2-Line Title Container ensuring all cards match in height */}
-        <h3 className="text-[11px] sm:text-[13px] font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 h-7 sm:h-8 leading-tight">
+        {/* Single-Line Title Container with ellipsis overflow and tooltip */}
+        <h3
+          title={product.title}
+          className="text-[11px] sm:text-[13px] font-bold text-slate-900 group-hover:text-emerald-700 transition truncate block h-4 sm:h-5 leading-tight"
+        >
           {product.title}
         </h3>
       </Link>

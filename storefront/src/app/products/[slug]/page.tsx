@@ -195,18 +195,26 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
         <div className="lg:col-span-7 space-y-3">
           {/* Interactive Product Gallery Scoped to Selected Variant + Curated Infographics */}
           {(() => {
+            const otherVariantImages = new Set(
+              (product.variants || [])
+                .filter((v) => v.vid !== targetVariant?.vid)
+                .map((v) => v.image_url)
+                .filter((u): u is string => Boolean(u))
+            );
+
             const allImages: string[] = [];
             if (targetVariant?.image_url) allImages.push(targetVariant.image_url);
-            if (product.hero_image_url) allImages.push(product.hero_image_url);
+            if (product.hero_image_url && !otherVariantImages.has(product.hero_image_url)) {
+              allImages.push(product.hero_image_url);
+            }
             if (product.images && Array.isArray(product.images)) {
-              allImages.push(...product.images.slice(0, 8));
+              for (const img of product.images) {
+                if (img && !otherVariantImages.has(img)) {
+                  allImages.push(img);
+                }
+              }
             }
-            if (product.variants && Array.isArray(product.variants)) {
-              product.variants.slice(0, 6).forEach((v) => {
-                if (v.image_url) allImages.push(v.image_url);
-              });
-            }
-            const uniqueImages = Array.from(new Set(allImages.filter(Boolean))).slice(0, 10);
+            const uniqueImages = Array.from(new Set(allImages.filter(Boolean))).slice(0, 6);
             return (
               <ProductGallery
                 images={uniqueImages.length > 0 ? uniqueImages : ["/placeholder.jpg"]}

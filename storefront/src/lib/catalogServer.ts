@@ -56,10 +56,32 @@ export function mapDbRowToProduct(r: any): Product {
     rating: Number(r.seo_meta_json?.rating || 4.7),
     review_count: Number(r.seo_meta_json?.review_count || 184),
     hero_image_url: r.hero_image_url,
-    images:
-      Array.isArray(r.images_json) && r.images_json.length > 0
+    images: (() => {
+      const list: string[] = [];
+      const raw = Array.isArray(r.images_json) && r.images_json.length > 0
         ? r.images_json
-        : [r.hero_image_url],
+        : [r.hero_image_url];
+      for (const item of raw) {
+        if (!item || typeof item !== "string") continue;
+        const trimmed = item.trim();
+        if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+              for (const p of parsed) {
+                if (typeof p === "string" && p.startsWith("http")) list.push(p);
+              }
+            }
+          } catch {
+            const matches = trimmed.match(/https?:\/\/[^\s"',\]\[]+/g);
+            if (matches) list.push(...matches);
+          }
+        } else if (trimmed.startsWith("http")) {
+          list.push(trimmed);
+        }
+      }
+      return list.length > 0 ? Array.from(new Set(list)) : [r.hero_image_url || "/placeholder.jpg"];
+    })(),
     pas_description_html: r.pas_description_html || "",
     features: Array.isArray(r.features_json) ? r.features_json : [],
     specs: r.specs_json || {},
