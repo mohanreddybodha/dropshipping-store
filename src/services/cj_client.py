@@ -126,7 +126,7 @@ class CJClient:
         self,
         api_key: Optional[str] = None,
         rate_limiter: Optional[TokenBucketRateLimiter] = None,
-        timeout: float = 10.0,
+        timeout: float = 25.0,
     ):
         self.api_key = api_key or os.getenv("CJ_API_KEY", "").strip()
         self.rate_limiter = rate_limiter or TokenBucketRateLimiter(rate=0.75, capacity=1.0)

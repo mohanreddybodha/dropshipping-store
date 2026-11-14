@@ -520,39 +520,36 @@ def run_bulk_seed(target: int = 150) -> int:
         "clock", "audio", "grill", "tent", "hammock", "blanket", "compass"
     ]
     target_categories = [
-        # Subcategories - Kitchen, Home & Storage
-        ("D5D120D0-1262-461A-97C5-74AC732625B5", "Kitchen & Dining", 10),
+        # Top-level high volume US stock categories
+        ("52FC6CA5-669B-4D0B-B1AC-415675931399", "Home, Garden & Furniture", 25),
+        ("6A5D2EB4-13BD-462E-A627-78CFED11B2A2", "Home Improvement", 12),
+        ("4B397425-26C1-4D0E-B6D2-96B0B03689DB", "Sports & Outdoors", 12),
+        ("D9E66BF8-4E81-4CAB-A425-AEDEC5FBFBF2", "Consumer Electronics", 12),
+        ("A2F799BE-FB59-428E-A953-296AA2673FCF", "Automobiles & Motorcycles", 10),
+        ("2409110611570657700", "Pet Supplies", 10),
+        # High-yield subcategories
         ("ED8E61AA-2260-4E03-BA66-DEAE3DF02CDC", "Home Storage", 10),
-        # Subcategories - Lighting & Tools
+        ("D5D120D0-1262-461A-97C5-74AC732625B5", "Kitchen & Dining", 10),
+        ("7D40D0BB-1466-4EEA-B275-0EB4CC0020D8", "Festive & Party Supplies", 8),
         ("392D3DB2-1E98-474E-9E45-9F2FE95A7608", "LED Lighting", 10),
         ("BEFFF5CB-EF79-4984-9C55-62C23B95C0F7", "Indoor Lighting", 10),
         ("59AEBD05-0FDB-4392-BCF5-518C411A26E0", "Outdoor Lighting", 8),
         ("67391D45-D736-40E9-9D90-F56418804ECC", "Tools & Hardware", 10),
         ("85EF081C-819E-448F-BD5C-C5D3F4CFAADA", "Home Appliances", 10),
-        # Subcategories - Auto & Everyday Utility
         ("575086BA-B96B-4557-85C9-004D3DF6A9AE", "Car Interior", 8),
         ("AE1E932F-7832-4CE8-9DFE-885044383863", "Car Electronics", 8),
         ("8D23F08A-3D9E-4A29-A184-EB6F8145E739", "Auto Maintenance", 8),
-        # Subcategories - Electronics & Office
         ("30063684-45E2-4929-BB85-441C1DF80DDE", "Electronics Accessories", 8),
         ("6A03FBB1-F7D9-441F-B06D-EF45CA87B553", "Smart Electronics", 8),
         ("DC11C779-CCD5-429C-9A93-F638456E745B", "Portable Audio", 8),
         ("764DB83F-C286-4CA9-9ACF-4017CFC86A39", "Laptop & Desk Accessories", 8),
         ("23AD5346-5552-4392-A922-69CE426EC583", "Storage Devices", 6),
-        # Subcategories - Outdoors & Pets
         ("CD4184EB-CD02-4789-8CFA-8FF3B4DEFC4E", "Fishing & Tackle", 8),
         ("55A1D05D-A254-4242-A4BD-4BE88F0680B6", "Cycling Accessories", 8),
         ("2410110335471602500", "Pet Toys", 8),
         ("2410110337031615300", "Pet Feeding", 8),
         ("2410110338321625700", "Pet Collars & Leashes", 8),
         ("04D68B68-1048-4971-BAFA-18FA0A6DB95C", "Toys & Puzzles", 8),
-        # Top-level categories fallback
-        ("52FC6CA5-669B-4D0B-B1AC-415675931399", "Home, Garden & Furniture", 25),
-        ("6A5D2EB4-13BD-462E-A627-78CFED11B2A2", "Home Improvement", 10),
-        ("2409110611570657700", "Pet Supplies", 10),
-        ("4B397425-26C1-4D0E-B6D2-96B0B03689DB", "Sports & Outdoors", 10),
-        ("D9E66BF8-4E81-4CAB-A425-AEDEC5FBFBF2", "Consumer Electronics", 10),
-        ("A2F799BE-FB59-428E-A953-296AA2673FCF", "Automobiles & Motorcycles", 8),
     ]
 
     queries = []
@@ -613,7 +610,8 @@ def run_bulk_seed(target: int = 150) -> int:
                     continue
 
                 raw_title = item.get("nameEn") or item.get("productName") or ""
-                supplier_cat = item.get("categoryName") or item.get("threeCategoryName") or ""
+                cat_label = q.get("label", "").split(" p")[0]
+                supplier_cat = item.get("categoryName") or item.get("twoCategoryName") or item.get("oneCategoryName") or item.get("threeCategoryName") or cat_label or ""
 
                 # Enforce strict double-gate (negative blacklist + 3P brands + positive vertical whitelist)
                 if not is_approved_impulse_item(raw_title, supplier_cat):
@@ -642,10 +640,10 @@ def run_bulk_seed(target: int = 150) -> int:
 
                     hero_image = gallery_images[0]
 
-                    # Pick suitable variant ($2.50 - $26.00 wholesale) that has physical US stock >= 50, domestic SLA <= 7d, and positive margins
+                    # Pick suitable variant ($2.50 - $28.00 wholesale) that has physical US stock >= 20, domestic SLA <= 7d, and positive margins
                     eligible_vars = [
                         v for v in variants
-                        if 2.5 <= float(v.get("variantSellPrice") or 0.0) <= 26.0
+                        if 2.5 <= float(v.get("variantSellPrice") or 0.0) <= 28.0
                     ]
                     if not eligible_vars:
                         continue
