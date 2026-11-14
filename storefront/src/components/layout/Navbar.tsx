@@ -426,18 +426,18 @@ export default function Navbar() {
                   <span className="hidden xl:inline text-xs font-bold text-slate-800">Home</span>
                 </Link>
 
-                {/* Watchlist / Collections Link */}
+                {/* Watchlist / Collections Link (Desktop & Tablet only) */}
                 <Link
                   href="/watchlist"
                   prefetch={true}
-                  className="flex items-center justify-center gap-2 w-9 h-9 md:w-auto md:px-3 md:py-2 rounded-xl bg-slate-100 md:bg-transparent hover:bg-slate-200 md:hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative shadow-xs md:shadow-none"
+                  className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative"
                   aria-label="My Collections"
                   title="My Collections"
                 >
                   <div className="relative flex items-center justify-center">
                     <Heart className="w-4 h-4 text-slate-700 group-hover:text-rose-600 transition" />
                     {mounted && watchlistCount > 0 && (
-                      <span className="absolute -top-1.5 -right-2 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                      <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                         {watchlistCount}
                       </span>
                     )}
@@ -445,18 +445,18 @@ export default function Navbar() {
                   <span className="hidden xl:inline text-xs font-bold text-slate-800">Collections</span>
                 </Link>
 
-                {/* Cart Link */}
+                {/* Cart Link (Desktop & Tablet only) */}
                 <Link
                   href="/cart"
                   prefetch={true}
-                  className="flex items-center justify-center gap-2 w-9 h-9 md:w-auto md:px-3 md:py-2 rounded-xl bg-slate-100 md:bg-transparent hover:bg-slate-200 md:hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative shadow-xs md:shadow-none"
+                  className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-slate-900 transition active:scale-95 group relative"
                   aria-label="Shopping Cart"
                   title="Shopping Cart"
                 >
                   <div className="relative flex items-center justify-center">
                     <ShoppingBag className="w-4 h-4 text-slate-700 group-hover:text-emerald-600 transition" />
                     {mounted && itemCount > 0 && (
-                      <span className="absolute -top-1.5 -right-2 bg-emerald-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                      <span className="absolute -top-2 -right-2 bg-emerald-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
                         {itemCount}
                       </span>
                     )}
