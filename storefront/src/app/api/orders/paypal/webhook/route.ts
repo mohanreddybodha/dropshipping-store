@@ -115,35 +115,54 @@ export async function POST(req: NextRequest) {
 
     const eventType = String(eventBody?.event_type || "").toUpperCase();
     const resource = eventBody?.resource || {};
-    const relatedOrderId =
+
+    // PayPal webhook resource.id is the CAPTURE ID for PAYMENT.CAPTURE.* events.
+    // The PayPal ORDER ID (which we store in stripe_payment_intent_id) is in supplementary_data.
+    // For disputes, the order_id is in disputed_transactions[0].seller_transaction_id.
+    // We match orders by the PayPal ORDER ID (stripe_payment_intent_id column).
+    const paypalOrderId: string =
       resource?.supplementary_data?.related_ids?.order_id ||
-      resource?.disputed_transactions?.[0]?.seller_transaction_id ||
+      resource?.id || // fallback: some events put order_id directly in resource.id
       "";
+    const disputeOrderId: string =
+      resource?.disputed_transactions?.[0]?.seller_transaction_id || "";
 
     const sql = getDb();
 
-    if (relatedOrderId && typeof relatedOrderId === "string") {
-      if (eventType === "PAYMENT.CAPTURE.REFUNDED") {
-        await sql`
-          UPDATE orders SET
-            status = CASE WHEN status = 'CANCELLED' THEN 'CANCELLED' ELSE 'REFUNDED' END,
-            updated_at = NOW()
-          WHERE stripe_payment_intent_id = ${relatedOrderId}
-        `;
-      } else if (
-        eventType === "PAYMENT.CAPTURE.REVERSED" ||
-        eventType === "CUSTOMER.DISPUTE.CREATED" ||
-        eventType === "PAYMENT.CAPTURE.DENIED"
-      ) {
-        await sql`
-          UPDATE orders SET
-            status = 'DISPUTED',
-            fulfillment_status = 'PAYMENT_DISPUTED',
-            fulfillment_error = ${`PayPal webhook event: ${eventType}`},
-            updated_at = NOW()
-          WHERE stripe_payment_intent_id = ${relatedOrderId}
-        `;
-      }
+    // PAYMENT.CAPTURE.REFUNDED — match by PayPal order ID stored in stripe_payment_intent_id
+    if (paypalOrderId && eventType === "PAYMENT.CAPTURE.REFUNDED") {
+      await sql`
+        UPDATE orders SET
+          status = CASE WHEN status = 'CANCELLED' THEN 'CANCELLED' ELSE 'REFUNDED' END,
+          updated_at = NOW()
+        WHERE stripe_payment_intent_id = ${paypalOrderId}
+      `;
+      console.info(`[PayPal Webhook] Marked order REFUNDED (PayPal order: ${paypalOrderId})`);
+    } else if (paypalOrderId && (
+      eventType === "PAYMENT.CAPTURE.REVERSED" ||
+      eventType === "PAYMENT.CAPTURE.DENIED"
+    )) {
+      await sql`
+        UPDATE orders SET
+          status = 'DISPUTED',
+          fulfillment_status = 'PAYMENT_DISPUTED',
+          fulfillment_error = ${`PayPal webhook event: ${eventType}`},
+          updated_at = NOW()
+        WHERE stripe_payment_intent_id = ${paypalOrderId}
+      `;
+      console.info(`[PayPal Webhook] Marked order DISPUTED (event: ${eventType}, PayPal order: ${paypalOrderId})`);
+    } else if (disputeOrderId && eventType === "CUSTOMER.DISPUTE.CREATED") {
+      // Dispute events reference the original seller transaction ID, not the order ID
+      await sql`
+        UPDATE orders SET
+          status = 'DISPUTED',
+          fulfillment_status = 'PAYMENT_DISPUTED',
+          fulfillment_error = ${'PayPal dispute opened: CUSTOMER.DISPUTE.CREATED'},
+          updated_at = NOW()
+        WHERE stripe_payment_intent_id = ${disputeOrderId}
+           OR internal_order_number = ${disputeOrderId}
+      `;
+      console.info(`[PayPal Webhook] Marked order DISPUTED (dispute transaction: ${disputeOrderId})`);
     }
 
     console.info(`[PayPal Webhook] Processed verified event ${eventType} (${transmissionId})`);

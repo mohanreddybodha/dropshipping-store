@@ -13,7 +13,7 @@ const nextConfig = {
     "@neondatabase/serverless",
   ],
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
     ignoreDuringBuilds: true,
