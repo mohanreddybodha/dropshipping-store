@@ -217,7 +217,7 @@ export default function ProductAccordion({ product }: ProductAccordionProps) {
                         answer.toLowerCase().includes("money-back")
                       ) {
                         answer =
-                          "We offer a 7-day return reporting window exclusively for items that arrive defective, damaged in transit, or mismatched from what you ordered. Due to automated domestic warehouse fulfillment, we cannot accept returns or refunds for buyer remorse, change of mind, or customer sizing mistakes. Notice must be submitted with photo evidence to support@vastire.com within 7 calendar days of delivery for supplier verification and resolution.";
+                          "We provide a 7-day transit damage & defect replacement guarantee. Email photos to support@vastire.com within 7 calendar days of delivery for an immediate replacement or refund.";
                       }
                       return (
                         <div
