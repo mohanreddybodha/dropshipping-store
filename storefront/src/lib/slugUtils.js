@@ -39,9 +39,15 @@ function normalizeCatalogSlugs(products) {
     }
     seen.set(finalSlug, keyId);
 
+    // If product has a known legacy slug (like the desk fan), keep it
+    let legacySlug = rawOriginalSlug || finalSlug;
+    if (String(product.id) === "1" || product.pid === "1902560845030125569") {
+      legacySlug = "new-for-keeping-turbo-fans-for-with-9002by";
+    }
+
     return {
       ...product,
-      legacy_slug: rawOriginalSlug || finalSlug,
+      legacy_slug: legacySlug,
       slug: finalSlug,
     };
   });

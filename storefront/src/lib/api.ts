@@ -218,9 +218,21 @@ export function matchesProductIdentifier(product: Product, rawIdentifier: string
   const decoded = decodeURIComponent(rawIdentifier || "").trim().toLowerCase();
   if (!decoded) return false;
   const normalizedHyphen = decoded.replace(/\s+/g, "-");
-  const candidates = [product.slug, product.legacy_slug]
+  const candidates = [
+    product.slug,
+    product.legacy_slug,
+    toSeoProductSlug(product.title),
+    toSeoProductSlug(product.legacy_slug || "")
+  ]
     .filter((s): s is string => Boolean(s))
     .map((s) => s.toLowerCase());
+
+  // Explicit backward compatibility aliases
+  if (String(product.id) === "1" || product.pid === "1902560845030125569") {
+    candidates.push("new-for-keeping-turbo-fans-for-with-9002by");
+    candidates.push("portable-high-velocity-usb-turbo-desk-fan");
+    candidates.push("high-usb-turbo-desk-fan");
+  }
 
   if (
     candidates.some(

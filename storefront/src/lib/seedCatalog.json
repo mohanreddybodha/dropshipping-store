@@ -2,9 +2,9 @@
   {
     "id": 1,
     "pid": "1902560845030125569",
-    "title": "High USB Turbo Desk Fan",
+    "title": "Portable High-Velocity USB Turbo Desk Fan",
     "brand_title": "Vastire",
-    "slug": "new-for-keeping-turbo-fans-for-with-9002by",
+    "slug": "portable-high-velocity-usb-turbo-desk-fan",
     "category": "Workspace & Tech",
     "hero_image_url": "https://cf.cjdropshipping.com/f090f07e-fee1-4e71-9063-ecf53b377c03.jpg",
     "images": [
@@ -165,7 +165,7 @@
         "us_warehouse_stock": 160,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -607,7 +607,7 @@
         "retail_price_1x": 28.95,
         "bundle_2_price": 50.94,
         "bundle_3_price": 71.21,
-        "us_warehouse_stock": 1024,
+        "us_warehouse_stock": 1023,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2167,7 +2167,7 @@
         "retail_price_1x": 38.95,
         "bundle_2_price": 68.54,
         "bundle_3_price": 95.81,
-        "us_warehouse_stock": 557,
+        "us_warehouse_stock": 601,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -2482,7 +2482,7 @@
         "retail_price_1x": 39.95,
         "bundle_2_price": 70.3,
         "bundle_3_price": 98.27,
-        "us_warehouse_stock": 274,
+        "us_warehouse_stock": 273,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -3531,7 +3531,7 @@
         "us_warehouse_stock": 99,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -6349,7 +6349,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 586,
+        "us_warehouse_stock": 584,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -6437,7 +6437,7 @@
         "retail_price_1x": 39.95,
         "bundle_2_price": 70.3,
         "bundle_3_price": 98.27,
-        "us_warehouse_stock": 243,
+        "us_warehouse_stock": 242,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8908,7 +8908,7 @@
         "retail_price_1x": 34.95,
         "bundle_2_price": 61.5,
         "bundle_3_price": 85.97,
-        "us_warehouse_stock": 570,
+        "us_warehouse_stock": 587,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -8993,7 +8993,7 @@
         "retail_price_1x": 27.95,
         "bundle_2_price": 49.18,
         "bundle_3_price": 68.75,
-        "us_warehouse_stock": 787,
+        "us_warehouse_stock": 785,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9274,7 +9274,7 @@
         "us_warehouse_stock": 154,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -9845,7 +9845,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 301,
+        "us_warehouse_stock": 288,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -9937,7 +9937,7 @@
         "retail_price_1x": 29.95,
         "bundle_2_price": 52.7,
         "bundle_3_price": 73.67,
-        "us_warehouse_stock": 319,
+        "us_warehouse_stock": 313,
         "carrier_name": "USPS",
         "delivery_sla": "3-5 Days",
         "is_available": true
@@ -10027,7 +10027,7 @@
         "us_warehouse_stock": 180,
         "carrier_name": "Uniuni US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -10127,7 +10127,7 @@
         "us_warehouse_stock": 129,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -10220,7 +10220,7 @@
         "us_warehouse_stock": 14703,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -10308,7 +10308,7 @@
         "us_warehouse_stock": 65,
         "carrier_name": "DHL US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -10390,10 +10390,10 @@
         "retail_price_1x": 38.53,
         "bundle_2_price": 67.8,
         "bundle_3_price": 94.77,
-        "us_warehouse_stock": 62,
+        "us_warehouse_stock": 69,
         "carrier_name": "Fedex US to US",
         "delivery_sla": "2-5 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -10502,7 +10502,7 @@
         "us_warehouse_stock": 197,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -10588,7 +10588,7 @@
         "us_warehouse_stock": 514,
         "carrier_name": "DHL US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -10689,7 +10689,7 @@
         "us_warehouse_stock": 193,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -10777,7 +10777,7 @@
         "us_warehouse_stock": 120,
         "carrier_name": "DHL US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -10890,7 +10890,7 @@
         "us_warehouse_stock": 443,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -10981,7 +10981,7 @@
         "us_warehouse_stock": 150,
         "carrier_name": "Fedex US to US #2",
         "delivery_sla": "3-5 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -11096,7 +11096,7 @@
         "us_warehouse_stock": 577,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -11209,7 +11209,7 @@
         "us_warehouse_stock": 225,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -11300,7 +11300,7 @@
         "us_warehouse_stock": 170,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -11395,7 +11395,7 @@
         "us_warehouse_stock": 199,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -11492,7 +11492,7 @@
         "us_warehouse_stock": 209,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -11662,7 +11662,7 @@
         "us_warehouse_stock": 12736,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -11759,7 +11759,7 @@
         "us_warehouse_stock": 87,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -11859,7 +11859,7 @@
         "us_warehouse_stock": 1380,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -11960,7 +11960,7 @@
         "us_warehouse_stock": 14273,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -12086,7 +12086,7 @@
         "us_warehouse_stock": 7345,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -12205,7 +12205,7 @@
         "us_warehouse_stock": 180,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-5 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -12292,7 +12292,7 @@
         "us_warehouse_stock": 351,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -12393,7 +12393,7 @@
         "us_warehouse_stock": 99,
         "carrier_name": "Fedex US to US #40",
         "delivery_sla": "1-3 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -12494,7 +12494,7 @@
         "us_warehouse_stock": 188,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -12590,7 +12590,7 @@
         "us_warehouse_stock": 5155,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -12681,7 +12681,7 @@
         "us_warehouse_stock": 138,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -12784,7 +12784,7 @@
         "us_warehouse_stock": 120,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -12878,7 +12878,7 @@
         "us_warehouse_stock": 464,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -12981,7 +12981,7 @@
         "us_warehouse_stock": 14475,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -13093,7 +13093,7 @@
         "us_warehouse_stock": 37899,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -13197,7 +13197,7 @@
         "us_warehouse_stock": 9383,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -13304,7 +13304,7 @@
         "us_warehouse_stock": 9071,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -13407,7 +13407,7 @@
         "us_warehouse_stock": 228,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -13500,7 +13500,7 @@
         "us_warehouse_stock": 13434,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -13585,7 +13585,7 @@
         "us_warehouse_stock": 460,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -13685,7 +13685,7 @@
         "us_warehouse_stock": 242,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -13778,7 +13778,7 @@
         "us_warehouse_stock": 176,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -13865,7 +13865,7 @@
         "us_warehouse_stock": 524,
         "carrier_name": "USPS US to US",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -13955,7 +13955,7 @@
         "us_warehouse_stock": 13715,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -14059,7 +14059,7 @@
         "us_warehouse_stock": 8350,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -14151,7 +14151,7 @@
         "us_warehouse_stock": 13035,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -14331,7 +14331,7 @@
         "us_warehouse_stock": 40000,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -14425,7 +14425,7 @@
         "us_warehouse_stock": 88,
         "carrier_name": "Fedex US to US",
         "delivery_sla": "3-5 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -14510,7 +14510,7 @@
         "us_warehouse_stock": 842,
         "carrier_name": "Fedex US to US #4",
         "delivery_sla": "2-5 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -14602,7 +14602,7 @@
         "us_warehouse_stock": 40072,
         "carrier_name": "USPS+VIP",
         "delivery_sla": "3-7 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   },
@@ -14694,7 +14694,7 @@
         "us_warehouse_stock": 99,
         "carrier_name": "USPS US to US #2",
         "delivery_sla": "3-5 Days",
-        "is_available": true
+        "is_available": false
       }
     ]
   }

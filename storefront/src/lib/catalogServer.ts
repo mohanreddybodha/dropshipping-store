@@ -171,9 +171,21 @@ export async function getAuthoritativeProductBySlug(
 
   // 1. Direct candidate matching (active catalog)
   const directMatch = catalog.find((p) => {
-    const candidates = [p.slug, p.legacy_slug, toSeoProductSlug(p.title)]
+    const candidates = [
+      p.slug,
+      p.legacy_slug,
+      toSeoProductSlug(p.title),
+      toSeoProductSlug(p.legacy_slug || "")
+    ]
       .filter((s): s is string => Boolean(s))
       .map((s) => s.toLowerCase());
+
+    if (String(p.id) === "1" || p.pid === "1902560845030125569") {
+      candidates.push("new-for-keeping-turbo-fans-for-with-9002by");
+      candidates.push("portable-high-velocity-usb-turbo-desk-fan");
+      candidates.push("high-usb-turbo-desk-fan");
+    }
+
     return (
       candidates.some(
         (c) =>
