@@ -408,33 +408,24 @@ def get_engine(database_url: Optional[str] = None) -> Engine:
 
 
 def init_db(engine: Optional[Engine] = None) -> Engine:
-    """Initialize all database tables with self-healing column sync for PostgreSQL and SQLite."""
+    """Initialize database tables. Production PostgreSQL schema migrations are managed via Alembic."""
     eng = engine or get_engine()
     Base.metadata.create_all(bind=eng)
 
-    try:
-        with eng.connect() as conn:
-            is_pg = "postgres" in str(eng.url).lower()
-            if is_pg:
-                conn.exec_driver_sql("ALTER TABLE products ADD COLUMN IF NOT EXISTS viral_scripts_json JSONB;")
-                conn.exec_driver_sql("ALTER TABLE products ADD COLUMN IF NOT EXISTS fallback_affiliate_url VARCHAR(1024);")
-                conn.exec_driver_sql("ALTER TABLE products ADD COLUMN IF NOT EXISTS specs_json JSONB;")
-                conn.exec_driver_sql("ALTER TABLE products ADD COLUMN IF NOT EXISTS category VARCHAR(128) DEFAULT 'Home & Kitchen';")
-                conn.exec_driver_sql("ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS retail_price NUMERIC;")
-                conn.exec_driver_sql("ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS stock_synced_at TIMESTAMPTZ;")
-                conn.exec_driver_sql("UPDATE product_variants SET retail_price = retail_price_1x WHERE retail_price IS NULL;")
-                conn.commit()
-            else:
+    # Local SQLite lightweight development fallback
+    if str(eng.url).startswith("sqlite"):
+        try:
+            with eng.connect() as conn:
                 res = conn.exec_driver_sql("PRAGMA table_info(products)").fetchall()
                 cols = {row[1] for row in res}
-                if "specs_json" not in cols:
-                    conn.exec_driver_sql("ALTER TABLE products ADD COLUMN specs_json JSON")
-                if "category" not in cols:
-                    conn.exec_driver_sql("ALTER TABLE products ADD COLUMN category VARCHAR(128) DEFAULT 'Home & Kitchen'")
-                if "viral_scripts_json" not in cols:
-                    conn.exec_driver_sql("ALTER TABLE products ADD COLUMN viral_scripts_json JSON")
-                if "fallback_affiliate_url" not in cols:
-                    conn.exec_driver_sql("ALTER TABLE products ADD COLUMN fallback_affiliate_url VARCHAR(1024)")
+                for col_name, col_def in [
+                    ("specs_json", "JSON"),
+                    ("category", "VARCHAR(128) DEFAULT 'Home & Kitchen'"),
+                    ("viral_scripts_json", "JSON"),
+                    ("fallback_affiliate_url", "VARCHAR(1024)"),
+                ]:
+                    if col_name not in cols:
+                        conn.exec_driver_sql(f"ALTER TABLE products ADD COLUMN {col_name} {col_def}")
 
                 res_v = conn.exec_driver_sql("PRAGMA table_info(product_variants)").fetchall()
                 cols_v = {row[1] for row in res_v}
@@ -445,8 +436,8 @@ def init_db(engine: Optional[Engine] = None) -> Engine:
                     conn.exec_driver_sql("ALTER TABLE product_variants ADD COLUMN retail_price FLOAT")
                     conn.exec_driver_sql("UPDATE product_variants SET retail_price = retail_price_1x")
                 conn.commit()
-    except Exception:
-        pass
+        except Exception:
+            pass
 
     return eng
 

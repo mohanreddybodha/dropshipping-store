@@ -28,6 +28,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Apply Database Migrations (Alembic)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        if: ${{ env.DATABASE_URL != '' }}
+        run: |
+          alembic upgrade head
+
       - name: Run Live CJ US Stock Sync & Rules Enforcement
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
