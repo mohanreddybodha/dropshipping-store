@@ -762,17 +762,29 @@ def run_bulk_seed(target: int = 150) -> int:
     except Exception as exc:
         logger.error("Bulk seed fatal error: %s", exc)
         errors.append({"general_error": str(exc)})
+        try:
+            session.rollback()
+        except Exception:
+            pass
     finally:
-        audit = SyncAuditLog(
-            sync_type="DISCOVER",
-            items_processed=items_processed,
-            items_updated=items_ingested,
-            errors_json=errors if errors else None,
-        )
-        session.add(audit)
-        session.commit()
-        session.close()
-        client.close()
+        try:
+            audit = SyncAuditLog(
+                sync_type="DISCOVER",
+                items_processed=items_processed,
+                items_updated=items_ingested,
+                errors_json=errors if errors else None,
+            )
+            session.add(audit)
+            session.commit()
+        except Exception as audit_err:
+            logger.error("Failed to commit bulk seed audit log: %s", audit_err)
+            try:
+                session.rollback()
+            except Exception:
+                pass
+        finally:
+            session.close()
+            client.close()
 
     total_final = items_ingested
     logger.info("Bulk seeding finished. Total active products in database: %d", total_final)
@@ -943,17 +955,29 @@ def run_stock_sync(enforce_rules: bool = True) -> int:
     except Exception as exc:
         logger.error("Stock sync error: %s", exc)
         errors.append({"general_error": str(exc)})
+        try:
+            session.rollback()
+        except Exception:
+            pass
     finally:
-        audit = SyncAuditLog(
-            sync_type="STOCK_SYNC",
-            items_processed=items_processed,
-            items_updated=items_updated,
-            errors_json=errors if errors else None,
-        )
-        session.add(audit)
-        session.commit()
-        session.close()
-        client.close()
+        try:
+            audit = SyncAuditLog(
+                sync_type="STOCK_SYNC",
+                items_processed=items_processed,
+                items_updated=items_updated,
+                errors_json=errors if errors else None,
+            )
+            session.add(audit)
+            session.commit()
+        except Exception as audit_err:
+            logger.error("Failed to commit stock sync audit log: %s", audit_err)
+            try:
+                session.rollback()
+            except Exception:
+                pass
+        finally:
+            session.close()
+            client.close()
 
     trigger_storefront_revalidation()
     return items_updated

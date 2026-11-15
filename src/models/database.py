@@ -125,6 +125,15 @@ class ProductVariant(Base):
     # Relationship back to product
     product: Mapped[Product] = relationship("Product", back_populates="variants")
 
+    @property
+    def retail_price_1x(self) -> float:
+        """Alias property matching storefront and JSON catalog schema."""
+        return float(self.retail_price or 0.0)
+
+    @retail_price_1x.setter
+    def retail_price_1x(self, val: float) -> None:
+        self.retail_price = float(val or 0.0)
+
     def __repr__(self) -> str:
         return (
             f"<ProductVariant(id={self.id}, vid='{self.vid}', sku='{self.sku}', "
@@ -399,23 +408,45 @@ def get_engine(database_url: Optional[str] = None) -> Engine:
 
 
 def init_db(engine: Optional[Engine] = None) -> Engine:
-    """Initialize all database tables with self-healing column sync."""
+    """Initialize all database tables with self-healing column sync for PostgreSQL and SQLite."""
     eng = engine or get_engine()
     Base.metadata.create_all(bind=eng)
 
-    # Self-healing column sync for SQLite dev environments
-    if str(eng.url).startswith("sqlite"):
-        try:
-            with eng.connect() as conn:
+    try:
+        with eng.connect() as conn:
+            is_pg = "postgres" in str(eng.url).lower()
+            if is_pg:
+                conn.exec_driver_sql("ALTER TABLE products ADD COLUMN IF NOT EXISTS viral_scripts_json JSONB;")
+                conn.exec_driver_sql("ALTER TABLE products ADD COLUMN IF NOT EXISTS fallback_affiliate_url VARCHAR(1024);")
+                conn.exec_driver_sql("ALTER TABLE products ADD COLUMN IF NOT EXISTS specs_json JSONB;")
+                conn.exec_driver_sql("ALTER TABLE products ADD COLUMN IF NOT EXISTS category VARCHAR(128) DEFAULT 'Home & Kitchen';")
+                conn.exec_driver_sql("ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS retail_price NUMERIC;")
+                conn.exec_driver_sql("ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS stock_synced_at TIMESTAMPTZ;")
+                conn.exec_driver_sql("UPDATE product_variants SET retail_price = retail_price_1x WHERE retail_price IS NULL;")
+                conn.commit()
+            else:
                 res = conn.exec_driver_sql("PRAGMA table_info(products)").fetchall()
                 cols = {row[1] for row in res}
                 if "specs_json" not in cols:
                     conn.exec_driver_sql("ALTER TABLE products ADD COLUMN specs_json JSON")
                 if "category" not in cols:
                     conn.exec_driver_sql("ALTER TABLE products ADD COLUMN category VARCHAR(128) DEFAULT 'Home & Kitchen'")
+                if "viral_scripts_json" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE products ADD COLUMN viral_scripts_json JSON")
+                if "fallback_affiliate_url" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE products ADD COLUMN fallback_affiliate_url VARCHAR(1024)")
+
+                res_v = conn.exec_driver_sql("PRAGMA table_info(product_variants)").fetchall()
+                cols_v = {row[1] for row in res_v}
+                if "retail_price_1x" not in cols_v and "retail_price" in cols_v:
+                    conn.exec_driver_sql("ALTER TABLE product_variants ADD COLUMN retail_price_1x FLOAT")
+                    conn.exec_driver_sql("UPDATE product_variants SET retail_price_1x = retail_price")
+                elif "retail_price" not in cols_v and "retail_price_1x" in cols_v:
+                    conn.exec_driver_sql("ALTER TABLE product_variants ADD COLUMN retail_price FLOAT")
+                    conn.exec_driver_sql("UPDATE product_variants SET retail_price = retail_price_1x")
                 conn.commit()
-        except Exception:
-            pass
+    except Exception:
+        pass
 
     return eng
 
